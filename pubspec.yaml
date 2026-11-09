@@ -41,9 +41,6 @@ dependencies:
   flutter_onnxruntime: 1.9.0
   dart_sentencepiece_tokenizer: 1.4.1
   crypto: ^3.0.8
-  # Reads a price off the screen when a page gives none as data (Android,
-  # on the device).
-  google_mlkit_text_recognition: 1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -62,6 +59,11 @@ dependency_overrides:
 
 flutter:
   uses-material-design: true
+  assets:
+    # Built-in text recognition for Windows and Linux (lib/domain/pp_ocr.dart).
+    - assets/ocr/
+    # Label vectors for picture search (tool/picture_labels.py).
+    - assets/pictures/
 
 # Bundle SQLite3MultipleCiphers instead of plain SQLite so the local database
 # is encrypted at rest on every platform (see doc/hook.md in package:sqlite3).

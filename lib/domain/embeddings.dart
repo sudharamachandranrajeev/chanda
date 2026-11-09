@@ -22,12 +22,17 @@ const _repo =
     'https://huggingface.co/Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q/resolve/'
     'faf4aa4225822f3bc6376869cb1164e8e3feedd0';
 
+/// One file of a downloaded model: kept as [name], fetched from [remote]
+/// (a path in [repo]) and checked against its [size] and [sha256].
 class ModelFile {
-  const ModelFile(this.name, this.size, this.sha256);
+  const ModelFile(this.name, this.size, this.sha256, {this.repo = _repo, String? remote})
+    : remote = remote ?? name;
   final String name;
   final int size;
   final String sha256;
-  Uri get url => Uri.parse('$_repo/$name');
+  final String repo;
+  final String remote;
+  Uri get url => Uri.parse('$repo/$remote');
 }
 
 const modelFiles = [
@@ -39,16 +44,18 @@ const modelFiles = [
   ModelFile('tokenizer.json', 17083009, 'fa685fc160bbdbab64058d4fc91b60e62d207e8dc60b9af5c002c5ab946ded00'),
 ];
 
-final modelBytes = modelFiles.fold<int>(0, (n, f) => n + f.size);
+final modelBytes = bytesOf(modelFiles);
+
+int bytesOf(List<ModelFile> files) => files.fold<int>(0, (n, f) => n + f.size);
 
 /// Every model file is in [dir] at its full size.
-bool modelPresent(Directory dir) => modelFiles.every((f) {
+bool modelPresent(Directory dir, [List<ModelFile> files = modelFiles]) => files.every((f) {
   final file = File('${dir.path}/${f.name}');
   return file.existsSync() && file.lengthSync() == f.size;
 });
 
 /// Downloads the model into [dir], checking each file's SHA-256 before it
-/// is kept. [progress] gets bytes done of [modelBytes]. A file already
+/// is kept. [progress] gets bytes done of all [files]. A file already
 /// there at its size is kept.
 Future<void> downloadModel(
   Directory dir, {

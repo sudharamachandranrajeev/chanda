@@ -1,0 +1,636 @@
+{
+ "model": "Marqo/marqo-fashionSigLIP",
+ "revision": "c56244cc94f92419e8369fa71efdaf403b124ce8",
+ "dims": 768,
+ "format": "float16 little-endian, one row per label, unit length",
+ "labels": [
+  {
+   "kind": "category",
+   "name": "t-shirt"
+  },
+  {
+   "kind": "category",
+   "name": "shirt"
+  },
+  {
+   "kind": "category",
+   "name": "blouse"
+  },
+  {
+   "kind": "category",
+   "name": "polo shirt"
+  },
+  {
+   "kind": "category",
+   "name": "jumper"
+  },
+  {
+   "kind": "category",
+   "name": "cardigan"
+  },
+  {
+   "kind": "category",
+   "name": "hoodie"
+  },
+  {
+   "kind": "category",
+   "name": "sweatshirt"
+  },
+  {
+   "kind": "category",
+   "name": "jacket"
+  },
+  {
+   "kind": "category",
+   "name": "coat"
+  },
+  {
+   "kind": "category",
+   "name": "blazer"
+  },
+  {
+   "kind": "category",
+   "name": "waistcoat"
+  },
+  {
+   "kind": "category",
+   "name": "dress"
+  },
+  {
+   "kind": "category",
+   "name": "skirt"
+  },
+  {
+   "kind": "category",
+   "name": "jeans"
+  },
+  {
+   "kind": "category",
+   "name": "trousers"
+  },
+  {
+   "kind": "category",
+   "name": "shorts"
+  },
+  {
+   "kind": "category",
+   "name": "leggings"
+  },
+  {
+   "kind": "category",
+   "name": "joggers"
+  },
+  {
+   "kind": "category",
+   "name": "suit"
+  },
+  {
+   "kind": "category",
+   "name": "jumpsuit"
+  },
+  {
+   "kind": "category",
+   "name": "pyjamas"
+  },
+  {
+   "kind": "category",
+   "name": "swimsuit"
+  },
+  {
+   "kind": "category",
+   "name": "bikini"
+  },
+  {
+   "kind": "category",
+   "name": "underwear"
+  },
+  {
+   "kind": "category",
+   "name": "bra"
+  },
+  {
+   "kind": "category",
+   "name": "socks"
+  },
+  {
+   "kind": "category",
+   "name": "tights"
+  },
+  {
+   "kind": "category",
+   "name": "trainers"
+  },
+  {
+   "kind": "category",
+   "name": "boots"
+  },
+  {
+   "kind": "category",
+   "name": "sandals"
+  },
+  {
+   "kind": "category",
+   "name": "heels"
+  },
+  {
+   "kind": "category",
+   "name": "flat shoes"
+  },
+  {
+   "kind": "category",
+   "name": "loafers"
+  },
+  {
+   "kind": "category",
+   "name": "slippers"
+  },
+  {
+   "kind": "category",
+   "name": "handbag"
+  },
+  {
+   "kind": "category",
+   "name": "backpack"
+  },
+  {
+   "kind": "category",
+   "name": "tote bag"
+  },
+  {
+   "kind": "category",
+   "name": "wallet"
+  },
+  {
+   "kind": "category",
+   "name": "belt"
+  },
+  {
+   "kind": "category",
+   "name": "hat"
+  },
+  {
+   "kind": "category",
+   "name": "cap"
+  },
+  {
+   "kind": "category",
+   "name": "scarf"
+  },
+  {
+   "kind": "category",
+   "name": "gloves"
+  },
+  {
+   "kind": "category",
+   "name": "tie"
+  },
+  {
+   "kind": "category",
+   "name": "glasses"
+  },
+  {
+   "kind": "category",
+   "name": "sunglasses"
+  },
+  {
+   "kind": "category",
+   "name": "watch"
+  },
+  {
+   "kind": "category",
+   "name": "necklace"
+  },
+  {
+   "kind": "category",
+   "name": "earrings"
+  },
+  {
+   "kind": "category",
+   "name": "ring"
+  },
+  {
+   "kind": "category",
+   "name": "bracelet"
+  },
+  {
+   "kind": "category",
+   "name": "hair clip"
+  },
+  {
+   "kind": "category",
+   "name": "umbrella"
+  },
+  {
+   "kind": "category",
+   "name": "suitcase"
+  },
+  {
+   "kind": "category",
+   "name": "phone"
+  },
+  {
+   "kind": "category",
+   "name": "phone case"
+  },
+  {
+   "kind": "category",
+   "name": "laptop"
+  },
+  {
+   "kind": "category",
+   "name": "tablet"
+  },
+  {
+   "kind": "category",
+   "name": "headphones"
+  },
+  {
+   "kind": "category",
+   "name": "earbuds"
+  },
+  {
+   "kind": "category",
+   "name": "speaker"
+  },
+  {
+   "kind": "category",
+   "name": "smartwatch"
+  },
+  {
+   "kind": "category",
+   "name": "camera"
+  },
+  {
+   "kind": "category",
+   "name": "television"
+  },
+  {
+   "kind": "category",
+   "name": "computer monitor"
+  },
+  {
+   "kind": "category",
+   "name": "keyboard"
+  },
+  {
+   "kind": "category",
+   "name": "computer mouse"
+  },
+  {
+   "kind": "category",
+   "name": "charger"
+  },
+  {
+   "kind": "category",
+   "name": "cable"
+  },
+  {
+   "kind": "category",
+   "name": "power bank"
+  },
+  {
+   "kind": "category",
+   "name": "game console"
+  },
+  {
+   "kind": "category",
+   "name": "game controller"
+  },
+  {
+   "kind": "category",
+   "name": "printer"
+  },
+  {
+   "kind": "category",
+   "name": "lamp"
+  },
+  {
+   "kind": "category",
+   "name": "chair"
+  },
+  {
+   "kind": "category",
+   "name": "sofa"
+  },
+  {
+   "kind": "category",
+   "name": "table"
+  },
+  {
+   "kind": "category",
+   "name": "desk"
+  },
+  {
+   "kind": "category",
+   "name": "bed"
+  },
+  {
+   "kind": "category",
+   "name": "pillow"
+  },
+  {
+   "kind": "category",
+   "name": "duvet"
+  },
+  {
+   "kind": "category",
+   "name": "rug"
+  },
+  {
+   "kind": "category",
+   "name": "curtains"
+  },
+  {
+   "kind": "category",
+   "name": "mirror"
+  },
+  {
+   "kind": "category",
+   "name": "clock"
+  },
+  {
+   "kind": "category",
+   "name": "vase"
+  },
+  {
+   "kind": "category",
+   "name": "plant pot"
+  },
+  {
+   "kind": "category",
+   "name": "candle"
+  },
+  {
+   "kind": "category",
+   "name": "picture frame"
+  },
+  {
+   "kind": "category",
+   "name": "shelf"
+  },
+  {
+   "kind": "category",
+   "name": "storage box"
+  },
+  {
+   "kind": "category",
+   "name": "mug"
+  },
+  {
+   "kind": "category",
+   "name": "plate"
+  },
+  {
+   "kind": "category",
+   "name": "bowl"
+  },
+  {
+   "kind": "category",
+   "name": "glassware"
+  },
+  {
+   "kind": "category",
+   "name": "cutlery"
+  },
+  {
+   "kind": "category",
+   "name": "saucepan"
+  },
+  {
+   "kind": "category",
+   "name": "frying pan"
+  },
+  {
+   "kind": "category",
+   "name": "kettle"
+  },
+  {
+   "kind": "category",
+   "name": "toaster"
+  },
+  {
+   "kind": "category",
+   "name": "coffee machine"
+  },
+  {
+   "kind": "category",
+   "name": "blender"
+  },
+  {
+   "kind": "category",
+   "name": "vacuum cleaner"
+  },
+  {
+   "kind": "category",
+   "name": "towel"
+  },
+  {
+   "kind": "category",
+   "name": "bedding"
+  },
+  {
+   "kind": "category",
+   "name": "toy"
+  },
+  {
+   "kind": "category",
+   "name": "doll"
+  },
+  {
+   "kind": "category",
+   "name": "building blocks"
+  },
+  {
+   "kind": "category",
+   "name": "book"
+  },
+  {
+   "kind": "category",
+   "name": "notebook"
+  },
+  {
+   "kind": "category",
+   "name": "pen"
+  },
+  {
+   "kind": "category",
+   "name": "bicycle"
+  },
+  {
+   "kind": "category",
+   "name": "helmet"
+  },
+  {
+   "kind": "category",
+   "name": "tent"
+  },
+  {
+   "kind": "category",
+   "name": "yoga mat"
+  },
+  {
+   "kind": "category",
+   "name": "dumbbells"
+  },
+  {
+   "kind": "category",
+   "name": "perfume"
+  },
+  {
+   "kind": "category",
+   "name": "lipstick"
+  },
+  {
+   "kind": "category",
+   "name": "skincare bottle"
+  },
+  {
+   "kind": "category",
+   "name": "makeup brush"
+  },
+  {
+   "kind": "category",
+   "name": "hair dryer"
+  },
+  {
+   "kind": "category",
+   "name": "shaver"
+  },
+  {
+   "kind": "category",
+   "name": "jewellery box"
+  },
+  {
+   "kind": "category",
+   "name": "dog bed"
+  },
+  {
+   "kind": "category",
+   "name": "pet toy"
+  },
+  {
+   "kind": "category",
+   "name": "garden tool"
+  },
+  {
+   "kind": "category",
+   "name": "drill"
+  },
+  {
+   "kind": "category",
+   "name": "screwdriver"
+  },
+  {
+   "kind": "category",
+   "name": "light bulb"
+  },
+  {
+   "kind": "colour",
+   "name": "black"
+  },
+  {
+   "kind": "colour",
+   "name": "white"
+  },
+  {
+   "kind": "colour",
+   "name": "grey"
+  },
+  {
+   "kind": "colour",
+   "name": "silver"
+  },
+  {
+   "kind": "colour",
+   "name": "gold"
+  },
+  {
+   "kind": "colour",
+   "name": "red"
+  },
+  {
+   "kind": "colour",
+   "name": "burgundy"
+  },
+  {
+   "kind": "colour",
+   "name": "pink"
+  },
+  {
+   "kind": "colour",
+   "name": "orange"
+  },
+  {
+   "kind": "colour",
+   "name": "yellow"
+  },
+  {
+   "kind": "colour",
+   "name": "beige"
+  },
+  {
+   "kind": "colour",
+   "name": "brown"
+  },
+  {
+   "kind": "colour",
+   "name": "green"
+  },
+  {
+   "kind": "colour",
+   "name": "olive"
+  },
+  {
+   "kind": "colour",
+   "name": "teal"
+  },
+  {
+   "kind": "colour",
+   "name": "blue"
+  },
+  {
+   "kind": "colour",
+   "name": "navy"
+  },
+  {
+   "kind": "colour",
+   "name": "purple"
+  },
+  {
+   "kind": "colour",
+   "name": "multicolour"
+  },
+  {
+   "kind": "pattern",
+   "name": "plain"
+  },
+  {
+   "kind": "pattern",
+   "name": "striped"
+  },
+  {
+   "kind": "pattern",
+   "name": "checked"
+  },
+  {
+   "kind": "pattern",
+   "name": "floral"
+  },
+  {
+   "kind": "pattern",
+   "name": "polka dot"
+  },
+  {
+   "kind": "pattern",
+   "name": "animal print"
+  },
+  {
+   "kind": "pattern",
+   "name": "camouflage"
+  },
+  {
+   "kind": "pattern",
+   "name": "graphic print"
+  }
+ ]
+}

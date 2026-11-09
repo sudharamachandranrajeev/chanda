@@ -1,7 +1,5 @@
-import 'dart:typed_data';
-
 import 'package:chanda/domain/reading.dart';
-import 'package:chanda/domain/screen_ocr.dart';
+import 'package:chanda/domain/pp_ocr.dart';
 import 'package:chanda/domain/screen_text.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -41,9 +39,34 @@ void main() {
     );
   });
 
-  test('png height from the header', () {
-    final png = Uint8List(24);
-    ByteData.sublistView(png).setUint32(20, 2400);
-    expect(pngHeight(png), 2400);
+  test('text boxes: regions over the threshold, grown and scaled to the picture', () {
+    // A 20×10 map with one strong 8×3 region and one weak blob.
+    final prob = List<double>.filled(200, 0);
+    for (var y = 2; y < 5; y++) {
+      for (var x = 4; x < 12; x++) {
+        prob[y * 20 + x] = 0.9;
+      }
+    }
+    for (var y = 7; y < 10; y++) {
+      for (var x = 15; x < 19; x++) {
+        prob[y * 20 + x] = 0.4;
+      }
+    }
+    final boxes = boxesFrom(prob, 20, 10, 40, 20);
+    expect(boxes, hasLength(1));
+    // 8×3 grows by 8·3·1.5 / (2·11) ≈ 1.64 each side, then doubles.
+    expect(boxes.single.left, closeTo((4 - 24 * 1.5 / 22) * 2, 1e-9));
+    expect(boxes.single.top, closeTo((2 - 24 * 1.5 / 22) * 2, 1e-9));
+    expect(boxes.single.right, closeTo((12 + 24 * 1.5 / 22) * 2, 1e-9));
+  });
+
+  test('CTC decoding drops blanks and repeats, keeps a doubled letter split by a blank', () {
+    const chars = ['£', '4', '5', '.', '9'];
+    const classes = 7; // blank, 5 characters, space
+    List<double> step(int c) => [for (var i = 0; i < classes; i++) i == c ? 0.9 : 0.01];
+    final steps = [1, 1, 2, 3, 0, 4, 5, 5, 0, 5, 6];
+    final (text, conf) = ctcDecode([for (final c in steps) ...step(c)], steps.length, classes, chars);
+    expect(text, '£45.99');
+    expect(conf, closeTo(0.9, 1e-9));
   });
 }

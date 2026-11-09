@@ -87,7 +87,7 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
     try {
       final e = await settle(web, tries: 8);
       final r = readProduct(e, hint: shopFor(_url).currency);
-      if (r.price != null || r.check || !canReadScreen) return r;
+      if (r.price != null || r.check) return r;
       // No price as data: read it off what the user sees.
       final png = await web.takeScreenshot();
       if (png == null || _private) return r;
