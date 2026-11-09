@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
@@ -54,4 +55,30 @@ Future<File?> keptImage(String itemId, int index) async {
 Future<void> forgetImages(String itemId) async {
   final dir = await imageDir(itemId);
   if (dir.existsSync()) await dir.delete(recursive: true);
+}
+
+/// Downloads one picture, saying who is asking. Null when [url] is not a
+/// web address or the answer is not a picture under 8 MB.
+Future<Uint8List?> fetchImage(String? url, {http.Client? client}) async {
+  if (url == null || !url.startsWith('http')) return null;
+  final c = client ?? http.Client();
+  try {
+    final r = await c
+        .get(Uri.parse(url), headers: {'user-agent': 'Chanda/0.1'})
+        .timeout(const Duration(seconds: 15));
+    final type = r.headers['content-type'] ?? 'image/';
+    return r.statusCode == 200 && type.startsWith('image/') && r.bodyBytes.length < 8 << 20
+        ? r.bodyBytes
+        : null;
+  } on Object {
+    return null;
+  } finally {
+    if (client == null) c.close();
+  }
+}
+
+/// An item's first picture: the kept copy, else downloaded.
+Future<Uint8List?> firstPicture(String itemId, String? url) async {
+  final kept = await keptImage(itemId, 0);
+  return kept != null ? kept.readAsBytes() : fetchImage(url);
 }

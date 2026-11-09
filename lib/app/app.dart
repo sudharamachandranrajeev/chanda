@@ -1,8 +1,11 @@
+import 'dart:io';
+
 import 'package:brahma_core/brahma_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../ui/look.dart';
+import '../ui/photo_search.dart';
 import '../ui/save_flow.dart';
 import 'modules.dart';
 import 'providers.dart';
@@ -49,11 +52,15 @@ class ChandaHome extends StatelessWidget {
     floating: true,
     railPanel: true,
     onHome: onHome,
-    onStart: (ref) => ref.read(liveChecksProvider.notifier).start(),
+    onStart: (ref) {
+      ref.read(liveChecksProvider.notifier).start();
+      ref.read(myShopsProvider);
+    },
   );
 }
 
-/// Hands links shared to Chanda to the save flow.
+/// Hands links shared to Chanda to the save flow, and photos to search by
+/// photo.
 class SharedLinks extends ConsumerStatefulWidget {
   const SharedLinks({super.key, required this.child});
   final Widget child;
@@ -66,9 +73,16 @@ class _SharedLinksState extends ConsumerState<SharedLinks> {
   @override
   void initState() {
     super.initState();
-    listenForShares((text) {
-      if (mounted) saveFromText(context, text);
-    });
+    listenForShares(
+      (text) {
+        if (mounted) saveFromText(context, text);
+      },
+      onPhoto: (path) async {
+        final bytes = await File(path).readAsBytes();
+        if (!mounted) return;
+        await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => PhotoSearchPage(bytes)));
+      },
+    );
   }
 
   @override

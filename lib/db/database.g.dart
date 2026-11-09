@@ -3994,6 +3994,592 @@ class ChandaMatchesCompanion extends UpdateCompanion<ProductMatch> {
   }
 }
 
+class $ChandaRatingsTable extends ChandaRatings with TableInfo<$ChandaRatingsTable, Rating> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ChandaRatingsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hlcMeta = const VerificationMeta('hlc');
+  @override
+  late final GeneratedColumn<String> hlc = GeneratedColumn<String>(
+    'hlc',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
+  @override
+  late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
+    'deleted',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _urlMeta = const VerificationMeta('url');
+  @override
+  late final GeneratedColumn<String> url = GeneratedColumn<String>(
+    'url',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _titleMeta = const VerificationMeta('title');
+  @override
+  late final GeneratedColumn<String> title = GeneratedColumn<String>(
+    'title',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _shopMeta = const VerificationMeta('shop');
+  @override
+  late final GeneratedColumn<String> shop = GeneratedColumn<String>(
+    'shop',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _imageMeta = const VerificationMeta('image');
+  @override
+  late final GeneratedColumn<String> image = GeneratedColumn<String>(
+    'image',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _priceMeta = const VerificationMeta('price');
+  @override
+  late final GeneratedColumn<int> price = GeneratedColumn<int>(
+    'price',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta('currency');
+  @override
+  late final GeneratedColumn<String> currency = GeneratedColumn<String>(
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _starsMeta = const VerificationMeta('stars');
+  @override
+  late final GeneratedColumn<int> stars = GeneratedColumn<int>(
+    'stars',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _atMeta = const VerificationMeta('at');
+  @override
+  late final GeneratedColumn<String> at = GeneratedColumn<String>(
+    'at',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('rated'),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    hlc,
+    deleted,
+    url,
+    title,
+    shop,
+    image,
+    price,
+    currency,
+    stars,
+    at,
+    source,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'chanda_ratings';
+  @override
+  VerificationContext validateIntegrity(Insertable<Rating> instance, {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('hlc')) {
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
+    }
+    if (data.containsKey('deleted')) {
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
+    }
+    if (data.containsKey('url')) {
+      context.handle(_urlMeta, url.isAcceptableOrUnknown(data['url']!, _urlMeta));
+    } else if (isInserting) {
+      context.missing(_urlMeta);
+    }
+    if (data.containsKey('title')) {
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
+    } else if (isInserting) {
+      context.missing(_titleMeta);
+    }
+    if (data.containsKey('shop')) {
+      context.handle(_shopMeta, shop.isAcceptableOrUnknown(data['shop']!, _shopMeta));
+    }
+    if (data.containsKey('image')) {
+      context.handle(_imageMeta, image.isAcceptableOrUnknown(data['image']!, _imageMeta));
+    }
+    if (data.containsKey('price')) {
+      context.handle(_priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
+    }
+    if (data.containsKey('currency')) {
+      context.handle(_currencyMeta, currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+    }
+    if (data.containsKey('stars')) {
+      context.handle(_starsMeta, stars.isAcceptableOrUnknown(data['stars']!, _starsMeta));
+    } else if (isInserting) {
+      context.missing(_starsMeta);
+    }
+    if (data.containsKey('at')) {
+      context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
+    } else if (isInserting) {
+      context.missing(_atMeta);
+    }
+    if (data.containsKey('source')) {
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  Rating map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return Rating(
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      url: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}url'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      shop: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}shop'])!,
+      image: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}image'])!,
+      price: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}price']),
+      currency: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      stars: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}stars'])!,
+      at: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}at'])!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
+    );
+  }
+
+  @override
+  $ChandaRatingsTable createAlias(String alias) {
+    return $ChandaRatingsTable(attachedDatabase, alias);
+  }
+}
+
+class Rating extends DataClass implements Insertable<Rating> {
+  final String id;
+  final String hlc;
+  final bool deleted;
+  final String url;
+  final String title;
+  final String shop;
+  final String image;
+  final int? price;
+  final String currency;
+
+  /// 1-5.
+  final int stars;
+  final String at;
+
+  /// rated | not-for-me
+  final String source;
+  const Rating({
+    required this.id,
+    required this.hlc,
+    required this.deleted,
+    required this.url,
+    required this.title,
+    required this.shop,
+    required this.image,
+    this.price,
+    required this.currency,
+    required this.stars,
+    required this.at,
+    required this.source,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['hlc'] = Variable<String>(hlc);
+    map['deleted'] = Variable<bool>(deleted);
+    map['url'] = Variable<String>(url);
+    map['title'] = Variable<String>(title);
+    map['shop'] = Variable<String>(shop);
+    map['image'] = Variable<String>(image);
+    if (!nullToAbsent || price != null) {
+      map['price'] = Variable<int>(price);
+    }
+    map['currency'] = Variable<String>(currency);
+    map['stars'] = Variable<int>(stars);
+    map['at'] = Variable<String>(at);
+    map['source'] = Variable<String>(source);
+    return map;
+  }
+
+  ChandaRatingsCompanion toCompanion(bool nullToAbsent) {
+    return ChandaRatingsCompanion(
+      id: Value(id),
+      hlc: Value(hlc),
+      deleted: Value(deleted),
+      url: Value(url),
+      title: Value(title),
+      shop: Value(shop),
+      image: Value(image),
+      price: price == null && nullToAbsent ? const Value.absent() : Value(price),
+      currency: Value(currency),
+      stars: Value(stars),
+      at: Value(at),
+      source: Value(source),
+    );
+  }
+
+  factory Rating.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return Rating(
+      id: serializer.fromJson<String>(json['id']),
+      hlc: serializer.fromJson<String>(json['hlc']),
+      deleted: serializer.fromJson<bool>(json['deleted']),
+      url: serializer.fromJson<String>(json['url']),
+      title: serializer.fromJson<String>(json['title']),
+      shop: serializer.fromJson<String>(json['shop']),
+      image: serializer.fromJson<String>(json['image']),
+      price: serializer.fromJson<int?>(json['price']),
+      currency: serializer.fromJson<String>(json['currency']),
+      stars: serializer.fromJson<int>(json['stars']),
+      at: serializer.fromJson<String>(json['at']),
+      source: serializer.fromJson<String>(json['source']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'hlc': serializer.toJson<String>(hlc),
+      'deleted': serializer.toJson<bool>(deleted),
+      'url': serializer.toJson<String>(url),
+      'title': serializer.toJson<String>(title),
+      'shop': serializer.toJson<String>(shop),
+      'image': serializer.toJson<String>(image),
+      'price': serializer.toJson<int?>(price),
+      'currency': serializer.toJson<String>(currency),
+      'stars': serializer.toJson<int>(stars),
+      'at': serializer.toJson<String>(at),
+      'source': serializer.toJson<String>(source),
+    };
+  }
+
+  Rating copyWith({
+    String? id,
+    String? hlc,
+    bool? deleted,
+    String? url,
+    String? title,
+    String? shop,
+    String? image,
+    Value<int?> price = const Value.absent(),
+    String? currency,
+    int? stars,
+    String? at,
+    String? source,
+  }) => Rating(
+    id: id ?? this.id,
+    hlc: hlc ?? this.hlc,
+    deleted: deleted ?? this.deleted,
+    url: url ?? this.url,
+    title: title ?? this.title,
+    shop: shop ?? this.shop,
+    image: image ?? this.image,
+    price: price.present ? price.value : this.price,
+    currency: currency ?? this.currency,
+    stars: stars ?? this.stars,
+    at: at ?? this.at,
+    source: source ?? this.source,
+  );
+  Rating copyWithCompanion(ChandaRatingsCompanion data) {
+    return Rating(
+      id: data.id.present ? data.id.value : this.id,
+      hlc: data.hlc.present ? data.hlc.value : this.hlc,
+      deleted: data.deleted.present ? data.deleted.value : this.deleted,
+      url: data.url.present ? data.url.value : this.url,
+      title: data.title.present ? data.title.value : this.title,
+      shop: data.shop.present ? data.shop.value : this.shop,
+      image: data.image.present ? data.image.value : this.image,
+      price: data.price.present ? data.price.value : this.price,
+      currency: data.currency.present ? data.currency.value : this.currency,
+      stars: data.stars.present ? data.stars.value : this.stars,
+      at: data.at.present ? data.at.value : this.at,
+      source: data.source.present ? data.source.value : this.source,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('Rating(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('url: $url, ')
+          ..write('title: $title, ')
+          ..write('shop: $shop, ')
+          ..write('image: $image, ')
+          ..write('price: $price, ')
+          ..write('currency: $currency, ')
+          ..write('stars: $stars, ')
+          ..write('at: $at, ')
+          ..write('source: $source')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, hlc, deleted, url, title, shop, image, price, currency, stars, at, source);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is Rating &&
+          other.id == this.id &&
+          other.hlc == this.hlc &&
+          other.deleted == this.deleted &&
+          other.url == this.url &&
+          other.title == this.title &&
+          other.shop == this.shop &&
+          other.image == this.image &&
+          other.price == this.price &&
+          other.currency == this.currency &&
+          other.stars == this.stars &&
+          other.at == this.at &&
+          other.source == this.source);
+}
+
+class ChandaRatingsCompanion extends UpdateCompanion<Rating> {
+  final Value<String> id;
+  final Value<String> hlc;
+  final Value<bool> deleted;
+  final Value<String> url;
+  final Value<String> title;
+  final Value<String> shop;
+  final Value<String> image;
+  final Value<int?> price;
+  final Value<String> currency;
+  final Value<int> stars;
+  final Value<String> at;
+  final Value<String> source;
+  final Value<int> rowid;
+  const ChandaRatingsCompanion({
+    this.id = const Value.absent(),
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    this.url = const Value.absent(),
+    this.title = const Value.absent(),
+    this.shop = const Value.absent(),
+    this.image = const Value.absent(),
+    this.price = const Value.absent(),
+    this.currency = const Value.absent(),
+    this.stars = const Value.absent(),
+    this.at = const Value.absent(),
+    this.source = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ChandaRatingsCompanion.insert({
+    required String id,
+    this.hlc = const Value.absent(),
+    this.deleted = const Value.absent(),
+    required String url,
+    required String title,
+    this.shop = const Value.absent(),
+    this.image = const Value.absent(),
+    this.price = const Value.absent(),
+    this.currency = const Value.absent(),
+    required int stars,
+    required String at,
+    this.source = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       url = Value(url),
+       title = Value(title),
+       stars = Value(stars),
+       at = Value(at);
+  static Insertable<Rating> custom({
+    Expression<String>? id,
+    Expression<String>? hlc,
+    Expression<bool>? deleted,
+    Expression<String>? url,
+    Expression<String>? title,
+    Expression<String>? shop,
+    Expression<String>? image,
+    Expression<int>? price,
+    Expression<String>? currency,
+    Expression<int>? stars,
+    Expression<String>? at,
+    Expression<String>? source,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (hlc != null) 'hlc': hlc,
+      if (deleted != null) 'deleted': deleted,
+      if (url != null) 'url': url,
+      if (title != null) 'title': title,
+      if (shop != null) 'shop': shop,
+      if (image != null) 'image': image,
+      if (price != null) 'price': price,
+      if (currency != null) 'currency': currency,
+      if (stars != null) 'stars': stars,
+      if (at != null) 'at': at,
+      if (source != null) 'source': source,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ChandaRatingsCompanion copyWith({
+    Value<String>? id,
+    Value<String>? hlc,
+    Value<bool>? deleted,
+    Value<String>? url,
+    Value<String>? title,
+    Value<String>? shop,
+    Value<String>? image,
+    Value<int?>? price,
+    Value<String>? currency,
+    Value<int>? stars,
+    Value<String>? at,
+    Value<String>? source,
+    Value<int>? rowid,
+  }) {
+    return ChandaRatingsCompanion(
+      id: id ?? this.id,
+      hlc: hlc ?? this.hlc,
+      deleted: deleted ?? this.deleted,
+      url: url ?? this.url,
+      title: title ?? this.title,
+      shop: shop ?? this.shop,
+      image: image ?? this.image,
+      price: price ?? this.price,
+      currency: currency ?? this.currency,
+      stars: stars ?? this.stars,
+      at: at ?? this.at,
+      source: source ?? this.source,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (hlc.present) {
+      map['hlc'] = Variable<String>(hlc.value);
+    }
+    if (deleted.present) {
+      map['deleted'] = Variable<bool>(deleted.value);
+    }
+    if (url.present) {
+      map['url'] = Variable<String>(url.value);
+    }
+    if (title.present) {
+      map['title'] = Variable<String>(title.value);
+    }
+    if (shop.present) {
+      map['shop'] = Variable<String>(shop.value);
+    }
+    if (image.present) {
+      map['image'] = Variable<String>(image.value);
+    }
+    if (price.present) {
+      map['price'] = Variable<int>(price.value);
+    }
+    if (currency.present) {
+      map['currency'] = Variable<String>(currency.value);
+    }
+    if (stars.present) {
+      map['stars'] = Variable<int>(stars.value);
+    }
+    if (at.present) {
+      map['at'] = Variable<String>(at.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChandaRatingsCompanion(')
+          ..write('id: $id, ')
+          ..write('hlc: $hlc, ')
+          ..write('deleted: $deleted, ')
+          ..write('url: $url, ')
+          ..write('title: $title, ')
+          ..write('shop: $shop, ')
+          ..write('image: $image, ')
+          ..write('price: $price, ')
+          ..write('currency: $currency, ')
+          ..write('stars: $stars, ')
+          ..write('at: $at, ')
+          ..write('source: $source, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
   @override
   final GeneratedDatabase attachedDatabase;
@@ -4852,6 +5438,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $ChandaAlertsTable chandaAlerts = $ChandaAlertsTable(this);
   late final $ChandaOffersTable chandaOffers = $ChandaOffersTable(this);
   late final $ChandaMatchesTable chandaMatches = $ChandaMatchesTable(this);
+  late final $ChandaRatingsTable chandaRatings = $ChandaRatingsTable(this);
   late final $PrefsTable prefs = $PrefsTable(this);
   late final $OutboxTable outbox = $OutboxTable(this);
   late final $SyncCursorsTable syncCursors = $SyncCursorsTable(this);
@@ -4867,6 +5454,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     chandaAlerts,
     chandaOffers,
     chandaMatches,
+    chandaRatings,
     prefs,
     outbox,
     syncCursors,
@@ -6647,6 +7235,273 @@ typedef $$ChandaMatchesTableProcessedTableManager =
       ProductMatch,
       PrefetchHooks Function()
     >;
+typedef $$ChandaRatingsTableCreateCompanionBuilder = ChandaRatingsCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String url,
+  required String title,
+  Value<String> shop,
+  Value<String> image,
+  Value<int?> price,
+  Value<String> currency,
+  required int stars,
+  required String at,
+  Value<String> source,
+  Value<int> rowid,
+});
+typedef $$ChandaRatingsTableUpdateCompanionBuilder = ChandaRatingsCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> url,
+  Value<String> title,
+  Value<String> shop,
+  Value<String> image,
+  Value<int?> price,
+  Value<String> currency,
+  Value<int> stars,
+  Value<String> at,
+  Value<String> source,
+  Value<int> rowid,
+});
+
+class $$ChandaRatingsTableFilterComposer extends Composer<_$AppDatabase, $ChandaRatingsTable> {
+  $$ChandaRatingsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get image =>
+      $composableBuilder(column: $table.image, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get stars =>
+      $composableBuilder(column: $table.stars, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
+}
+
+class $$ChandaRatingsTableOrderingComposer extends Composer<_$AppDatabase, $ChandaRatingsTable> {
+  $$ChandaRatingsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get image =>
+      $composableBuilder(column: $table.image, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get stars =>
+      $composableBuilder(column: $table.stars, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
+}
+
+class $$ChandaRatingsTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaRatingsTable> {
+  $$ChandaRatingsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
+
+  GeneratedColumn<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => column);
+
+  GeneratedColumn<String> get url => $composableBuilder(column: $table.url, builder: (column) => column);
+
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get shop => $composableBuilder(column: $table.shop, builder: (column) => column);
+
+  GeneratedColumn<String> get image => $composableBuilder(column: $table.image, builder: (column) => column);
+
+  GeneratedColumn<int> get price => $composableBuilder(column: $table.price, builder: (column) => column);
+
+  GeneratedColumn<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => column);
+
+  GeneratedColumn<int> get stars => $composableBuilder(column: $table.stars, builder: (column) => column);
+
+  GeneratedColumn<String> get at => $composableBuilder(column: $table.at, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+}
+
+class $$ChandaRatingsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ChandaRatingsTable,
+          Rating,
+          $$ChandaRatingsTableFilterComposer,
+          $$ChandaRatingsTableOrderingComposer,
+          $$ChandaRatingsTableAnnotationComposer,
+          $$ChandaRatingsTableCreateCompanionBuilder,
+          $$ChandaRatingsTableUpdateCompanionBuilder,
+          (Rating, BaseReferences<_$AppDatabase, $ChandaRatingsTable, Rating>),
+          Rating,
+          PrefetchHooks Function()
+        > {
+  $$ChandaRatingsTableTableManager(_$AppDatabase db, $ChandaRatingsTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () => $$ChandaRatingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaRatingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaRatingsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                Value<String> url = const Value.absent(),
+                Value<String> title = const Value.absent(),
+                Value<String> shop = const Value.absent(),
+                Value<String> image = const Value.absent(),
+                Value<int?> price = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<int> stars = const Value.absent(),
+                Value<String> at = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ChandaRatingsCompanion(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                url: url,
+                title: title,
+                shop: shop,
+                image: image,
+                price: price,
+                currency: currency,
+                stars: stars,
+                at: at,
+                source: source,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String> hlc = const Value.absent(),
+                Value<bool> deleted = const Value.absent(),
+                required String url,
+                required String title,
+                Value<String> shop = const Value.absent(),
+                Value<String> image = const Value.absent(),
+                Value<int?> price = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                required int stars,
+                required String at,
+                Value<String> source = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ChandaRatingsCompanion.insert(
+                id: id,
+                hlc: hlc,
+                deleted: deleted,
+                url: url,
+                title: title,
+                shop: shop,
+                image: image,
+                price: price,
+                currency: currency,
+                stars: stars,
+                at: at,
+                source: source,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable<$ChandaRatingsTable, Rating>(table),
+                  BaseReferences<_$AppDatabase, $ChandaRatingsTable, Rating>(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ChandaRatingsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ChandaRatingsTable,
+      Rating,
+      $$ChandaRatingsTableFilterComposer,
+      $$ChandaRatingsTableOrderingComposer,
+      $$ChandaRatingsTableAnnotationComposer,
+      $$ChandaRatingsTableCreateCompanionBuilder,
+      $$ChandaRatingsTableUpdateCompanionBuilder,
+      (Rating, BaseReferences<_$AppDatabase, $ChandaRatingsTable, Rating>),
+      Rating,
+      PrefetchHooks Function()
+    >;
 typedef $$PrefsTableCreateCompanionBuilder = PrefsCompanion Function({
   required String id,
   Value<String> hlc,
@@ -7153,6 +8008,8 @@ class $AppDatabaseManager {
   $$ChandaOffersTableTableManager get chandaOffers => $$ChandaOffersTableTableManager(_db, _db.chandaOffers);
   $$ChandaMatchesTableTableManager get chandaMatches =>
       $$ChandaMatchesTableTableManager(_db, _db.chandaMatches);
+  $$ChandaRatingsTableTableManager get chandaRatings =>
+      $$ChandaRatingsTableTableManager(_db, _db.chandaRatings);
   $$PrefsTableTableManager get prefs => $$PrefsTableTableManager(_db, _db.prefs);
   $$OutboxTableTableManager get outbox => $$OutboxTableTableManager(_db, _db.outbox);
   $$SyncCursorsTableTableManager get syncCursors => $$SyncCursorsTableTableManager(_db, _db.syncCursors);

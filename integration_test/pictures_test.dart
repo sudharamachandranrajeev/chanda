@@ -43,7 +43,7 @@ void main() {
     expect(bad, isNull);
     if (glasses.isNotEmpty) {
       final [photo] = await m.embed([await File(glasses).readAsBytes()]);
-      expect(tagsOf(photo!, await loadLabels()).category, 'glasses');
+      expect(pictureTags(photo!, await loadLabels()).category, 'glasses');
     }
     await m.close();
   });

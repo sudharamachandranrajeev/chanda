@@ -113,3 +113,32 @@ class PriceLine extends StatelessWidget {
     );
   }
 }
+
+/// One to five stars, tappable. Tapping the current rating clears it.
+class Stars extends StatelessWidget {
+  const Stars({super.key, required this.value, required this.onChanged, this.size = 28});
+  final int? value;
+  final ValueChanged<int?> onChanged;
+  final double size;
+
+  static const _words = ['Not for me', 'Not really', 'It is fine', 'Like it', 'Love it'];
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: value == null ? 'Not rated' : 'Rated $value of 5',
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var n = 1; n <= 5; n++)
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            iconSize: size,
+            tooltip: '$n: ${_words[n - 1]}',
+            color: n <= (value ?? 0) ? Colors.amber.shade700 : null,
+            icon: Icon(n <= (value ?? 0) ? Icons.star_rounded : Icons.star_outline_rounded),
+            onPressed: () => onChanged(n == value ? null : n),
+          ),
+      ],
+    ),
+  );
+}

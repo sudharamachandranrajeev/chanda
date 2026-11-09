@@ -1,7 +1,7 @@
 name: chanda
 description: "Chanda - shopping assistant: one private vault for everything you want to buy, from any shop in the world. Prices tracked and re-checked before every alert; no affiliate links, no data sale. Linux, Windows, Android. Part of Brahma."
 publish_to: 'none'
-version: 0.2.0+2
+version: 0.3.0+3
 
 environment:
   sdk: ^3.13.5
@@ -41,6 +41,10 @@ dependencies:
   flutter_onnxruntime: 1.9.0
   dart_sentencepiece_tokenizer: 1.4.1
   crypto: ^3.0.8
+  # Search by photo (camera or gallery on Android, a file on Windows and
+  # Linux) and opening or saving a taste export.
+  image_picker: ^1.2.4
+  file_selector: ^1.1.0
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +68,8 @@ flutter:
     - assets/ocr/
     # Label vectors for picture search (tool/picture_labels.py).
     - assets/pictures/
+    # The curated shop list for "Shops like yours" (lib/domain/similar_shops.dart).
+    - assets/shops/
 
 # Bundle SQLite3MultipleCiphers instead of plain SQLite so the local database
 # is encrypted at rest on every platform (see doc/hook.md in package:sqlite3).

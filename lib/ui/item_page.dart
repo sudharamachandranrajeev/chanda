@@ -196,7 +196,23 @@ class _BodyState extends ConsumerState<_Body> {
               style: text.bodyMedium?.copyWith(color: p.muted),
             ),
           ),
-        const SizedBox(height: 18),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Text('Your rating', style: text.bodyMedium?.copyWith(color: p.muted)),
+            const SizedBox(width: 6),
+            Stars(
+              value: ref.watch(ratingsProvider).value?[i.url]?.stars,
+              onChanged: (n) async {
+                final t = await ref.read(tasteProvider.future);
+                await (n == null ? t.unrate(i.url) : t.rateItem(i, n));
+                ref.read(revisionProvider.notifier).bump();
+                ref.read(syncProvider.notifier).soon();
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
         Wrap(
           spacing: 10,
           runSpacing: 10,

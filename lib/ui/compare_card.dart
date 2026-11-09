@@ -2,7 +2,6 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
 import 'package:nithya/nithya.dart';
 
 import '../app/providers.dart';
@@ -79,28 +78,19 @@ class _CompareCardState extends ConsumerState<CompareCard> {
     try {
       final local = ref.read(localSearchProvider);
       if (_itemHash.isEmpty) {
-        final kept = await keptImage(i.id, 0);
-        final bytes = kept != null ? await kept.readAsBytes() : await _download(imagesOf(i).firstOrNull);
+        final bytes = await firstPicture(i.id, imagesOf(i).firstOrNull);
         if (bytes != null) _itemHash = await compute(dhashOf, bytes) ?? '';
       }
       if (_itemHash.isEmpty) return;
       final cands = await local.candidatesFor(i);
       for (final o in cands.where((o) => o.dhash.isEmpty && o.image.startsWith('http')).take(12)) {
-        final bytes = await _download(o.image);
+        final bytes = await fetchImage(o.image);
         final h = bytes == null ? null : await compute(dhashOf, bytes);
         if (h != null) await local.setHash(o.id, h);
       }
     } on Object catch (e) {
       debugPrint('Chanda: picture fingerprints skipped: $e');
     }
-  }
-
-  Future<Uint8List?> _download(String? url) async {
-    if (url == null || !url.startsWith('http')) return null;
-    final r = await http
-        .get(Uri.parse(url), headers: const {'user-agent': 'Chanda/0.1'})
-        .timeout(const Duration(seconds: 15));
-    return r.statusCode == 200 ? r.bodyBytes : null;
   }
 
   Future<void> _answer(ShopOffer o, bool same) async {

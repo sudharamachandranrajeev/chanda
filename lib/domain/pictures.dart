@@ -145,7 +145,7 @@ class PictureTags {
 
 /// The shipped labels (assets/pictures/labels.*).
 Future<List<PictureLabel>> loadLabels() async {
-  final meta = jsonDecode(await rootBundle.loadString('assets/pictures/labels.json')) as Map;
+  final meta = jsonDecode(await rootBundle.loadString('assets/pictures/labels.json', cache: false)) as Map;
   final bin = await rootBundle.load('assets/pictures/labels.bin');
   return labelsFrom(meta, bin);
 }
@@ -178,7 +178,7 @@ double halfToDouble(int h) {
 /// The best label of each kind for picture vector [v]. A colour is named
 /// unless the best is "multicolour"; a pattern only when it clearly beats
 /// the next and is not "plain" (the model is unsure of patterns).
-PictureTags tagsOf(Float32List v, List<PictureLabel> labels) {
+PictureTags pictureTags(Float32List v, List<PictureLabel> labels) {
   List<(double, String)> ranked(String kind) => [
     for (final l in labels)
       if (l.kind == kind) (cosine(v, l.vec), l.name),

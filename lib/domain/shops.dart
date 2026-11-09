@@ -63,9 +63,21 @@ class Shop {
   String keyOf(Uri url) => productKey?.firstMatch(url.path)?.group(1) ?? '';
 }
 
+/// Every shop Chanda searches: its own, then those the user added.
+List<Shop> get shops => [..._builtIn, ..._added];
+
+var _added = const <Shop>[];
+
+/// Sets the shops the user added (lib/domain/similar_shops.dart). A built-in
+/// shop's domain is never taken over.
+void registerShops(List<Shop> added) => _added = [
+  for (final s in added)
+    if (!_builtIn.any((b) => b.id == s.id || b.domains.any(s.domains.contains))) s,
+];
+
 /// The shops Chanda was first tested with. Hacoo and Temu are app-first and
 /// strict about automated loads; Shein sends unknown visitors to a check.
-final shops = <Shop>[
+final _builtIn = <Shop>[
   Shop(
     id: 'amazon-uk',
     name: 'Amazon UK',

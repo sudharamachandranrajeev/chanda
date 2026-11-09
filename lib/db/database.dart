@@ -15,6 +15,7 @@ part 'database.g.dart';
     ChandaAlerts,
     ChandaOffers,
     ChandaMatches,
+    ChandaRatings,
     Prefs,
     Outbox,
     SyncCursors,
@@ -34,17 +35,18 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
     'chanda_prices',
     'chanda_alerts',
     'chanda_matches',
+    'chanda_ratings',
     'prefs',
   ];
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      for (final sql in [..._indexes, ..._phase2]) {
+      for (final sql in [..._indexes, ..._phase2, ..._phase3]) {
         await customStatement(sql);
       }
     },
@@ -53,6 +55,12 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
         await m.createTable(chandaOffers);
         await m.createTable(chandaMatches);
         for (final sql in _phase2) {
+          await customStatement(sql);
+        }
+      }
+      if (from < 3) {
+        await m.createTable(chandaRatings);
+        for (final sql in _phase3) {
           await customStatement(sql);
         }
       }
@@ -74,5 +82,14 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
     "CREATE VIRTUAL TABLE chanda_words USING fts5(ref UNINDEXED, kind UNINDEXED, title, extra, "
         "tokenize = 'unicode61 remove_diacritics 2', prefix = '2 3')",
     "CREATE VIRTUAL TABLE chanda_grams USING fts5(ref UNINDEXED, kind UNINDEXED, title, tokenize = 'trigram')",
+  ];
+
+  /// Taste and shops (schema 3): ratings by page, and two local caches that
+  /// are never synced: picture vectors by picture address, and facts looked
+  /// up about shops' domains.
+  static const _phase3 = [
+    'CREATE INDEX chanda_ratings_url ON chanda_ratings (url)',
+    'CREATE TABLE IF NOT EXISTS chanda_pictures (url TEXT PRIMARY KEY, vec BLOB NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS chanda_shop_facts (domain TEXT PRIMARY KEY, json TEXT NOT NULL, checked TEXT NOT NULL)',
   ];
 }

@@ -11,6 +11,7 @@ import 'package:chanda/domain/vault.dart';
 import 'package:chanda/domain/web_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 
@@ -44,6 +45,7 @@ class AppHarness {
     Map<String, Evidence> pages = const {},
     Map<String, List<Offer>> offers = const {},
     http.Client? ai,
+    List<Override> extra = const [],
   }) async {
     await tester.pumpWidget(
       ProviderScope(
@@ -52,6 +54,7 @@ class AppHarness {
           readerProvider.overrideWithValue(TablePageReader(pages)),
           searcherProvider.overrideWithValue(TableSearcher(offers)),
           if (ai != null) aiClientProvider.overrideWithValue(ai),
+          ...extra,
         ],
         retry: (_, _) => null,
         child: const ChandaApp(),
@@ -71,6 +74,14 @@ class AppHarness {
     for (var i = 0; i < 6; i++) {
       await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
       await tester.pump(const Duration(milliseconds: 400));
+    }
+  }
+
+  /// Settles until [f] finds something (database work behind a screen can
+  /// take a few rounds), or gives up after [tries].
+  Future<void> waitFor(Finder f, {int tries = 20}) async {
+    for (var i = 0; i < tries && f.evaluate().isEmpty; i++) {
+      await settle();
     }
   }
 

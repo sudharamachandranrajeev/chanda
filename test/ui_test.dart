@@ -1,17 +1,27 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
+import 'package:chanda/app/app.dart';
 import 'package:chanda/app/modules.dart';
+import 'package:chanda/app/providers.dart';
 import 'package:chanda/db/database.dart';
 import 'package:chanda/domain/ai_reader.dart';
 import 'package:chanda/domain/checker.dart';
 import 'package:chanda/domain/local_search.dart';
 import 'package:chanda/domain/offers.dart';
+import 'package:chanda/domain/pictures.dart';
 import 'package:chanda/domain/reading.dart';
+import 'package:chanda/domain/similar_shops.dart';
+import 'package:chanda/domain/taste_store.dart';
+import 'package:chanda/ui/photo_search.dart';
 import 'package:chanda/ui/save_flow.dart';
+import 'package:chanda/ui/vault_page.dart' show ItemCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
+import 'package:image/image.dart' as img;
 
 import 'app_harness.dart';
 import 'support.dart';
@@ -50,13 +60,15 @@ void main() {
     final app = AppHarness(tester)..desktop();
     await app.open(seed: seedVault);
     await app.run();
-    expect(find.text('Brass desk lamp'), findsOneWidget);
-    expect(find.text('Pleated midi skirt'), findsOneWidget);
+    Finder card(String title) => find.descendant(of: find.byType(ItemCard), matching: find.text(title));
+    expect(card('Brass desk lamp'), findsOneWidget);
+    expect(card('Pleated midi skirt'), findsOneWidget);
     expect(find.text('£39.99'), findsOneWidget);
 
     await app.tapText('Home office');
+    expect(find.text('Rate a few?'), findsNothing, reason: 'only on the whole vault');
     expect(find.text('Pleated midi skirt'), findsNothing);
-    expect(find.text('Brass desk lamp'), findsOneWidget);
+    expect(card('Brass desk lamp'), findsOneWidget);
 
     await app.tapText('Brass desk lamp');
     expect(find.text('Price history'), findsOneWidget);
@@ -130,7 +142,9 @@ void main() {
     await app.close();
   });
 
-  testWidgets('Settings offers smarter search and AI reading, both off at first', (tester) async {
+  testWidgets('Settings offers both models, taste and AI reading, models and AI off at first', (
+    tester,
+  ) async {
     final app = AppHarness(tester)..desktop();
     await app.open();
     await app.run();
@@ -140,10 +154,160 @@ void main() {
       300,
       scrollable: find.byType(Scrollable).first,
     );
-    expect(find.textContaining('Download ('), findsOneWidget);
-    expect(find.text('Add key'), findsOneWidget);
+    expect(find.text('Download (252 MB)'), findsOneWidget);
+    expect(find.text('Download (94 MB)'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Add key'), 300, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Your taste'), findsOneWidget);
+    expect(find.text('0 ratings so far'), findsOneWidget);
     await app.close();
   });
+
+  testWidgets('rating: the rate card, stars on an item, and For you with Not for me', (tester) async {
+    final app = AppHarness(tester)..desktop();
+    await app.open(
+      seed: (v) async {
+        await seedVault(v);
+        await LocalSearch(v.store).keepOffers(const [
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0LAMP0009',
+            title: 'Brass floor lamp',
+            price: 7999,
+            currency: 'GBP',
+          ),
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0SKIRT009',
+            title: 'Pleated maxi skirt',
+            price: 3500,
+            currency: 'GBP',
+          ),
+        ], 'lamp');
+      },
+    );
+    await app.run();
+    final taste = TasteStore(app.session.store);
+
+    await app.waitFor(find.text('Rate a few?'));
+    expect(find.text('Rate a few?'), findsOneWidget);
+    await app.tap(find.byTooltip('5: Love it').first);
+    expect(await tester.runAsync(() async => (await taste.ratings()).length), 1);
+    await app.tapText('Not now');
+    expect(find.text('Rate a few?'), findsNothing);
+
+    await app.tapText('Brass desk lamp');
+    expect(find.text('Your rating'), findsOneWidget);
+    await app.tap(find.byTooltip('4: Like it').first);
+    final lamp = await tester.runAsync(() => taste.ratingOf('https://www.amazon.co.uk/dp/B000000001'));
+    expect(lamp?.stars, 4);
+    await tester.pageBack();
+    await app.settle();
+
+    await app.go('Search');
+    await app.waitFor(find.text('For you'));
+    expect(find.text('For you'), findsOneWidget);
+    expect(find.text('Brass floor lamp'), findsOneWidget);
+    await app.tap(find.byTooltip('Why this, and less like it').first);
+    await app.tapText('Not for me');
+    final rs = await tester.runAsync(() => taste.ratings());
+    expect(rs!.where((r) => r.source == 'not-for-me'), hasLength(1));
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
+  testWidgets('search by photo names what it shows and searches the shops for it', (tester) async {
+    final app = AppHarness(tester)..desktop();
+    await app.open(seed: seedVault);
+    final labels = await tester.runAsync(loadLabels);
+    final glasses = labels!.firstWhere((l) => l.name == 'glasses').vec;
+    await app.run(extra: [pictureEmbedderProvider.overrideWith((_) => _OnePicture(glasses))]);
+    final nav = Navigator.of(tester.element(find.byType(ChandaHome)));
+    unawaited(nav.push(MaterialPageRoute<void>(builder: (_) => PhotoSearchPage(_png))));
+    await app.waitFor(find.text('It looks like'));
+    expect(find.text('It looks like'), findsOneWidget);
+    expect(find.text('glasses'), findsOneWidget);
+    await app.tap(find.textContaining('Search the shops for'));
+    await app.settle();
+    expect(find.text('Search'), findsWidgets);
+    expect(find.textContaining('glasses'), findsWidgets);
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
+  testWidgets(
+    'Shops like yours: check a shop, add it to search, remove it; add any shop by one results page',
+    (tester) async {
+      final app = AppHarness(tester)..desktop();
+      await app.open(seed: seedVault);
+      await app.run(
+        offers: {
+          'shop.example': const [
+            Offer(
+              shop: 'shop.example',
+              url: 'https://www.shop.example/p/1',
+              title: 'Walnut desk lamp',
+              price: 3500,
+              currency: 'GBP',
+            ),
+          ],
+        },
+        extra: [
+          shopFactsProvider.overrideWith(
+            (ref, home) async => ShopFacts(
+              domain: registrableDomain(Uri.parse(home).host),
+              registered: 2001,
+              registryChecked: true,
+              secure: true,
+              pageRead: true,
+              company: 'Example Retail Ltd',
+              search: '${home}search?q={q}',
+            ),
+          ),
+        ],
+      );
+      await app.go('Shops');
+      await app.waitFor(find.text('Shops like yours'));
+      final first = find.byWidgetPredicate((w) => w is ListTile && '${w.key}'.contains('similar-')).first;
+      final name = ((tester.widget<ListTile>(first).title! as Text).data)!;
+
+      await app.tap(find.descendant(of: first, matching: find.byTooltip('Check this shop')));
+      await app.waitFor(find.text('2001'));
+      expect(find.text('Example Retail Ltd'), findsOneWidget);
+      expect(find.text('Read what buyers say'), findsOneWidget);
+      await app.tapText('Close');
+
+      await app.tap(find.descendant(of: first, matching: find.byTooltip('Add to my search')));
+      await app.waitFor(find.text('You added it'));
+      expect(find.byTooltip('Stop searching $name'), findsOneWidget);
+      expect(
+        find.descendant(of: find.byType(ListTile), matching: find.text(name)),
+        findsNothing,
+        reason: 'no longer suggested',
+      );
+      await app.tap(find.byTooltip('Stop searching $name'));
+      expect(find.text('You added it'), findsNothing);
+
+      await app.tapText('Add a shop to search');
+      await tester.enterText(
+        find.byType(TextField).at(0),
+        'https://www.shop.example/search?q=desk+lamp&sort=new',
+      );
+      await tester.enterText(find.byType(TextField).at(1), 'chair');
+      await app.tap(find.widgetWithText(FilledButton, 'Add'));
+      expect(find.textContaining('Those words are not in that address'), findsOneWidget);
+      await tester.enterText(find.byType(TextField).at(1), 'Desk lamp');
+      await app.tap(find.widgetWithText(FilledButton, 'Add'));
+      await app.waitFor(find.byTooltip('Stop searching Shop'));
+
+      await app.go('Search');
+      await tester.enterText(find.byType(TextField).first, 'desk lamp');
+      await app.tap(find.widgetWithText(FilledButton, 'Search'));
+      await app.waitFor(find.text('Walnut desk lamp'));
+      expect(find.text('Walnut desk lamp'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    },
+  );
 
   testWidgets('"Check now" reads the page again and records the new price', (tester) async {
     final app = AppHarness(tester)..desktop();
@@ -301,4 +465,15 @@ class _Count implements AlertSender {
 
   @override
   Future<void> send(VaultItem item, List<AlertEvent> alerts) async => sent.add(alerts.length);
+}
+
+/// A 1×1 picture.
+final _png = Uint8List.fromList(img.encodePng(img.Image(width: 1, height: 1)));
+
+/// Sees the same thing in every picture.
+class _OnePicture implements PictureEmbedder {
+  const _OnePicture(this.v);
+  final Float32List v;
+  @override
+  Future<List<Float32List?>> embed(List<Uint8List> pictures) async => [for (final _ in pictures) v];
 }

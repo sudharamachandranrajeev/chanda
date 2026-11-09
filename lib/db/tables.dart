@@ -149,6 +149,26 @@ class ChandaMatches extends Table with SyncedRow {
   TextColumn get verdict => text()();
 }
 
+/// The user's star ratings, of saved items and of things seen in searches,
+/// kept against the product page address. Synced: the taste model is
+/// rebuilt from them on each device.
+@DataClassName('Rating')
+class ChandaRatings extends Table with SyncedRow {
+  TextColumn get url => text()();
+  TextColumn get title => text()();
+  TextColumn get shop => text().withDefault(const Constant(''))();
+  TextColumn get image => text().withDefault(const Constant(''))();
+  IntColumn get price => integer().nullable()();
+  TextColumn get currency => text().withDefault(const Constant(''))();
+
+  /// 1-5.
+  IntColumn get stars => integer()();
+  TextColumn get at => text()();
+
+  /// rated | not-for-me
+  TextColumn get source => text().withDefault(const Constant('rated'))();
+}
+
 class Prefs extends Table with SyncedRow, PrefColumns {}
 
 @DataClassName('OutboxItem')

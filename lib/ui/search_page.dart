@@ -13,9 +13,13 @@ import '../domain/offers.dart';
 import '../domain/query.dart';
 import '../domain/shop_search.dart';
 import '../domain/shops.dart';
+import '../domain/similar_shops.dart';
+import '../domain/taste.dart';
+import '../domain/taste_store.dart';
 import 'browser_page.dart';
 import 'item_page.dart';
 import 'look.dart';
+import 'photo_search.dart';
 import 'vault_page.dart' show ItemCard;
 
 /// One search over the vault and the shops. The words are read into chips
@@ -23,7 +27,10 @@ import 'vault_page.dart' show ItemCard;
 /// that allow it are read in the background, three at a time, and the
 /// others open in the browser for the user to add their results.
 class SearchPage extends ConsumerStatefulWidget {
-  const SearchPage({super.key});
+  const SearchPage({super.key, this.initial});
+
+  /// Words to search for straight away (from a photo's labels).
+  final String? initial;
 
   @override
   ConsumerState<SearchPage> createState() => _SearchPageState();
@@ -38,6 +45,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   /// Offers found before for these words, shown until the shops answer.
   var _before = const <Offer>[];
   StreamSubscription<ShopResult>? _sub;
+  var _sort = ResultSort.best;
+
+  /// The offers in taste order, for the offers they were worked out for.
+  (String, List<Offer>)? _tasteOrder;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initial case final w?) {
+      _box.text = w;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _submit(w));
+    }
+  }
 
   @override
   void dispose() {
@@ -70,6 +90,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       ];
     });
     if (q.words.trim().isEmpty) return;
+    await ref.read(myShopsProvider.future).catchError((_) => const <SeedShop>[]);
+    if (!mounted || _q != q) return;
     _sub = searchShops(ref.read(searcherProvider), q, shops).listen((r) async {
       if (r.state == SearchState.done) await local.keepOffers(r.offers, q.raw);
       if (mounted && _q == q) setState(() => _results[r.shop.id] = r);
@@ -89,6 +111,30 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     }
   }
 
+  /// [offers] in the chosen order. Taste only reorders: the same offers,
+  /// worked out in the background and shown when ready.
+  List<Offer> _ordered(List<Offer> offers) {
+    switch (_sort) {
+      case ResultSort.best:
+        return offers;
+      case ResultSort.price:
+        return [...offers]..sort((a, b) => a.price.compareTo(b.price));
+      case ResultSort.forYou:
+        final key = offers.map((o) => o.id).join('|');
+        if (_tasteOrder case (final k, final order) when k == key) return order;
+        ref.read(tasteProvider.future).then((t) => t.reorder(offers, Thing.ofFound)).then((order) {
+          if (mounted) setState(() => _tasteOrder = (key, order));
+        });
+        return offers;
+    }
+  }
+
+  Future<void> _byPhoto() async {
+    final bytes = await pickPhoto(context);
+    if (bytes == null || !mounted) return;
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => PhotoSearchPage(bytes)));
+  }
+
   void _add(String words) {
     _box.text = '${_box.text.trim()} $words';
     _submit(_box.text);
@@ -102,12 +148,14 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       for (final r in _results.values)
         for (final o in r.offers) o.id: o,
     };
-    final offers = q == null ? const <Offer>[] : rankOffers(q, found.values);
+    final offers = q == null ? const <Offer>[] : _ordered(rankOffers(q, found.values));
+    final tasteOn = ref.watch(tasteOnProvider).value ?? false;
     return PageScaffold(
       title: 'Search',
       banner: 'page.search',
       children: [
-        _SearchBox(controller: _box, onSubmit: _submit),
+        _SearchBox(controller: _box, onSubmit: _submit, onPhoto: _byPhoto),
+        if (q == null) const _ForYou(),
         if (q != null && q.facets.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -131,8 +179,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           _ShopStates(results: _results, onOpen: _open),
           if (_vault.isNotEmpty) ...[
             const SizedBox(height: 16),
-            _Heading('In your vault', '${_vault.length}'),
-            _Grid(
+            ResultHeading('In your vault', '${_vault.length}'),
+            ResultGrid(
               children: [
                 for (final i in _vault)
                   SizedBox(
@@ -147,7 +195,21 @@ class _SearchPageState extends ConsumerState<SearchPage> {
             ),
           ],
           const SizedBox(height: 16),
-          _Heading('At the shops', offers.isEmpty ? '' : '${offers.length}'),
+          ResultHeading('At the shops', offers.isEmpty ? '' : '${offers.length}'),
+          if (offers.length > 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: SegmentedButton<ResultSort>(
+                showSelectedIcon: false,
+                segments: [
+                  const ButtonSegment(value: ResultSort.best, label: Text('Best match')),
+                  if (tasteOn) const ButtonSegment(value: ResultSort.forYou, label: Text('For you')),
+                  const ButtonSegment(value: ResultSort.price, label: Text('Price')),
+                ],
+                selected: {_sort == ResultSort.forYou && !tasteOn ? ResultSort.best : _sort},
+                onSelectionChanged: (v) => setState(() => _sort = v.single),
+              ),
+            ),
           if (offers.isEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -159,12 +221,94 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               ),
             )
           else
-            _Grid(children: [for (final o in offers) SizedBox(height: 300, child: OfferCard(o))]),
+            ResultGrid(children: [for (final o in offers) SizedBox(height: 300, child: OfferCard(o))]),
         ],
       ],
     );
   }
 }
+
+/// "For you": offers found in earlier searches that suit the user's
+/// ratings, each saying why, with "Not for me" and a way to stop a word
+/// counting. Shown before a search; hidden until there is something to show.
+class _ForYou extends ConsumerWidget {
+  const _ForYou();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(forYouProvider).value ?? const [];
+    if (all.isEmpty) return const SizedBox.shrink();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 20),
+        const ResultHeading('For you', ''),
+        Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Text(
+            'From what you rated and saved, among things your searches found.',
+            style: TextStyle(color: muted(context)),
+          ),
+        ),
+        ResultGrid(
+          children: [
+            for (final (o, why) in all)
+              SizedBox(height: 320, child: OfferCard(offerOf(o), footer: _Why(o, why))),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _Why extends ConsumerWidget {
+  const _Why(this.offer, this.why);
+  final ShopOffer offer;
+  final Suggestion why;
+
+  String get _reason {
+    if (why.explore) return 'Something different';
+    if (why.because case final b?) return 'Like ${b.title}';
+    if (why.liked case final a?) return 'You like ${attributeWords(a)}';
+    return 'Close to what you like';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    Future<void> write(Future<void> Function(TasteStore t) f) async {
+      await f(await ref.read(tasteProvider.future));
+      ref.read(revisionProvider.notifier).bump();
+      ref.read(syncProvider.notifier).soon();
+    }
+
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            _reason,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: muted(context)),
+          ),
+        ),
+        PopupMenuButton<String>(
+          tooltip: 'Why this, and less like it',
+          icon: const Icon(Icons.more_horiz, size: 18),
+          onSelected: (v) =>
+              write((t) => v == 'no' ? t.rateOffer(offer, 1, source: 'not-for-me') : t.mute(why.liked!)),
+          itemBuilder: (_) => [
+            const PopupMenuItem(value: 'no', child: Text('Not for me')),
+            if (why.liked case final a?)
+              PopupMenuItem(value: 'mute', child: Text('Stop counting "${attributeWords(a)}"')),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// How shop results are ordered. Taste only reorders what matched.
+enum ResultSort { best, forYou, price }
 
 IconData _facetIcon(String kind) => switch (kind) {
   'budget' => Icons.payments_outlined,
@@ -175,9 +319,10 @@ IconData _facetIcon(String kind) => switch (kind) {
 };
 
 class _SearchBox extends StatelessWidget {
-  const _SearchBox({required this.controller, required this.onSubmit});
+  const _SearchBox({required this.controller, required this.onSubmit, required this.onPhoto});
   final TextEditingController controller;
   final ValueChanged<String> onSubmit;
+  final VoidCallback onPhoto;
 
   @override
   Widget build(BuildContext context) => Extruded(
@@ -200,6 +345,11 @@ class _SearchBox extends StatelessWidget {
               filled: false,
             ),
           ),
+        ),
+        IconButton(
+          tooltip: 'Search with a photo',
+          icon: const Icon(Icons.photo_camera_outlined),
+          onPressed: onPhoto,
         ),
         FilledButton(onPressed: () => onSubmit(controller.text), child: const Text('Search')),
       ],
@@ -287,8 +437,9 @@ class _ShopStates extends StatelessWidget {
   );
 }
 
-class _Heading extends StatelessWidget {
-  const _Heading(this.title, this.count);
+/// A results heading with a count.
+class ResultHeading extends StatelessWidget {
+  const ResultHeading(this.title, this.count, {super.key});
   final String title;
   final String count;
 
@@ -304,8 +455,9 @@ class _Heading extends StatelessWidget {
   );
 }
 
-class _Grid extends StatelessWidget {
-  const _Grid({required this.children});
+/// Cards in as many columns as fit.
+class ResultGrid extends StatelessWidget {
+  const ResultGrid({super.key, required this.children});
   final List<Widget> children;
 
   @override

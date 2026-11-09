@@ -118,6 +118,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                           const SizedBox(height: 12),
                           _ListChips(view: view),
                           _TagChips(view: view),
+                          if (view.query.isEmpty && view.listId == null && view.tag == null)
+                            const _RateCard(),
                         ],
                       ),
                     ),
@@ -425,6 +427,111 @@ class _TagChips extends ConsumerWidget {
                   onSelected: (on) => set(view.copyWith(tag: () => on ? t : null)),
                 ),
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Rate a few?": up to three saved things to star, so suggestions learn
+/// what the user likes. At most once a session, never while taste is off,
+/// and paused for a week after three "Not now"s in a row.
+class _RateCard extends ConsumerStatefulWidget {
+  const _RateCard();
+
+  @override
+  ConsumerState<_RateCard> createState() => _RateCardState();
+}
+
+class _RateCardState extends ConsumerState<_RateCard> {
+  var _items = const <VaultItem>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (ref.read(ratePromptShownProvider)) return;
+    final t = await ref.read(tasteProvider.future);
+    if (!await t.on() || !await t.mayAskToRate()) return;
+    final items = await t.toRate();
+    if (!mounted || items.isEmpty) return;
+    setState(() => _items = items);
+  }
+
+  void _done() {
+    ref.read(ratePromptShownProvider.notifier).shown();
+    setState(() => _items = const []);
+  }
+
+  Future<void> _rate(VaultItem i, int? n) async {
+    if (n == null) return;
+    final t = await ref.read(tasteProvider.future);
+    await t.rateItem(i, n);
+    await t.ratedFromPrompt();
+    ref.read(revisionProvider.notifier).bump();
+    ref.read(syncProvider.notifier).soon();
+    if (!mounted) return;
+    final left = [..._items]..remove(i);
+    if (left.isEmpty) {
+      _done();
+    } else {
+      setState(() => _items = left);
+    }
+  }
+
+  Future<void> _notNow() async {
+    await (await ref.read(tasteProvider.future)).skippedRating();
+    if (mounted) _done();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_items.isEmpty) return const SizedBox.shrink();
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Extruded(
+        depth: 0.4,
+        padding: const EdgeInsets.fromLTRB(14, 12, 8, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Rate a few?', style: text.titleSmall),
+            Text(
+              'Stars teach Chanda what you like, on this device, so it can suggest things and sort searches '
+              'for you.',
+              style: text.bodySmall?.copyWith(color: muted(context)),
+            ),
+            for (final i in _items)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Row(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: SizedBox(width: 44, height: 44, child: ItemImage(i)),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(i.title, maxLines: 1, overflow: TextOverflow.ellipsis),
+                          Stars(value: null, size: 22, onChanged: (n) => _rate(i, n)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(onPressed: _notNow, child: const Text('Not now')),
+            ),
           ],
         ),
       ),

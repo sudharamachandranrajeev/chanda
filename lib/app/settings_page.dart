@@ -1,31 +1,57 @@
+import 'dart:io';
+
 import 'package:brahma_core/brahma_core.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nithya/nithya.dart';
 
 import '../domain/ai_reader.dart';
-import '../domain/embeddings.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
+import '../domain/taste.dart';
+import '../domain/taste_store.dart';
 import '../domain/vault.dart';
 import '../ui/common.dart';
 import '../ui/look.dart';
 import 'background.dart';
 import 'providers.dart';
 
+String _smartAbout(int mb) =>
+    'Search finds words by default. Smarter search also finds things by meaning: "specs" finds reading '
+    'glasses, and a search in one language finds titles in another. It needs a $mb MB download, once, and then '
+    'runs on this device: nothing you search for is sent anywhere.';
+
+String _picturesAbout(int mb) =>
+    'Search with a photo, find saved things and offers that look alike, and let looks count in your '
+    'suggestions. It needs a $mb MB download, once, and then runs on this device: your photos are not sent '
+    'anywhere.';
+
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context) => const PageScaffold(
+  Widget build(BuildContext context) => PageScaffold(
     title: 'Settings',
     children: [
-      _TrustCard(),
+      const _TrustCard(),
       _LookCard(),
       _MoneyCard(),
       _AlertsCard(),
       _BackgroundCard(),
-      _SmartSearchCard(),
+      _ModelCard(
+        provider: smartSearchProvider,
+        title: 'Smarter search',
+        switchLabel: 'Search by meaning',
+        about: _smartAbout,
+      ),
+      _ModelCard(
+        provider: picturesProvider,
+        title: 'Picture search',
+        switchLabel: 'Use pictures',
+        about: _picturesAbout,
+      ),
+      _TasteCard(),
       _AiCard(),
       AppLockCard(),
       HintsCard(),
@@ -35,7 +61,11 @@ class SettingsPage extends StatelessWidget {
             'Chanda loads a shop\'s pages only to show them to you, read a product you save, and check saved '
             'prices. Background checks say they come from Chanda. It fetches exchange rates from the European '
             'Central Bank\'s reference feed (frankfurter.dev) and talks to your sync server only if you sign in. '
-            'Smarter search downloads its model from Hugging Face once, if you ask for it. '
+            'Smarter search and picture search download their models from Hugging Face once, if you ask for '
+            'them. With picture search on, Chanda fetches the pictures of things you saved or found to compare '
+            'their looks, saying it is Chanda. '
+            'When you check a shop, Chanda reads its home page and asks the registry for its web address, '
+            'found through IANA\'s public list, when the address was first registered. '
             'If you add your own AI key, a product page\'s text goes to Anthropic only when you press Read with AI. '
             'Shop logins stay in the shop\'s own pages: Chanda never sees or stores your passwords or card '
             'details, never reads payment pages and never checks out for you.',
@@ -531,35 +561,40 @@ class _AiCard extends ConsumerWidget {
   }
 }
 
-/// The optional meaning model for search.
-class _SmartSearchCard extends ConsumerWidget {
-  const _SmartSearchCard();
+/// An optional downloaded model: what it does, its download and its switch.
+class _ModelCard extends ConsumerWidget {
+  const _ModelCard({
+    required this.provider,
+    required this.title,
+    required this.about,
+    required this.switchLabel,
+  });
+  final AsyncNotifierProvider<DownloadedModel, ModelState> provider;
+  final String title;
+  final String Function(int mb) about;
+  final String switchLabel;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final s = ref.watch(smartSearchProvider).value ?? const SmartSearch();
-    final notifier = ref.read(smartSearchProvider.notifier);
-    final mb = (modelBytes / 1e6).round();
+    final s = ref.watch(provider).value ?? const ModelState();
+    final notifier = ref.read(provider.notifier);
+    final bytes = notifier.bytes;
+    final mb = (bytes / 1e6).round();
     return SectionCard(
-      title: 'Smarter search',
+      title: title,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Search finds words by default. Smarter search also finds things by meaning: "specs" finds reading '
-            'glasses, and a search in one language finds titles in another. It needs a $mb MB download, once, '
-            'and then runs on this device: nothing you search for is sent anywhere.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          Text(about(mb), style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 12),
           if (s.downloading) ...[
-            LinearProgressIndicator(value: s.done! / modelBytes),
+            LinearProgressIndicator(value: s.done! / bytes),
             const SizedBox(height: 6),
             Text('Downloading… ${(s.done! / 1e6).round()} of $mb MB'),
           ] else if (s.present) ...[
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('Search by meaning'),
+              title: Text(switchLabel),
               value: s.on,
               onChanged: notifier.setOn,
             ),
@@ -586,6 +621,133 @@ class _SmartSearchCard extends ConsumerWidget {
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Suggestions from the user's ratings: on or off, muted attributes,
+/// export, import and reset.
+class _TasteCard extends ConsumerWidget {
+  const _TasteCard();
+
+  Future<void> _export(BuildContext context, WidgetRef ref) async {
+    final json = await (await ref.read(tasteProvider.future)).export();
+    if (Platform.isAndroid) {
+      await copyText(json);
+      if (context.mounted) {
+        showMessage(context, 'Your ratings are copied. Paste them into a note or a file to keep.');
+      }
+      return;
+    }
+    final where = await getSaveLocation(
+      suggestedName: 'chanda-taste.json',
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'JSON', extensions: ['json']),
+      ],
+    );
+    if (where == null) return;
+    await File(where.path).writeAsString(json);
+    if (context.mounted) showMessage(context, 'Saved to ${where.path}');
+  }
+
+  Future<void> _import(BuildContext context, WidgetRef ref) async {
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'JSON', extensions: ['json'], mimeTypes: ['application/json']),
+      ],
+    );
+    if (file == null) return;
+    try {
+      if (await file.length() > 5 << 20) {
+        throw const FormatException('That file is too big to be a taste export.');
+      }
+      final n = await (await ref.read(tasteProvider.future)).import(await file.readAsString());
+      ref.read(revisionProvider.notifier).bump();
+      ref.read(syncProvider.notifier).soon();
+      if (context.mounted) showMessage(context, n == 1 ? '1 rating added.' : '$n ratings added.');
+    } on FormatException catch (e) {
+      if (context.mounted) showMessage(context, e.message);
+    }
+  }
+
+  Future<void> _reset(BuildContext context, WidgetRef ref) async {
+    final ok = await confirm(
+      context,
+      title: 'Forget your ratings?',
+      message: 'Every star rating and muted word is deleted on all your devices. Saved things stay.',
+      action: 'Forget',
+      destructive: true,
+    );
+    if (!ok) return;
+    await (await ref.read(tasteProvider.future)).reset();
+    ref.read(revisionProvider.notifier).bump();
+    ref.read(syncProvider.notifier).soon();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(tasteOnProvider).value ?? true;
+    final n = ref.watch(ratingsProvider).value?.length ?? 0;
+    final muted = ref.watch(mutedProvider).value ?? const <String>{};
+    Future<void> write(Future<void> Function(TasteStore t) f) async {
+      await f(await ref.read(tasteProvider.future));
+      ref.read(revisionProvider.notifier).bump();
+      ref.read(syncProvider.notifier).soon();
+    }
+
+    return SectionCard(
+      title: 'Your taste',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Chanda learns what you like from your star ratings and what you save, on this device. It uses '
+            'only those: never your age, gender or anything else about you. Suggestions only reorder what you '
+            'searched for; they never add things you did not ask for.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Suggest and sort by my taste'),
+            subtitle: Text(n == 1 ? '1 rating so far' : '$n ratings so far'),
+            value: on,
+            onChanged: (v) => write((t) => t.setOn(v)),
+          ),
+          if (muted.isNotEmpty) ...[
+            Text('Not counted (tap to count again)', style: Theme.of(context).textTheme.labelMedium),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final a in muted.toList()..sort())
+                  InputChip(label: Text(attributeWords(a)), onDeleted: () => write((t) => t.unmute(a))),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton.icon(
+                icon: const Icon(Icons.upload_outlined),
+                label: const Text('Export'),
+                onPressed: () => _export(context, ref),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('Import'),
+                onPressed: () => _import(context, ref),
+              ),
+              TextButton.icon(
+                icon: const Icon(Icons.restart_alt),
+                label: const Text('Forget ratings'),
+                onPressed: n == 0 && muted.isEmpty ? null : () => _reset(context, ref),
+              ),
+            ],
+          ),
         ],
       ),
     );

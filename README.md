@@ -35,6 +35,12 @@ Chanda checks those only while it is open.
   Type "black shirt under £30" and Chanda turns the colour and budget into filters you can tap off.
 - ⚖️ **The best deal, with the reason** – Chanda finds the same product at other shops, asks you when it is
   not sure, and names the best one: "£4.20 less delivered than the next, rated 4.5 by 300".
+- 📷 **Search with a photo** – take or pick a photo and Chanda names what it shows, finds things that look
+  like it, and searches the shops for it. It runs on your device, with an optional download.
+- ⭐ **Suggestions that learn your taste** – rate things with stars and *For you* suggests more like them,
+  each with the reason. Turn it off, export it, or forget it at any time.
+- 🏬 **Shops like yours** – shops that sell what you save at the prices you pay, with the facts they publish
+  about themselves, and a button to add them to your search.
 - 🧠 **Smarter search, if you want it** – an optional download that finds things by meaning ("specs" finds
   reading glasses). It runs on your device.
 - 🧾 **What you will really pay** – the delivered total in pounds, with UK VAT and import duty for
@@ -82,13 +88,16 @@ flowchart LR
 ```
 
 - Chanda reads what the page itself says: the shop's product details first, then what is drawn on screen.
-  On Android, if the page gives no price at all, Chanda reads it off the screen, on the phone itself.
+  If the page gives no price at all, Chanda reads it off the screen with its own built-in text recognition,
+  on your device. No AI plan or account is needed for this.
 - If you add your own Anthropic API key in Settings, a **Read with AI** button can fill in a name and price
   Chanda was unsure of. You always check them before saving.
 - Some shops only show search results to a person. For those, Chanda opens the search in its browser and
   you press **Add these results**.
 - A shop that shows a "prove you are human" check is never worked around. Chanda asks you to open it instead.
 - Checks are spread out and slow, one page at a time, so no shop is hammered.
+- Your star ratings, and what you save and buy, make a small taste model on your device. It suggests and
+  sorts by what you like. It never uses your age or gender.
 
 ## 🔒 Your data
 
@@ -99,6 +108,11 @@ flowchart LR
   stay on your device.
 - Read with AI sends a product page's text to Anthropic, with your own key, only when you press the button.
   Sign-in and payment pages are never sent. Your key stays on this device and is never synced.
+- Picture search downloads its model once, from Hugging Face, only if you ask. Your photos stay on your
+  device. To compare looks, Chanda fetches the pictures of things you saved or found, saying it is Chanda.
+- When you check a shop, Chanda reads its home page and asks the registry for its web address when it was
+  first registered.
+- Your ratings sync with your vault. Settings can export them to a file, or forget them all.
 - Delete an item and its saved pictures go with it.
 
 ## ❓ FAQ
@@ -108,6 +122,21 @@ flowchart LR
 
 That shop showed a check page or hid its price from an automatic visit. Open it from the Shops page,
 finish any check it shows, and press **Update price**.
+</details>
+
+<details>
+<summary>Why does Chanda suggest those shops?</summary>
+
+They sell the kinds of things you save, at about the prices you pay. They come from a short list kept
+with Chanda, and no shop pays to be on it. Press the check button to see what a shop publishes about
+itself before you buy there.
+</details>
+
+<details>
+<summary>Do I need an AI plan to read prices off the screen?</summary>
+
+No. Chanda has its own text recognition built in and it runs on your device. Read with AI is only an
+extra, for when you add your own key.
 </details>
 
 <details>
@@ -127,7 +156,9 @@ No. It removes tracking and affiliate tags from the links you save, and never ad
 4. Run the tests with `flutter test` (the browser-script tests need Chromium and skip without it).
 5. To test the smarter-search model itself, download it into a folder and run
    `flutter test integration_test/embedder_test.dart -d linux --dart-define=MODEL_DIR=/that/folder`.
-6. For a phone, build with `flutter build apk --split-per-abi`: one APK per processor type is much smaller.
+6. To test the picture model, download it into a folder and run
+   `flutter test integration_test/pictures_test.dart -d linux --dart-define=PICTURE_DIR=/that/folder`.
+7. For a phone, build with `flutter build apk --split-per-abi`: one APK per processor type is much smaller.
 
 `packages/flutter_inappwebview_linux` is a patched copy of the Linux web view plugin; its README lists
 the changes.

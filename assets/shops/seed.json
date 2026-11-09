@@ -1,0 +1,722 @@
+{
+ "checked": "2026-11-09",
+ "about": "Curated shops for \"similar shops\". search: the address the shop declares on its home page (schema.org SearchAction or OpenSearch), null where it declares none.",
+ "shops": [
+  {
+   "domain": "ebay.co.uk",
+   "name": "eBay",
+   "home": "https://www.ebay.co.uk/",
+   "groups": [
+    "general",
+    "tech",
+    "home",
+    "clothes"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "etsy.com",
+   "name": "Etsy",
+   "home": "https://www.etsy.com/uk/",
+   "groups": [
+    "home",
+    "accessories",
+    "clothes",
+    "gifts"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "argos.co.uk",
+   "name": "Argos",
+   "home": "https://www.argos.co.uk/",
+   "groups": [
+    "general",
+    "home",
+    "tech",
+    "toys"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "johnlewis.com",
+   "name": "John Lewis",
+   "home": "https://www.johnlewis.com/",
+   "groups": [
+    "home",
+    "tech",
+    "clothes",
+    "beauty"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.johnlewis.com/search?search-term={q}"
+  },
+  {
+   "domain": "very.co.uk",
+   "name": "Very",
+   "home": "https://www.very.co.uk/",
+   "groups": [
+    "general",
+    "clothes",
+    "tech",
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "marksandspencer.com",
+   "name": "M&S",
+   "home": "https://www.marksandspencer.com/",
+   "groups": [
+    "clothes",
+    "home",
+    "beauty"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.marksandspencer.com/search?searchTerm={q}&intid=normal&langId=-24&storeId=10151&catalogId=10051&searchType=normal"
+  },
+  {
+   "domain": "next.co.uk",
+   "name": "Next",
+   "home": "https://www.next.co.uk/",
+   "groups": [
+    "clothes",
+    "shoes",
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "asos.com",
+   "name": "ASOS",
+   "home": "https://www.asos.com/",
+   "groups": [
+    "clothes",
+    "shoes",
+    "accessories"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "boohoo.com",
+   "name": "boohoo",
+   "home": "https://www.boohoo.com/",
+   "groups": [
+    "clothes"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.boohoo.com/search?text={q}"
+  },
+  {
+   "domain": "prettylittlething.com",
+   "name": "PrettyLittleThing",
+   "home": "https://www.prettylittlething.com/",
+   "groups": [
+    "clothes"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.prettylittlething.com/search?text={q}"
+  },
+  {
+   "domain": "hm.com",
+   "name": "H&M",
+   "home": "https://www2.hm.com/en_gb/",
+   "groups": [
+    "clothes",
+    "home"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "zara.com",
+   "name": "Zara",
+   "home": "https://www.zara.com/uk/",
+   "groups": [
+    "clothes",
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "uniqlo.com",
+   "name": "Uniqlo",
+   "home": "https://www.uniqlo.com/uk/en/",
+   "groups": [
+    "clothes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "mango.com",
+   "name": "Mango",
+   "home": "https://shop.mango.com/gb",
+   "groups": [
+    "clothes",
+    "accessories"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "riverisland.com",
+   "name": "River Island",
+   "home": "https://www.riverisland.com/",
+   "groups": [
+    "clothes",
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.riverisland.com/search?keyword={q}"
+  },
+  {
+   "domain": "newlook.com",
+   "name": "New Look",
+   "home": "https://www.newlook.com/uk",
+   "groups": [
+    "clothes",
+    "shoes"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "selfridges.com",
+   "name": "Selfridges",
+   "home": "https://www.selfridges.com/GB/en/",
+   "groups": [
+    "clothes",
+    "beauty",
+    "accessories"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.selfridges.com/GB/en/cat/?freeText={q}&srch=Y&sug=Y"
+  },
+  {
+   "domain": "endclothing.com",
+   "name": "END.",
+   "home": "https://www.endclothing.com/",
+   "groups": [
+    "clothes",
+    "shoes"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.endclothing.com/search?q={q}"
+  },
+  {
+   "domain": "schuh.co.uk",
+   "name": "schuh",
+   "home": "https://www.schuh.co.uk/",
+   "groups": [
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "office.co.uk",
+   "name": "Office",
+   "home": "https://www.office.co.uk/",
+   "groups": [
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.office.co.uk/view/search?search={q}"
+  },
+  {
+   "domain": "jdsports.co.uk",
+   "name": "JD Sports",
+   "home": "https://www.jdsports.co.uk/",
+   "groups": [
+    "shoes",
+    "sport",
+    "clothes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.jdsports.co.uk/search/{q}/"
+  },
+  {
+   "domain": "sportsdirect.com",
+   "name": "Sports Direct",
+   "home": "https://www.sportsdirect.com/",
+   "groups": [
+    "sport",
+    "shoes",
+    "clothes"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "decathlon.co.uk",
+   "name": "Decathlon",
+   "home": "https://www.decathlon.co.uk/",
+   "groups": [
+    "sport"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "nike.com",
+   "name": "Nike",
+   "home": "https://www.nike.com/gb/",
+   "groups": [
+    "sport",
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "adidas.co.uk",
+   "name": "adidas",
+   "home": "https://www.adidas.co.uk/",
+   "groups": [
+    "sport",
+    "shoes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "currys.co.uk",
+   "name": "Currys",
+   "home": "https://www.currys.co.uk/",
+   "groups": [
+    "tech"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "scan.co.uk",
+   "name": "Scan",
+   "home": "https://www.scan.co.uk/",
+   "groups": [
+    "tech"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.scan.co.uk/search?q={q}"
+  },
+  {
+   "domain": "overclockers.co.uk",
+   "name": "Overclockers UK",
+   "home": "https://www.overclockers.co.uk/",
+   "groups": [
+    "tech"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "ao.com",
+   "name": "AO",
+   "home": "https://ao.com/",
+   "groups": [
+    "tech",
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://ao.com/l/search/101/99/?search={q}"
+  },
+  {
+   "domain": "richersounds.com",
+   "name": "Richer Sounds",
+   "home": "https://www.richersounds.com/",
+   "groups": [
+    "tech"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "backmarket.co.uk",
+   "name": "Back Market",
+   "home": "https://www.backmarket.co.uk/",
+   "groups": [
+    "tech"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "ikea.com",
+   "name": "IKEA",
+   "home": "https://www.ikea.com/gb/en/",
+   "groups": [
+    "home"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "wayfair.co.uk",
+   "name": "Wayfair",
+   "home": "https://www.wayfair.co.uk/",
+   "groups": [
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "dunelm.com",
+   "name": "Dunelm",
+   "home": "https://www.dunelm.com/",
+   "groups": [
+    "home"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.dunelm.com/search?q={q}"
+  },
+  {
+   "domain": "habitat.co.uk",
+   "name": "Habitat",
+   "home": "https://www.habitat.co.uk/",
+   "groups": [
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "lakeland.co.uk",
+   "name": "Lakeland",
+   "home": "https://www.lakeland.co.uk/",
+   "groups": [
+    "home"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.lakeland.co.uk/search?q={q}"
+  },
+  {
+   "domain": "robertdyas.co.uk",
+   "name": "Robert Dyas",
+   "home": "https://www.robertdyas.co.uk/",
+   "groups": [
+    "home",
+    "garden"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "therange.co.uk",
+   "name": "The Range",
+   "home": "https://www.therange.co.uk/",
+   "groups": [
+    "home",
+    "garden"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "diy.com",
+   "name": "B&Q",
+   "home": "https://www.diy.com/",
+   "groups": [
+    "home",
+    "garden",
+    "tools"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "screwfix.com",
+   "name": "Screwfix",
+   "home": "https://www.screwfix.com/",
+   "groups": [
+    "tools"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.screwfix.com/search?search={q}"
+  },
+  {
+   "domain": "toolstation.com",
+   "name": "Toolstation",
+   "home": "https://www.toolstation.com/",
+   "groups": [
+    "tools"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.toolstation.com/search?q={q}"
+  },
+  {
+   "domain": "boots.com",
+   "name": "Boots",
+   "home": "https://www.boots.com/",
+   "groups": [
+    "beauty"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "superdrug.com",
+   "name": "Superdrug",
+   "home": "https://www.superdrug.com/",
+   "groups": [
+    "beauty"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.superdrug.com/search/{q}"
+  },
+  {
+   "domain": "lookfantastic.com",
+   "name": "LOOKFANTASTIC",
+   "home": "https://www.lookfantastic.com/",
+   "groups": [
+    "beauty"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "cultbeauty.co.uk",
+   "name": "Cult Beauty",
+   "home": "https://www.cultbeauty.co.uk/",
+   "groups": [
+    "beauty"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "smythstoys.com",
+   "name": "Smyths Toys",
+   "home": "https://www.smythstoys.com/",
+   "groups": [
+    "toys"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "hamleys.com",
+   "name": "Hamleys",
+   "home": "https://www.hamleys.com/",
+   "groups": [
+    "toys"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "waterstones.com",
+   "name": "Waterstones",
+   "home": "https://www.waterstones.com/",
+   "groups": [
+    "books"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "blackwells.co.uk",
+   "name": "Blackwell's",
+   "home": "https://www.blackwells.co.uk/",
+   "groups": [
+    "books"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "petsathome.com",
+   "name": "Pets at Home",
+   "home": "https://www.petsathome.com/",
+   "groups": [
+    "pets"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "zooplus.co.uk",
+   "name": "zooplus",
+   "home": "https://www.zooplus.co.uk/",
+   "groups": [
+    "pets"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "glassesdirect.co.uk",
+   "name": "Glasses Direct",
+   "home": "https://www.glassesdirect.co.uk/",
+   "groups": [
+    "glasses"
+   ],
+   "band": "budget",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.glassesdirect.co.uk/?q={q}"
+  },
+  {
+   "domain": "specsavers.co.uk",
+   "name": "Specsavers",
+   "home": "https://www.specsavers.co.uk/",
+   "groups": [
+    "glasses"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  },
+  {
+   "domain": "cotswoldoutdoor.com",
+   "name": "Cotswold Outdoor",
+   "home": "https://www.cotswoldoutdoor.com/",
+   "groups": [
+    "sport",
+    "clothes"
+   ],
+   "band": "premium",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.cotswoldoutdoor.com/lister.html?q={q}"
+  },
+  {
+   "domain": "gooutdoors.co.uk",
+   "name": "GO Outdoors",
+   "home": "https://www.gooutdoors.co.uk/",
+   "groups": [
+    "sport",
+    "clothes"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": "https://www.gooutdoors.co.uk/search?q={q}"
+  },
+  {
+   "domain": "notonthehighstreet.com",
+   "name": "notonthehighstreet",
+   "home": "https://www.notonthehighstreet.com/",
+   "groups": [
+    "gifts",
+    "home",
+    "accessories"
+   ],
+   "band": "mid",
+   "country": "GB",
+   "currency": "GBP",
+   "search": null
+  }
+ ]
+}

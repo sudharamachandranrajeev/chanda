@@ -1,5 +1,28 @@
 # Changelog
 
+## 0.3.0
+
+Search with a photo, suggestions that learn your taste, and shops like the ones you use.
+
+- Built-in text recognition on every device. When a page gives no price as data, Chanda reads it off
+  the screen on the device itself, with no AI plan or account needed. Windows and Linux now do this too.
+- Search with a photo: take one or pick one, and Chanda names what it shows ("blue round glasses"), finds
+  things you saved or found before that look like it, and searches the shops for it. On Android you can
+  also share a photo to Chanda. Needs the picture model, an optional one-time download of about 94 MB.
+  Your photos never leave the device.
+- Rate things with one to five stars, on an item or from the *Rate a few?* card in the vault. Saving and
+  buying count a little too.
+- *For you* on the Search page suggests things found before that suit your taste, each with the reason.
+  *Not for me* and *Stop counting* teach it what you do not want. Results can be sorted *For you*.
+- Taste can be turned off, exported to a file, imported on another device, or forgotten, in Settings.
+  It never uses your age or gender.
+- *Shops like yours* on the Shops page suggests shops that sell what you save, at the prices you pay,
+  from a list kept with Chanda. No shop pays to be on it.
+- *Check this shop* shows what a shop and its domain registry publish: when its web address was first
+  registered, a secure connection, company, contact and returns details, and a link to read what buyers say.
+- *Add to my search* adds a suggested shop, or any shop, to Chanda's search. For a shop that does not say
+  how to search it, paste one of its results pages and the words you searched.
+
 ## 0.2.0
 
 Search, compare, and read prices when a page makes it hard.

@@ -17,8 +17,13 @@ import '../domain/images.dart';
 import '../domain/local_search.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
+import '../domain/picture_index.dart';
+import '../domain/pictures.dart';
 import '../domain/shop_search.dart';
 import '../domain/shops.dart';
+import '../domain/similar_shops.dart';
+import '../domain/taste.dart';
+import '../domain/taste_store.dart';
 import '../domain/vault.dart';
 import '../domain/web_reader.dart';
 import '../ui/hints.dart';
@@ -223,13 +228,14 @@ final localSearchProvider = Provider<LocalSearch>(
   (ref) => LocalSearch(ref.watch(sessionProvider).store, embedder: ref.watch(embedderProvider).value),
 );
 
-/// Where the "Smarter search" model is kept: one folder per pinned revision.
-Future<Directory> modelDir() async =>
-    Directory('${(await getApplicationSupportDirectory()).path}/models/minilm-faf4aa4');
+/// Where a downloaded model is kept: one folder per pinned revision.
+Future<Directory> modelFolder(String name) async =>
+    Directory('${(await getApplicationSupportDirectory()).path}/models/$name');
 
-/// "Smarter search": downloaded or not, on or off, and a download's progress.
-class SmartSearch {
-  const SmartSearch({this.present = false, this.on = false, this.done, this.error});
+/// A downloadable model: downloaded or not, on or off, and a download's
+/// progress.
+class ModelState {
+  const ModelState({this.present = false, this.on = false, this.done, this.error});
   final bool present;
   final bool on;
 
@@ -240,58 +246,196 @@ class SmartSearch {
   bool get downloading => done != null;
 }
 
-class SmartSearchState extends AsyncNotifier<SmartSearch> {
+/// One optional model: its device setting, its files and its folder.
+class DownloadedModel extends AsyncNotifier<ModelState> {
+  DownloadedModel(this.setting, this.files, this.folder);
+  final String setting;
+  final List<ModelFile> files;
+  final String folder;
+
+  int get bytes => bytesOf(files);
+
+  Future<Directory> dir() => modelFolder(folder);
+
   @override
-  Future<SmartSearch> build() async {
+  Future<ModelState> build() async {
     try {
-      final present = modelPresent(await modelDir());
-      final on = await ref.read(sessionProvider).db.localSetting(smartSearchSetting) == 'on';
-      return SmartSearch(present: present, on: on && present);
+      final present = modelPresent(await dir(), files);
+      final on = await ref.read(sessionProvider).db.localSetting(setting) == 'on';
+      return ModelState(present: present, on: on && present);
     } on Object catch (e) {
-      debugPrint('Chanda: smarter search unavailable: $e');
-      return const SmartSearch();
+      debugPrint('Chanda: model $folder unavailable: $e');
+      return const ModelState();
     }
   }
 
   Future<void> download() async {
     if (state.value?.downloading ?? false) return;
-    state = const AsyncData(SmartSearch(done: 0));
+    state = const AsyncData(ModelState(done: 0));
     try {
-      await downloadModel(await modelDir(), progress: (n) => state = AsyncData(SmartSearch(done: n)));
-      await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, 'on');
-      state = const AsyncData(SmartSearch(present: true, on: true));
+      await downloadModel(
+        await dir(),
+        files: files,
+        progress: (n) => state = AsyncData(ModelState(done: n)),
+      );
+      await ref.read(sessionProvider).db.setLocalSetting(setting, 'on');
+      state = const AsyncData(ModelState(present: true, on: true));
     } on Object catch (e) {
-      state = AsyncData(SmartSearch(error: describeError(e)));
+      state = AsyncData(ModelState(error: describeError(e)));
     }
   }
 
   Future<void> setOn(bool on) async {
-    await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, on ? 'on' : 'off');
-    state = AsyncData(SmartSearch(present: state.value?.present ?? false, on: on));
+    await ref.read(sessionProvider).db.setLocalSetting(setting, on ? 'on' : 'off');
+    state = AsyncData(ModelState(present: state.value?.present ?? false, on: on));
   }
 
   Future<void> remove() async {
-    await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, 'off');
-    final dir = await modelDir();
-    if (dir.existsSync()) await dir.delete(recursive: true);
-    state = const AsyncData(SmartSearch());
+    await ref.read(sessionProvider).db.setLocalSetting(setting, 'off');
+    final d = await dir();
+    if (d.existsSync()) await d.delete(recursive: true);
+    state = const AsyncData(ModelState());
   }
 }
 
-final smartSearchProvider = AsyncNotifierProvider<SmartSearchState, SmartSearch>(SmartSearchState.new);
+/// "Smarter search": the meaning model.
+final smartSearchProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
+  () => DownloadedModel(smartSearchSetting, modelFiles, 'minilm-faf4aa4'),
+);
+
+/// "Picture search": the picture model.
+final picturesProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
+  () => DownloadedModel(pictureSetting, pictureFiles, 'fashion-siglip-c56244c'),
+);
 
 /// The meaning model, loaded while smarter search is on.
 final embedderProvider = FutureProvider<Embedder?>((ref) async {
   final s = await ref.watch(smartSearchProvider.selectAsync((s) => s.on));
   if (!s) return null;
   try {
-    final e = await OnnxEmbedder.load(await modelDir());
+    final e = await OnnxEmbedder.load(await ref.read(smartSearchProvider.notifier).dir());
     ref.onDispose(e.close);
     return e;
   } on Object catch (e) {
     debugPrint('Chanda: could not load the search model: $e');
     return null;
   }
+});
+
+/// The picture model, loaded while picture search is on.
+final pictureEmbedderProvider = FutureProvider<PictureEmbedder?>((ref) async {
+  final on = await ref.watch(picturesProvider.selectAsync((s) => s.on));
+  if (!on) return null;
+  try {
+    final e = await OnnxPictureEmbedder.load(await ref.read(picturesProvider.notifier).dir());
+    ref.onDispose(e.close);
+    return e;
+  } on Object catch (e) {
+    debugPrint('Chanda: could not load the picture model: $e');
+    return null;
+  }
+});
+
+/// The shipped picture labels (what a thing is, colours, patterns).
+final pictureLabelsProvider = FutureProvider<List<PictureLabel>>((_) async {
+  try {
+    return await loadLabels();
+  } on Object catch (e) {
+    debugPrint('Chanda: picture labels not loaded: $e');
+    return const [];
+  }
+});
+
+/// Ratings and the taste model's inputs.
+final tasteProvider = FutureProvider<TasteStore>(
+  (ref) async =>
+      TasteStore(ref.watch(sessionProvider).store, labels: await ref.watch(pictureLabelsProvider.future)),
+);
+
+final ratingsProvider = FutureProvider<Map<String, Rating>>((ref) async {
+  ref.watch(revisionProvider);
+  return {for (final r in await (await ref.watch(tasteProvider.future)).ratings()) r.url: r};
+});
+
+final tasteOnProvider = FutureProvider<bool>((ref) async {
+  ref.watch(revisionProvider);
+  return (await ref.watch(tasteProvider.future)).on();
+});
+
+final mutedProvider = FutureProvider<Set<String>>((ref) async {
+  ref.watch(revisionProvider);
+  return (await ref.watch(tasteProvider.future)).muted();
+});
+
+/// Puts the pictures of saved things and of offers found lately through
+/// the picture model, a few dozen at a time, so looks count in suggestions
+/// and photo search. Nothing happens while picture search is off.
+Future<void> indexPictures(Ref ref, {int cap = 24}) async {
+  final e = await ref.read(pictureEmbedderProvider.future);
+  if (e == null) return;
+  try {
+    await PictureIndex(ref.read(sessionProvider).db)
+        .fillFromVault(e, ref.read(sessionProvider).vault, cap: cap);
+  } on Object catch (e) {
+    debugPrint('Chanda: pictures not indexed: $e');
+  }
+}
+
+/// "For you": suggestions from offers found before, best first.
+final forYouProvider = FutureProvider<List<(ShopOffer, Suggestion)>>((ref) async {
+  ref.watch(revisionProvider);
+  ref.watch(pictureEmbedderProvider);
+  await indexPictures(ref);
+  return (await ref.watch(tasteProvider.future)).forYou();
+});
+
+/// Whether the "rate a few" card has shown in this session.
+class RatePromptShown extends Notifier<bool> {
+  @override
+  bool build() => false;
+  void shown() => state = true;
+}
+
+final ratePromptShownProvider = NotifierProvider<RatePromptShown, bool>(RatePromptShown.new);
+
+// ---- shops ----
+
+/// The curated shop list for "similar shops".
+final seedShopsProvider = FutureProvider<List<SeedShop>>((_) async {
+  try {
+    return await loadSeedShops();
+  } on Object catch (e) {
+    debugPrint('Chanda: shop list not loaded: $e');
+    return const [];
+  }
+});
+
+/// The shops the user added to search, registered with the catalogue.
+final myShopsProvider = FutureProvider<List<SeedShop>>((ref) {
+  ref.watch(revisionProvider);
+  return MyShops(ref.watch(sessionProvider).vault).load();
+});
+
+/// Shops like the ones the user buys from, that they do not use yet.
+final similarShopsProvider = FutureProvider<List<SimilarShop>>((ref) async {
+  final items = await ref.watch(allItemsProvider.future);
+  final seeds = await ref.watch(seedShopsProvider.future);
+  final labels = await ref.watch(pictureLabelsProvider.future);
+  final mine = {for (final s in await ref.watch(myShopsProvider.future)) s.domain};
+  final home = await ref.watch(homeCurrencyProvider.future);
+  return similarShops([
+    for (final s in seeds)
+      if (!mine.contains(s.domain)) s,
+  ], profileOf(items, seeds, labels, currency: home));
+});
+
+/// Facts about the shop at a home address, looked up when asked for (and
+/// kept a month). Its page is read the plain way, or like a product page
+/// when the plain way is turned away.
+final shopFactsProvider = FutureProvider.family<ShopFacts, String>((ref, home) {
+  final reader = ref.read(readerProvider);
+  return ShopFactsStore(ref.read(sessionProvider).db)
+      .facts(Uri.parse(home), readPage: (u) async => (await reader.read(u)).ld);
 });
 
 /// Offers found before that could be the item at other shops, with the
