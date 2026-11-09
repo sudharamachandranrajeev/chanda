@@ -45,8 +45,32 @@ Chanda checks those only while it is open.
 
 ## 🚀 Get started
 
-There is no download yet: the first release comes when the remaining phases are done. Until then you
-can build Chanda yourself (see [For developers](#%EF%B8%8F-for-developers)).
+Chanda is an alpha: it works, but expect rough edges. Downloads are on the
+[Releases page](https://github.com/sudharamachandranrajeev/chanda/releases).
+
+**Android**
+
+1. On your phone, open the Releases page and download `Chanda-<version>-android-arm64-v8a.apk`.
+   Almost every phone from the last ten years wants this one. Very old phones want `armeabi-v7a`.
+2. Open the downloaded file. If Android asks, allow your browser to install apps.
+3. Open Chanda and allow notifications, so it can tell you when a price drops.
+
+**Windows**
+
+1. Download `Chanda-<version>-windows-x64-setup.exe` and run it.
+2. Windows may say it protected your PC, because the installer is not signed. Choose *More info*, then
+   *Run anyway*.
+3. Chanda is in the Start menu. No installer wanted? Use the `portable.zip` and run `chanda.exe`.
+
+**Linux**
+
+1. You need GTK 3, libsecret and a keyring (GNOME Keyring or KWallet). Most desktops have them.
+2. Download `Chanda-<version>-linux-x64.tar.gz` and unpack it.
+3. In the unpacked folder, run `./install.sh` to add Chanda to your app menu. No root needed.
+4. This download opens shops in your normal browser. For the in-app browser, build from source on a
+   system with WPE WebKit (see [For developers](#%EF%B8%8F-for-developers)).
+
+Each release lists SHA-256 checksums in `SHA256SUMS.txt`, if you want to check your download.
 
 ## 🧭 How it works
 

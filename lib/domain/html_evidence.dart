@@ -12,7 +12,8 @@ Evidence htmlEvidence(String body, String url) {
   final doc = html.parse(body);
   final meta = <String, String>{};
   for (final m in doc.querySelectorAll('meta[content]')) {
-    final k = (m.attributes['property'] ?? m.attributes['name'] ?? m.attributes['itemprop'] ?? '').toLowerCase();
+    final k = (m.attributes['property'] ?? m.attributes['name'] ?? m.attributes['itemprop'] ?? '')
+        .toLowerCase();
     if (k.isNotEmpty) meta.putIfAbsent(k, () => (m.attributes['content'] ?? '').trim());
   }
   final micro = <String, String>{};
@@ -43,11 +44,14 @@ Evidence htmlEvidence(String body, String url) {
     embedded: embedded,
     prices: _pricesAfter(text, h1),
     text: text.length > 8000 ? text.substring(0, 8000) : text,
-    check: RegExp(
-      r'security checks?|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|'
-      r'pardon our interruption|robot check',
-      caseSensitive: false,
-    ).hasMatch('${doc.querySelector('title')?.text ?? ''} ${text.length > 2000 ? text.substring(0, 2000) : text}'),
+    check:
+        RegExp(
+          r'security checks?|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|'
+          r'pardon our interruption|robot check',
+          caseSensitive: false,
+        ).hasMatch(
+          '${doc.querySelector('title')?.text ?? ''} ${text.length > 2000 ? text.substring(0, 2000) : text}',
+        ),
   );
 }
 

@@ -247,7 +247,10 @@ Reading readProduct(Evidence e, {required String hint}) {
   final h1 = e.h1.length > 4 && (og == null || similarity(e.h1, og) >= 0.3) ? e.h1 : null;
   // The shop's part comes off the page title before the longest part is
   // picked, or "Lamp | Example Shop" would read as the shop.
-  final title = _withoutShop(_clean(_s(ld?['name']) ?? h1 ?? og ?? _docTitle(_withoutShop(e.docTitle, e.url))), e.url);
+  final title = _withoutShop(
+    _clean(_s(ld?['name']) ?? h1 ?? og ?? _docTitle(_withoutShop(e.docTitle, e.url))),
+    e.url,
+  );
   final warnings = <String>[];
 
   // Every price drawn on the page, as numbers.
@@ -339,7 +342,8 @@ Reading readProduct(Evidence e, {required String hint}) {
     mpn: _s(ld?['mpn']) ?? mi['mpn'] ?? '',
     sku: _s(ld?['sku']) ?? mi['sku'] ?? '',
     rating: double.tryParse(_s(ld?['rating']) ?? mi['ratingvalue'] ?? '') ?? _ratingIn(text),
-    reviews: int.tryParse((_s(ld?['reviews']) ?? mi['reviewcount'] ?? '').replaceAll(',', '')) ?? _reviewsIn(text),
+    reviews:
+        int.tryParse((_s(ld?['reviews']) ?? mi['reviewcount'] ?? '').replaceAll(',', '')) ?? _reviewsIn(text),
     warranty: _warrantyIn(text),
     variant: e.variant,
     layer: layer,
@@ -364,7 +368,8 @@ Map<String, Object?>? _ldProduct(List<String> blocks, String heading) {
       }
     } else if (n is Map) {
       final types = [n['@type']].expand((t) => t is List ? t : [t]).map((t) => '$t').toList();
-      if (types.any((t) => t == 'Product' || t == 'ProductGroup' || t == 'IndividualProduct') && n['name'] != null) {
+      if (types.any((t) => t == 'Product' || t == 'ProductGroup' || t == 'IndividualProduct') &&
+          n['name'] != null) {
         products.add(n);
       }
       for (final v in n.values) {
@@ -391,7 +396,9 @@ Map<String, Object?>? _ldProduct(List<String> blocks, String heading) {
       if (offers.isNotEmpty) break;
     }
   }
-  final inStock = offers.where((o) => !RegExp('OutOfStock|SoldOut').hasMatch('${o['availability']}')).toList();
+  final inStock = offers
+      .where((o) => !RegExp('OutOfStock|SoldOut').hasMatch('${o['availability']}'))
+      .toList();
   final o = (inStock.isNotEmpty ? inStock : offers).firstOrNull ?? const {};
   final spec = o['priceSpecification'];
   final specs = spec is List ? spec : [?spec];
@@ -514,7 +521,9 @@ int? _embeddedPrice(List<String> blocks, String title, String currency) {
     if (n is! Map) return;
     String? name;
     for (final e in n.entries) {
-      if (_titleKeys.contains('${e.key}'.toLowerCase()) && e.value is String && (e.value as String).length > 5) {
+      if (_titleKeys.contains('${e.key}'.toLowerCase()) &&
+          e.value is String &&
+          (e.value as String).length > 5) {
         name = e.value as String;
         break;
       }
@@ -590,13 +599,17 @@ String _clean(String s) {
 /// "Shirt - AliExpress 200000343" loses the shop's name at the end.
 String _withoutShop(String title, String url) {
   final host = Uri.tryParse(url)?.host.toLowerCase() ?? '';
-  final labels = host.split('.').where((l) => l.length > 2 && !const {'www', 'com', 'shop', 'store'}.contains(l));
+  final labels = host
+      .split('.')
+      .where((l) => l.length > 2 && !const {'www', 'com', 'shop', 'store'}.contains(l));
   if (labels.isEmpty) return title;
   final parts = title.split(RegExp(r'\s+[|:–—-]\s+'));
   while (parts.length > 1 && labels.any((l) => parts.last.toLowerCase().contains(l))) {
     parts.removeLast();
   }
-  return parts.length == 1 ? parts.first : title.substring(0, title.lastIndexOf(parts.last) + parts.last.length);
+  return parts.length == 1
+      ? parts.first
+      : title.substring(0, title.lastIndexOf(parts.last) + parts.last.length);
 }
 
 /// "Thing : Amazon.co.uk: Fashion" and "Thing | Shop" lose the shop's part.
@@ -616,11 +629,14 @@ String? _absolute(String url, String base) {
 }
 
 String _brandIn(String text) =>
-    RegExp(r'(?:^|\n)\s*(?:Brand|Visit the)\s*:?\s*([^\n]{2,40}?)(?:\s+Store)?\s*(?:\n|$)').firstMatch(text)?[1] ?? '';
+    RegExp(r'(?:^|\n)\s*(?:Brand|Visit the)\s*:?\s*([^\n]{2,40}?)(?:\s+Store)?\s*(?:\n|$)')
+        .firstMatch(text)?[1] ??
+    '';
 
 String _sellerIn(String text) =>
-    RegExp(r'(?:Sold by|Dispatched from and sold by|Seller|Store|Sold and shipped by)\s*:?\s*([^\n]{2,60}?)\s*(?:\n|$)')
-        .firstMatch(text)?[1] ??
+    RegExp(
+      r'(?:Sold by|Dispatched from and sold by|Seller|Store|Sold and shipped by)\s*:?\s*([^\n]{2,60}?)\s*(?:\n|$)',
+    ).firstMatch(text)?[1] ??
     '';
 
 int? _shippingIn(String text, String currency) {

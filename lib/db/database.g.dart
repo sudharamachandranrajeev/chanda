@@ -3,8 +3,7 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
-class $ChandaListsTable extends ChandaLists
-    with TableInfo<$ChandaListsTable, VaultList> {
+class $ChandaListsTable extends ChandaLists with TableInfo<$ChandaListsTable, VaultList> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -28,9 +27,7 @@ class $ChandaListsTable extends ChandaLists
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -38,9 +35,7 @@ class $ChandaListsTable extends ChandaLists
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
@@ -52,9 +47,7 @@ class $ChandaListsTable extends ChandaLists
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdMeta = const VerificationMeta(
-    'created',
-  );
+  static const VerificationMeta _createdMeta = const VerificationMeta('created');
   @override
   late final GeneratedColumn<String> created = GeneratedColumn<String>(
     'created',
@@ -81,10 +74,7 @@ class $ChandaListsTable extends ChandaLists
   String get actualTableName => $name;
   static const String $name = 'chanda_lists';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<VaultList> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<VaultList> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -93,38 +83,23 @@ class $ChandaListsTable extends ChandaLists
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('name')) {
-      context.handle(
-        _nameMeta,
-        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
-      );
+      context.handle(_nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('created')) {
-      context.handle(
-        _createdMeta,
-        created.isAcceptableOrUnknown(data['created']!, _createdMeta),
-      );
+      context.handle(_createdMeta, created.isAcceptableOrUnknown(data['created']!, _createdMeta));
     } else if (isInserting) {
       context.missing(_createdMeta);
     }
     if (data.containsKey('ord')) {
-      context.handle(
-        _ordMeta,
-        ord.isAcceptableOrUnknown(data['ord']!, _ordMeta),
-      );
+      context.handle(_ordMeta, ord.isAcceptableOrUnknown(data['ord']!, _ordMeta));
     }
     return context;
   }
@@ -135,30 +110,12 @@ class $ChandaListsTable extends ChandaLists
   VaultList map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return VaultList(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      name: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}name'],
-      )!,
-      created: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}created'],
-      )!,
-      ord: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ord'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      name: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      created: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}created'])!,
+      ord: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}ord'])!,
     );
   }
 
@@ -206,10 +163,7 @@ class VaultList extends DataClass implements Insertable<VaultList> {
     );
   }
 
-  factory VaultList.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory VaultList.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return VaultList(
       id: serializer.fromJson<String>(json['id']),
@@ -233,21 +187,15 @@ class VaultList extends DataClass implements Insertable<VaultList> {
     };
   }
 
-  VaultList copyWith({
-    String? id,
-    String? hlc,
-    bool? deleted,
-    String? name,
-    String? created,
-    int? ord,
-  }) => VaultList(
-    id: id ?? this.id,
-    hlc: hlc ?? this.hlc,
-    deleted: deleted ?? this.deleted,
-    name: name ?? this.name,
-    created: created ?? this.created,
-    ord: ord ?? this.ord,
-  );
+  VaultList copyWith({String? id, String? hlc, bool? deleted, String? name, String? created, int? ord}) =>
+      VaultList(
+        id: id ?? this.id,
+        hlc: hlc ?? this.hlc,
+        deleted: deleted ?? this.deleted,
+        name: name ?? this.name,
+        created: created ?? this.created,
+        ord: ord ?? this.ord,
+      );
   VaultList copyWithCompanion(ChandaListsCompanion data) {
     return VaultList(
       id: data.id.present ? data.id.value : this.id,
@@ -396,8 +344,7 @@ class ChandaListsCompanion extends UpdateCompanion<VaultList> {
   }
 }
 
-class $ChandaItemsTable extends ChandaItems
-    with TableInfo<$ChandaItemsTable, VaultItem> {
+class $ChandaItemsTable extends ChandaItems with TableInfo<$ChandaItemsTable, VaultItem> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -421,9 +368,7 @@ class $ChandaItemsTable extends ChandaItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -431,9 +376,7 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _listIdMeta = const VerificationMeta('listId');
@@ -482,9 +425,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _productKeyMeta = const VerificationMeta(
-    'productKey',
-  );
+  static const VerificationMeta _productKeyMeta = const VerificationMeta('productKey');
   @override
   late final GeneratedColumn<String> productKey = GeneratedColumn<String>(
     'product_key',
@@ -494,9 +435,7 @@ class $ChandaItemsTable extends ChandaItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _variantMeta = const VerificationMeta(
-    'variant',
-  );
+  static const VerificationMeta _variantMeta = const VerificationMeta('variant');
   @override
   late final GeneratedColumn<String> variant = GeneratedColumn<String>(
     'variant',
@@ -536,9 +475,7 @@ class $ChandaItemsTable extends ChandaItems
     requiredDuringInsert: false,
     defaultValue: const Constant('[]'),
   );
-  static const VerificationMeta _descriptionMeta = const VerificationMeta(
-    'description',
-  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta('description');
   @override
   late final GeneratedColumn<String> description = GeneratedColumn<String>(
     'description',
@@ -587,9 +524,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _reviewsMeta = const VerificationMeta(
-    'reviews',
-  );
+  static const VerificationMeta _reviewsMeta = const VerificationMeta('reviews');
   @override
   late final GeneratedColumn<int> reviews = GeneratedColumn<int>(
     'reviews',
@@ -598,9 +533,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _warrantyMeta = const VerificationMeta(
-    'warranty',
-  );
+  static const VerificationMeta _warrantyMeta = const VerificationMeta('warranty');
   @override
   late final GeneratedColumn<String> warranty = GeneratedColumn<String>(
     'warranty',
@@ -610,9 +543,7 @@ class $ChandaItemsTable extends ChandaItems
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _currencyMeta = const VerificationMeta(
-    'currency',
-  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta('currency');
   @override
   late final GeneratedColumn<String> currency = GeneratedColumn<String>(
     'currency',
@@ -639,9 +570,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _shippingMeta = const VerificationMeta(
-    'shipping',
-  );
+  static const VerificationMeta _shippingMeta = const VerificationMeta('shipping');
   @override
   late final GeneratedColumn<int> shipping = GeneratedColumn<int>(
     'shipping',
@@ -650,9 +579,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _inStockMeta = const VerificationMeta(
-    'inStock',
-  );
+  static const VerificationMeta _inStockMeta = const VerificationMeta('inStock');
   @override
   late final GeneratedColumn<bool> inStock = GeneratedColumn<bool>(
     'in_stock',
@@ -660,9 +587,7 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("in_stock" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("in_stock" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
   static const VerificationMeta _targetMeta = const VerificationMeta('target');
@@ -674,9 +599,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _alertDropMeta = const VerificationMeta(
-    'alertDrop',
-  );
+  static const VerificationMeta _alertDropMeta = const VerificationMeta('alertDrop');
   @override
   late final GeneratedColumn<bool> alertDrop = GeneratedColumn<bool>(
     'alert_drop',
@@ -684,14 +607,10 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("alert_drop" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("alert_drop" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _alertStockMeta = const VerificationMeta(
-    'alertStock',
-  );
+  static const VerificationMeta _alertStockMeta = const VerificationMeta('alertStock');
   @override
   late final GeneratedColumn<bool> alertStock = GeneratedColumn<bool>(
     'alert_stock',
@@ -699,14 +618,10 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("alert_stock" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("alert_stock" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _watchCloseMeta = const VerificationMeta(
-    'watchClose',
-  );
+  static const VerificationMeta _watchCloseMeta = const VerificationMeta('watchClose');
   @override
   late final GeneratedColumn<bool> watchClose = GeneratedColumn<bool>(
     'watch_close',
@@ -714,9 +629,7 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("watch_close" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("watch_close" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _boughtMeta = const VerificationMeta('bought');
@@ -727,9 +640,7 @@ class $ChandaItemsTable extends ChandaItems
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("bought" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("bought" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _addedMeta = const VerificationMeta('added');
@@ -741,9 +652,7 @@ class $ChandaItemsTable extends ChandaItems
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _checkedMeta = const VerificationMeta(
-    'checked',
-  );
+  static const VerificationMeta _checkedMeta = const VerificationMeta('checked');
   @override
   late final GeneratedColumn<String> checked = GeneratedColumn<String>(
     'checked',
@@ -762,9 +671,7 @@ class $ChandaItemsTable extends ChandaItems
     requiredDuringInsert: false,
     defaultValue: const Constant('ok'),
   );
-  static const VerificationMeta _failuresMeta = const VerificationMeta(
-    'failures',
-  );
+  static const VerificationMeta _failuresMeta = const VerificationMeta('failures');
   @override
   late final GeneratedColumn<int> failures = GeneratedColumn<int>(
     'failures',
@@ -828,10 +735,7 @@ class $ChandaItemsTable extends ChandaItems
   String get actualTableName => $name;
   static const String $name = 'chanda_items';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<VaultItem> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<VaultItem> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -840,52 +744,31 @@ class $ChandaItemsTable extends ChandaItems
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('list_id')) {
-      context.handle(
-        _listIdMeta,
-        listId.isAcceptableOrUnknown(data['list_id']!, _listIdMeta),
-      );
+      context.handle(_listIdMeta, listId.isAcceptableOrUnknown(data['list_id']!, _listIdMeta));
     } else if (isInserting) {
       context.missing(_listIdMeta);
     }
     if (data.containsKey('title')) {
-      context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('brand')) {
-      context.handle(
-        _brandMeta,
-        brand.isAcceptableOrUnknown(data['brand']!, _brandMeta),
-      );
+      context.handle(_brandMeta, brand.isAcceptableOrUnknown(data['brand']!, _brandMeta));
     }
     if (data.containsKey('shop')) {
-      context.handle(
-        _shopMeta,
-        shop.isAcceptableOrUnknown(data['shop']!, _shopMeta),
-      );
+      context.handle(_shopMeta, shop.isAcceptableOrUnknown(data['shop']!, _shopMeta));
     } else if (isInserting) {
       context.missing(_shopMeta);
     }
     if (data.containsKey('url')) {
-      context.handle(
-        _urlMeta,
-        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
-      );
+      context.handle(_urlMeta, url.isAcceptableOrUnknown(data['url']!, _urlMeta));
     } else if (isInserting) {
       context.missing(_urlMeta);
     }
@@ -896,117 +779,63 @@ class $ChandaItemsTable extends ChandaItems
       );
     }
     if (data.containsKey('variant')) {
-      context.handle(
-        _variantMeta,
-        variant.isAcceptableOrUnknown(data['variant']!, _variantMeta),
-      );
+      context.handle(_variantMeta, variant.isAcceptableOrUnknown(data['variant']!, _variantMeta));
     }
     if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
+      context.handle(_noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
     }
     if (data.containsKey('tags')) {
-      context.handle(
-        _tagsMeta,
-        tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta),
-      );
+      context.handle(_tagsMeta, tags.isAcceptableOrUnknown(data['tags']!, _tagsMeta));
     }
     if (data.containsKey('images')) {
-      context.handle(
-        _imagesMeta,
-        images.isAcceptableOrUnknown(data['images']!, _imagesMeta),
-      );
+      context.handle(_imagesMeta, images.isAcceptableOrUnknown(data['images']!, _imagesMeta));
     }
     if (data.containsKey('description')) {
       context.handle(
         _descriptionMeta,
-        description.isAcceptableOrUnknown(
-          data['description']!,
-          _descriptionMeta,
-        ),
+        description.isAcceptableOrUnknown(data['description']!, _descriptionMeta),
       );
     }
     if (data.containsKey('seller')) {
-      context.handle(
-        _sellerMeta,
-        seller.isAcceptableOrUnknown(data['seller']!, _sellerMeta),
-      );
+      context.handle(_sellerMeta, seller.isAcceptableOrUnknown(data['seller']!, _sellerMeta));
     }
     if (data.containsKey('gtin')) {
-      context.handle(
-        _gtinMeta,
-        gtin.isAcceptableOrUnknown(data['gtin']!, _gtinMeta),
-      );
+      context.handle(_gtinMeta, gtin.isAcceptableOrUnknown(data['gtin']!, _gtinMeta));
     }
     if (data.containsKey('mpn')) {
-      context.handle(
-        _mpnMeta,
-        mpn.isAcceptableOrUnknown(data['mpn']!, _mpnMeta),
-      );
+      context.handle(_mpnMeta, mpn.isAcceptableOrUnknown(data['mpn']!, _mpnMeta));
     }
     if (data.containsKey('rating')) {
-      context.handle(
-        _ratingMeta,
-        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
-      );
+      context.handle(_ratingMeta, rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta));
     }
     if (data.containsKey('reviews')) {
-      context.handle(
-        _reviewsMeta,
-        reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta),
-      );
+      context.handle(_reviewsMeta, reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta));
     }
     if (data.containsKey('warranty')) {
-      context.handle(
-        _warrantyMeta,
-        warranty.isAcceptableOrUnknown(data['warranty']!, _warrantyMeta),
-      );
+      context.handle(_warrantyMeta, warranty.isAcceptableOrUnknown(data['warranty']!, _warrantyMeta));
     }
     if (data.containsKey('currency')) {
-      context.handle(
-        _currencyMeta,
-        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
-      );
+      context.handle(_currencyMeta, currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
     } else if (isInserting) {
       context.missing(_currencyMeta);
     }
     if (data.containsKey('price')) {
-      context.handle(
-        _priceMeta,
-        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
-      );
+      context.handle(_priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
     }
     if (data.containsKey('was')) {
-      context.handle(
-        _wasMeta,
-        was.isAcceptableOrUnknown(data['was']!, _wasMeta),
-      );
+      context.handle(_wasMeta, was.isAcceptableOrUnknown(data['was']!, _wasMeta));
     }
     if (data.containsKey('shipping')) {
-      context.handle(
-        _shippingMeta,
-        shipping.isAcceptableOrUnknown(data['shipping']!, _shippingMeta),
-      );
+      context.handle(_shippingMeta, shipping.isAcceptableOrUnknown(data['shipping']!, _shippingMeta));
     }
     if (data.containsKey('in_stock')) {
-      context.handle(
-        _inStockMeta,
-        inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta),
-      );
+      context.handle(_inStockMeta, inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta));
     }
     if (data.containsKey('target')) {
-      context.handle(
-        _targetMeta,
-        target.isAcceptableOrUnknown(data['target']!, _targetMeta),
-      );
+      context.handle(_targetMeta, target.isAcceptableOrUnknown(data['target']!, _targetMeta));
     }
     if (data.containsKey('alert_drop')) {
-      context.handle(
-        _alertDropMeta,
-        alertDrop.isAcceptableOrUnknown(data['alert_drop']!, _alertDropMeta),
-      );
+      context.handle(_alertDropMeta, alertDrop.isAcceptableOrUnknown(data['alert_drop']!, _alertDropMeta));
     }
     if (data.containsKey('alert_stock')) {
       context.handle(
@@ -1021,42 +850,24 @@ class $ChandaItemsTable extends ChandaItems
       );
     }
     if (data.containsKey('bought')) {
-      context.handle(
-        _boughtMeta,
-        bought.isAcceptableOrUnknown(data['bought']!, _boughtMeta),
-      );
+      context.handle(_boughtMeta, bought.isAcceptableOrUnknown(data['bought']!, _boughtMeta));
     }
     if (data.containsKey('added')) {
-      context.handle(
-        _addedMeta,
-        added.isAcceptableOrUnknown(data['added']!, _addedMeta),
-      );
+      context.handle(_addedMeta, added.isAcceptableOrUnknown(data['added']!, _addedMeta));
     } else if (isInserting) {
       context.missing(_addedMeta);
     }
     if (data.containsKey('checked')) {
-      context.handle(
-        _checkedMeta,
-        checked.isAcceptableOrUnknown(data['checked']!, _checkedMeta),
-      );
+      context.handle(_checkedMeta, checked.isAcceptableOrUnknown(data['checked']!, _checkedMeta));
     }
     if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     }
     if (data.containsKey('failures')) {
-      context.handle(
-        _failuresMeta,
-        failures.isAcceptableOrUnknown(data['failures']!, _failuresMeta),
-      );
+      context.handle(_failuresMeta, failures.isAcceptableOrUnknown(data['failures']!, _failuresMeta));
     }
     if (data.containsKey('layer')) {
-      context.handle(
-        _layerMeta,
-        layer.isAcceptableOrUnknown(data['layer']!, _layerMeta),
-      );
+      context.handle(_layerMeta, layer.isAcceptableOrUnknown(data['layer']!, _layerMeta));
     }
     return context;
   }
@@ -1067,114 +878,39 @@ class $ChandaItemsTable extends ChandaItems
   VaultItem map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return VaultItem(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      listId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}list_id'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      )!,
-      brand: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}brand'],
-      )!,
-      shop: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}shop'],
-      )!,
-      url: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}url'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      listId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}list_id'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      brand: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}brand'])!,
+      shop: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}shop'])!,
+      url: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}url'])!,
       productKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}product_key'],
       )!,
-      variant: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}variant'],
-      )!,
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      )!,
-      tags: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}tags'],
-      )!,
-      images: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}images'],
-      )!,
+      variant: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}variant'])!,
+      note: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}note'])!,
+      tags: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}tags'])!,
+      images: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}images'])!,
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       )!,
-      seller: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}seller'],
-      )!,
-      gtin: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}gtin'],
-      )!,
-      mpn: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}mpn'],
-      )!,
-      rating: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}rating'],
-      ),
-      reviews: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reviews'],
-      ),
-      warranty: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}warranty'],
-      )!,
-      currency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency'],
-      )!,
-      price: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}price'],
-      ),
-      was: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}was'],
-      ),
-      shipping: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}shipping'],
-      ),
-      inStock: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}in_stock'],
-      )!,
-      target: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}target'],
-      ),
-      alertDrop: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}alert_drop'],
-      )!,
+      seller: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}seller'])!,
+      gtin: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}gtin'])!,
+      mpn: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}mpn'])!,
+      rating: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}rating']),
+      reviews: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reviews']),
+      warranty: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}warranty'])!,
+      currency: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      price: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}price']),
+      was: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}was']),
+      shipping: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}shipping']),
+      inStock: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}in_stock'])!,
+      target: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}target']),
+      alertDrop: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}alert_drop'])!,
       alertStock: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}alert_stock'],
@@ -1183,30 +919,12 @@ class $ChandaItemsTable extends ChandaItems
         DriftSqlType.bool,
         data['${effectivePrefix}watch_close'],
       )!,
-      bought: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}bought'],
-      )!,
-      added: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}added'],
-      )!,
-      checked: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}checked'],
-      ),
-      status: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}status'],
-      )!,
-      failures: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}failures'],
-      )!,
-      layer: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}layer'],
-      )!,
+      bought: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}bought'])!,
+      added: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}added'])!,
+      checked: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}checked']),
+      status: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      failures: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}failures'])!,
+      layer: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}layer'])!,
     );
   }
 
@@ -1390,43 +1108,28 @@ class VaultItem extends DataClass implements Insertable<VaultItem> {
       seller: Value(seller),
       gtin: Value(gtin),
       mpn: Value(mpn),
-      rating: rating == null && nullToAbsent
-          ? const Value.absent()
-          : Value(rating),
-      reviews: reviews == null && nullToAbsent
-          ? const Value.absent()
-          : Value(reviews),
+      rating: rating == null && nullToAbsent ? const Value.absent() : Value(rating),
+      reviews: reviews == null && nullToAbsent ? const Value.absent() : Value(reviews),
       warranty: Value(warranty),
       currency: Value(currency),
-      price: price == null && nullToAbsent
-          ? const Value.absent()
-          : Value(price),
+      price: price == null && nullToAbsent ? const Value.absent() : Value(price),
       was: was == null && nullToAbsent ? const Value.absent() : Value(was),
-      shipping: shipping == null && nullToAbsent
-          ? const Value.absent()
-          : Value(shipping),
+      shipping: shipping == null && nullToAbsent ? const Value.absent() : Value(shipping),
       inStock: Value(inStock),
-      target: target == null && nullToAbsent
-          ? const Value.absent()
-          : Value(target),
+      target: target == null && nullToAbsent ? const Value.absent() : Value(target),
       alertDrop: Value(alertDrop),
       alertStock: Value(alertStock),
       watchClose: Value(watchClose),
       bought: Value(bought),
       added: Value(added),
-      checked: checked == null && nullToAbsent
-          ? const Value.absent()
-          : Value(checked),
+      checked: checked == null && nullToAbsent ? const Value.absent() : Value(checked),
       status: Value(status),
       failures: Value(failures),
       layer: Value(layer),
     );
   }
 
-  factory VaultItem.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory VaultItem.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return VaultItem(
       id: serializer.fromJson<String>(json['id']),
@@ -1591,16 +1294,12 @@ class VaultItem extends DataClass implements Insertable<VaultItem> {
       brand: data.brand.present ? data.brand.value : this.brand,
       shop: data.shop.present ? data.shop.value : this.shop,
       url: data.url.present ? data.url.value : this.url,
-      productKey: data.productKey.present
-          ? data.productKey.value
-          : this.productKey,
+      productKey: data.productKey.present ? data.productKey.value : this.productKey,
       variant: data.variant.present ? data.variant.value : this.variant,
       note: data.note.present ? data.note.value : this.note,
       tags: data.tags.present ? data.tags.value : this.tags,
       images: data.images.present ? data.images.value : this.images,
-      description: data.description.present
-          ? data.description.value
-          : this.description,
+      description: data.description.present ? data.description.value : this.description,
       seller: data.seller.present ? data.seller.value : this.seller,
       gtin: data.gtin.present ? data.gtin.value : this.gtin,
       mpn: data.mpn.present ? data.mpn.value : this.mpn,
@@ -1614,12 +1313,8 @@ class VaultItem extends DataClass implements Insertable<VaultItem> {
       inStock: data.inStock.present ? data.inStock.value : this.inStock,
       target: data.target.present ? data.target.value : this.target,
       alertDrop: data.alertDrop.present ? data.alertDrop.value : this.alertDrop,
-      alertStock: data.alertStock.present
-          ? data.alertStock.value
-          : this.alertStock,
-      watchClose: data.watchClose.present
-          ? data.watchClose.value
-          : this.watchClose,
+      alertStock: data.alertStock.present ? data.alertStock.value : this.alertStock,
+      watchClose: data.watchClose.present ? data.watchClose.value : this.watchClose,
       bought: data.bought.present ? data.bought.value : this.bought,
       added: data.added.present ? data.added.value : this.added,
       checked: data.checked.present ? data.checked.value : this.checked,
@@ -2183,8 +1878,7 @@ class ChandaItemsCompanion extends UpdateCompanion<VaultItem> {
   }
 }
 
-class $ChandaPricesTable extends ChandaPrices
-    with TableInfo<$ChandaPricesTable, PricePoint> {
+class $ChandaPricesTable extends ChandaPrices with TableInfo<$ChandaPricesTable, PricePoint> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2208,9 +1902,7 @@ class $ChandaPricesTable extends ChandaPrices
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -2218,9 +1910,7 @@ class $ChandaPricesTable extends ChandaPrices
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
@@ -2241,9 +1931,7 @@ class $ChandaPricesTable extends ChandaPrices
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _currencyMeta = const VerificationMeta(
-    'currency',
-  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta('currency');
   @override
   late final GeneratedColumn<String> currency = GeneratedColumn<String>(
     'currency',
@@ -2261,9 +1949,7 @@ class $ChandaPricesTable extends ChandaPrices
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _shippingMeta = const VerificationMeta(
-    'shipping',
-  );
+  static const VerificationMeta _shippingMeta = const VerificationMeta('shipping');
   @override
   late final GeneratedColumn<int> shipping = GeneratedColumn<int>(
     'shipping',
@@ -2272,9 +1958,7 @@ class $ChandaPricesTable extends ChandaPrices
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _inStockMeta = const VerificationMeta(
-    'inStock',
-  );
+  static const VerificationMeta _inStockMeta = const VerificationMeta('inStock');
   @override
   late final GeneratedColumn<bool> inStock = GeneratedColumn<bool>(
     'in_stock',
@@ -2282,9 +1966,7 @@ class $ChandaPricesTable extends ChandaPrices
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("in_stock" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("in_stock" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
   static const VerificationMeta _seenMeta = const VerificationMeta('seen');
@@ -2337,10 +2019,7 @@ class $ChandaPricesTable extends ChandaPrices
   String get actualTableName => $name;
   static const String $name = 'chanda_prices';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<PricePoint> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<PricePoint> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -2349,78 +2028,45 @@ class $ChandaPricesTable extends ChandaPrices
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('item_id')) {
-      context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
-      );
+      context.handle(_itemIdMeta, itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
     } else if (isInserting) {
       context.missing(_itemIdMeta);
     }
     if (data.containsKey('price')) {
-      context.handle(
-        _priceMeta,
-        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
-      );
+      context.handle(_priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
     } else if (isInserting) {
       context.missing(_priceMeta);
     }
     if (data.containsKey('currency')) {
-      context.handle(
-        _currencyMeta,
-        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
-      );
+      context.handle(_currencyMeta, currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
     } else if (isInserting) {
       context.missing(_currencyMeta);
     }
     if (data.containsKey('was')) {
-      context.handle(
-        _wasMeta,
-        was.isAcceptableOrUnknown(data['was']!, _wasMeta),
-      );
+      context.handle(_wasMeta, was.isAcceptableOrUnknown(data['was']!, _wasMeta));
     }
     if (data.containsKey('shipping')) {
-      context.handle(
-        _shippingMeta,
-        shipping.isAcceptableOrUnknown(data['shipping']!, _shippingMeta),
-      );
+      context.handle(_shippingMeta, shipping.isAcceptableOrUnknown(data['shipping']!, _shippingMeta));
     }
     if (data.containsKey('in_stock')) {
-      context.handle(
-        _inStockMeta,
-        inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta),
-      );
+      context.handle(_inStockMeta, inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta));
     }
     if (data.containsKey('seen')) {
-      context.handle(
-        _seenMeta,
-        seen.isAcceptableOrUnknown(data['seen']!, _seenMeta),
-      );
+      context.handle(_seenMeta, seen.isAcceptableOrUnknown(data['seen']!, _seenMeta));
     } else if (isInserting) {
       context.missing(_seenMeta);
     }
     if (data.containsKey('layer')) {
-      context.handle(
-        _layerMeta,
-        layer.isAcceptableOrUnknown(data['layer']!, _layerMeta),
-      );
+      context.handle(_layerMeta, layer.isAcceptableOrUnknown(data['layer']!, _layerMeta));
     }
     if (data.containsKey('source')) {
-      context.handle(
-        _sourceMeta,
-        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
-      );
+      context.handle(_sourceMeta, source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
     }
     return context;
   }
@@ -2431,54 +2077,18 @@ class $ChandaPricesTable extends ChandaPrices
   PricePoint map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return PricePoint(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      itemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}item_id'],
-      )!,
-      price: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}price'],
-      )!,
-      currency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency'],
-      )!,
-      was: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}was'],
-      ),
-      shipping: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}shipping'],
-      ),
-      inStock: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}in_stock'],
-      )!,
-      seen: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}seen'],
-      )!,
-      layer: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}layer'],
-      )!,
-      source: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}source'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      itemId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}item_id'])!,
+      price: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}price'])!,
+      currency: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      was: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}was']),
+      shipping: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}shipping']),
+      inStock: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}in_stock'])!,
+      seen: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}seen'])!,
+      layer: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}layer'])!,
+      source: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}source'])!,
     );
   }
 
@@ -2548,9 +2158,7 @@ class PricePoint extends DataClass implements Insertable<PricePoint> {
       price: Value(price),
       currency: Value(currency),
       was: was == null && nullToAbsent ? const Value.absent() : Value(was),
-      shipping: shipping == null && nullToAbsent
-          ? const Value.absent()
-          : Value(shipping),
+      shipping: shipping == null && nullToAbsent ? const Value.absent() : Value(shipping),
       inStock: Value(inStock),
       seen: Value(seen),
       layer: Value(layer),
@@ -2558,10 +2166,7 @@ class PricePoint extends DataClass implements Insertable<PricePoint> {
     );
   }
 
-  factory PricePoint.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory PricePoint.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return PricePoint(
       id: serializer.fromJson<String>(json['id']),
@@ -2661,20 +2266,8 @@ class PricePoint extends DataClass implements Insertable<PricePoint> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    hlc,
-    deleted,
-    itemId,
-    price,
-    currency,
-    was,
-    shipping,
-    inStock,
-    seen,
-    layer,
-    source,
-  );
+  int get hashCode =>
+      Object.hash(id, hlc, deleted, itemId, price, currency, was, shipping, inStock, seen, layer, source);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2871,8 +2464,7 @@ class ChandaPricesCompanion extends UpdateCompanion<PricePoint> {
   }
 }
 
-class $ChandaAlertsTable extends ChandaAlerts
-    with TableInfo<$ChandaAlertsTable, AlertEvent> {
+class $ChandaAlertsTable extends ChandaAlerts with TableInfo<$ChandaAlertsTable, AlertEvent> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -2896,9 +2488,7 @@ class $ChandaAlertsTable extends ChandaAlerts
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -2906,9 +2496,7 @@ class $ChandaAlertsTable extends ChandaAlerts
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
@@ -2947,9 +2535,7 @@ class $ChandaAlertsTable extends ChandaAlerts
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _currencyMeta = const VerificationMeta(
-    'currency',
-  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta('currency');
   @override
   late final GeneratedColumn<String> currency = GeneratedColumn<String>(
     'currency',
@@ -2976,34 +2562,18 @@ class $ChandaAlertsTable extends ChandaAlerts
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("seen" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("seen" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    hlc,
-    deleted,
-    itemId,
-    kind,
-    before,
-    after,
-    currency,
-    at,
-    seen,
-  ];
+  List<GeneratedColumn> get $columns => [id, hlc, deleted, itemId, kind, before, after, currency, at, seen];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'chanda_alerts';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<AlertEvent> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<AlertEvent> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3012,50 +2582,29 @@ class $ChandaAlertsTable extends ChandaAlerts
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('item_id')) {
-      context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
-      );
+      context.handle(_itemIdMeta, itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
     } else if (isInserting) {
       context.missing(_itemIdMeta);
     }
     if (data.containsKey('kind')) {
-      context.handle(
-        _kindMeta,
-        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
-      );
+      context.handle(_kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('before')) {
-      context.handle(
-        _beforeMeta,
-        before.isAcceptableOrUnknown(data['before']!, _beforeMeta),
-      );
+      context.handle(_beforeMeta, before.isAcceptableOrUnknown(data['before']!, _beforeMeta));
     }
     if (data.containsKey('after')) {
-      context.handle(
-        _afterMeta,
-        after.isAcceptableOrUnknown(data['after']!, _afterMeta),
-      );
+      context.handle(_afterMeta, after.isAcceptableOrUnknown(data['after']!, _afterMeta));
     }
     if (data.containsKey('currency')) {
-      context.handle(
-        _currencyMeta,
-        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
-      );
+      context.handle(_currencyMeta, currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
     }
     if (data.containsKey('at')) {
       context.handle(_atMeta, at.isAcceptableOrUnknown(data['at']!, _atMeta));
@@ -3063,10 +2612,7 @@ class $ChandaAlertsTable extends ChandaAlerts
       context.missing(_atMeta);
     }
     if (data.containsKey('seen')) {
-      context.handle(
-        _seenMeta,
-        seen.isAcceptableOrUnknown(data['seen']!, _seenMeta),
-      );
+      context.handle(_seenMeta, seen.isAcceptableOrUnknown(data['seen']!, _seenMeta));
     }
     return context;
   }
@@ -3077,46 +2623,16 @@ class $ChandaAlertsTable extends ChandaAlerts
   AlertEvent map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return AlertEvent(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      itemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}item_id'],
-      )!,
-      kind: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}kind'],
-      )!,
-      before: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}before'],
-      ),
-      after: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}after'],
-      ),
-      currency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency'],
-      )!,
-      at: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}at'],
-      )!,
-      seen: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}seen'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      itemId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}item_id'])!,
+      kind: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
+      before: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}before']),
+      after: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}after']),
+      currency: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      at: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}at'])!,
+      seen: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}seen'])!,
     );
   }
 
@@ -3178,22 +2694,15 @@ class AlertEvent extends DataClass implements Insertable<AlertEvent> {
       deleted: Value(deleted),
       itemId: Value(itemId),
       kind: Value(kind),
-      before: before == null && nullToAbsent
-          ? const Value.absent()
-          : Value(before),
-      after: after == null && nullToAbsent
-          ? const Value.absent()
-          : Value(after),
+      before: before == null && nullToAbsent ? const Value.absent() : Value(before),
+      after: after == null && nullToAbsent ? const Value.absent() : Value(after),
       currency: Value(currency),
       at: Value(at),
       seen: Value(seen),
     );
   }
 
-  factory AlertEvent.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory AlertEvent.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AlertEvent(
       id: serializer.fromJson<String>(json['id']),
@@ -3281,18 +2790,7 @@ class AlertEvent extends DataClass implements Insertable<AlertEvent> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    hlc,
-    deleted,
-    itemId,
-    kind,
-    before,
-    after,
-    currency,
-    at,
-    seen,
-  );
+  int get hashCode => Object.hash(id, hlc, deleted, itemId, kind, before, after, currency, at, seen);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3464,8 +2962,7 @@ class ChandaAlertsCompanion extends UpdateCompanion<AlertEvent> {
   }
 }
 
-class $ChandaOffersTable extends ChandaOffers
-    with TableInfo<$ChandaOffersTable, ShopOffer> {
+class $ChandaOffersTable extends ChandaOffers with TableInfo<$ChandaOffersTable, ShopOffer> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -3525,9 +3022,7 @@ class $ChandaOffersTable extends ChandaOffers
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _currencyMeta = const VerificationMeta(
-    'currency',
-  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta('currency');
   @override
   late final GeneratedColumn<String> currency = GeneratedColumn<String>(
     'currency',
@@ -3554,9 +3049,7 @@ class $ChandaOffersTable extends ChandaOffers
     type: DriftSqlType.double,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _reviewsMeta = const VerificationMeta(
-    'reviews',
-  );
+  static const VerificationMeta _reviewsMeta = const VerificationMeta('reviews');
   @override
   late final GeneratedColumn<int> reviews = GeneratedColumn<int>(
     'reviews',
@@ -3565,9 +3058,7 @@ class $ChandaOffersTable extends ChandaOffers
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _inStockMeta = const VerificationMeta(
-    'inStock',
-  );
+  static const VerificationMeta _inStockMeta = const VerificationMeta('inStock');
   @override
   late final GeneratedColumn<bool> inStock = GeneratedColumn<bool>(
     'in_stock',
@@ -3575,9 +3066,7 @@ class $ChandaOffersTable extends ChandaOffers
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("in_stock" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("in_stock" IN (0, 1))'),
     defaultValue: const Constant(true),
   );
   static const VerificationMeta _queryMeta = const VerificationMeta('query');
@@ -3632,10 +3121,7 @@ class $ChandaOffersTable extends ChandaOffers
   String get actualTableName => $name;
   static const String $name = 'chanda_offers';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ShopOffer> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ShopOffer> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3644,92 +3130,53 @@ class $ChandaOffersTable extends ChandaOffers
       context.missing(_idMeta);
     }
     if (data.containsKey('shop')) {
-      context.handle(
-        _shopMeta,
-        shop.isAcceptableOrUnknown(data['shop']!, _shopMeta),
-      );
+      context.handle(_shopMeta, shop.isAcceptableOrUnknown(data['shop']!, _shopMeta));
     } else if (isInserting) {
       context.missing(_shopMeta);
     }
     if (data.containsKey('url')) {
-      context.handle(
-        _urlMeta,
-        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
-      );
+      context.handle(_urlMeta, url.isAcceptableOrUnknown(data['url']!, _urlMeta));
     } else if (isInserting) {
       context.missing(_urlMeta);
     }
     if (data.containsKey('title')) {
-      context.handle(
-        _titleMeta,
-        title.isAcceptableOrUnknown(data['title']!, _titleMeta),
-      );
+      context.handle(_titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
     }
     if (data.containsKey('image')) {
-      context.handle(
-        _imageMeta,
-        image.isAcceptableOrUnknown(data['image']!, _imageMeta),
-      );
+      context.handle(_imageMeta, image.isAcceptableOrUnknown(data['image']!, _imageMeta));
     }
     if (data.containsKey('price')) {
-      context.handle(
-        _priceMeta,
-        price.isAcceptableOrUnknown(data['price']!, _priceMeta),
-      );
+      context.handle(_priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
     }
     if (data.containsKey('currency')) {
-      context.handle(
-        _currencyMeta,
-        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
-      );
+      context.handle(_currencyMeta, currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
     } else if (isInserting) {
       context.missing(_currencyMeta);
     }
     if (data.containsKey('was')) {
-      context.handle(
-        _wasMeta,
-        was.isAcceptableOrUnknown(data['was']!, _wasMeta),
-      );
+      context.handle(_wasMeta, was.isAcceptableOrUnknown(data['was']!, _wasMeta));
     }
     if (data.containsKey('rating')) {
-      context.handle(
-        _ratingMeta,
-        rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta),
-      );
+      context.handle(_ratingMeta, rating.isAcceptableOrUnknown(data['rating']!, _ratingMeta));
     }
     if (data.containsKey('reviews')) {
-      context.handle(
-        _reviewsMeta,
-        reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta),
-      );
+      context.handle(_reviewsMeta, reviews.isAcceptableOrUnknown(data['reviews']!, _reviewsMeta));
     }
     if (data.containsKey('in_stock')) {
-      context.handle(
-        _inStockMeta,
-        inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta),
-      );
+      context.handle(_inStockMeta, inStock.isAcceptableOrUnknown(data['in_stock']!, _inStockMeta));
     }
     if (data.containsKey('query')) {
-      context.handle(
-        _queryMeta,
-        query.isAcceptableOrUnknown(data['query']!, _queryMeta),
-      );
+      context.handle(_queryMeta, query.isAcceptableOrUnknown(data['query']!, _queryMeta));
     }
     if (data.containsKey('seen')) {
-      context.handle(
-        _seenMeta,
-        seen.isAcceptableOrUnknown(data['seen']!, _seenMeta),
-      );
+      context.handle(_seenMeta, seen.isAcceptableOrUnknown(data['seen']!, _seenMeta));
     } else if (isInserting) {
       context.missing(_seenMeta);
     }
     if (data.containsKey('dhash')) {
-      context.handle(
-        _dhashMeta,
-        dhash.isAcceptableOrUnknown(data['dhash']!, _dhashMeta),
-      );
+      context.handle(_dhashMeta, dhash.isAcceptableOrUnknown(data['dhash']!, _dhashMeta));
     }
     return context;
   }
@@ -3740,62 +3187,20 @@ class $ChandaOffersTable extends ChandaOffers
   ShopOffer map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ShopOffer(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      shop: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}shop'],
-      )!,
-      url: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}url'],
-      )!,
-      title: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}title'],
-      )!,
-      image: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}image'],
-      )!,
-      price: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}price'],
-      ),
-      currency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}currency'],
-      )!,
-      was: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}was'],
-      ),
-      rating: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}rating'],
-      ),
-      reviews: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}reviews'],
-      ),
-      inStock: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}in_stock'],
-      )!,
-      query: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}query'],
-      )!,
-      seen: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}seen'],
-      )!,
-      dhash: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}dhash'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      shop: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}shop'])!,
+      url: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}url'])!,
+      title: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      image: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}image'])!,
+      price: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}price']),
+      currency: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
+      was: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}was']),
+      rating: attachedDatabase.typeMapping.read(DriftSqlType.double, data['${effectivePrefix}rating']),
+      reviews: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}reviews']),
+      inStock: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}in_stock'])!,
+      query: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}query'])!,
+      seen: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}seen'])!,
+      dhash: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}dhash'])!,
     );
   }
 
@@ -3877,17 +3282,11 @@ class ShopOffer extends DataClass implements Insertable<ShopOffer> {
       url: Value(url),
       title: Value(title),
       image: Value(image),
-      price: price == null && nullToAbsent
-          ? const Value.absent()
-          : Value(price),
+      price: price == null && nullToAbsent ? const Value.absent() : Value(price),
       currency: Value(currency),
       was: was == null && nullToAbsent ? const Value.absent() : Value(was),
-      rating: rating == null && nullToAbsent
-          ? const Value.absent()
-          : Value(rating),
-      reviews: reviews == null && nullToAbsent
-          ? const Value.absent()
-          : Value(reviews),
+      rating: rating == null && nullToAbsent ? const Value.absent() : Value(rating),
+      reviews: reviews == null && nullToAbsent ? const Value.absent() : Value(reviews),
       inStock: Value(inStock),
       query: Value(query),
       seen: Value(seen),
@@ -3895,10 +3294,7 @@ class ShopOffer extends DataClass implements Insertable<ShopOffer> {
     );
   }
 
-  factory ShopOffer.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ShopOffer.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ShopOffer(
       id: serializer.fromJson<String>(json['id']),
@@ -4247,8 +3643,7 @@ class ChandaOffersCompanion extends UpdateCompanion<ShopOffer> {
   }
 }
 
-class $ChandaMatchesTable extends ChandaMatches
-    with TableInfo<$ChandaMatchesTable, ProductMatch> {
+class $ChandaMatchesTable extends ChandaMatches with TableInfo<$ChandaMatchesTable, ProductMatch> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -4272,9 +3667,7 @@ class $ChandaMatchesTable extends ChandaMatches
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -4282,9 +3675,7 @@ class $ChandaMatchesTable extends ChandaMatches
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _itemIdMeta = const VerificationMeta('itemId');
@@ -4305,9 +3696,7 @@ class $ChandaMatchesTable extends ChandaMatches
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _verdictMeta = const VerificationMeta(
-    'verdict',
-  );
+  static const VerificationMeta _verdictMeta = const VerificationMeta('verdict');
   @override
   late final GeneratedColumn<String> verdict = GeneratedColumn<String>(
     'verdict',
@@ -4317,24 +3706,14 @@ class $ChandaMatchesTable extends ChandaMatches
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    hlc,
-    deleted,
-    itemId,
-    url,
-    verdict,
-  ];
+  List<GeneratedColumn> get $columns => [id, hlc, deleted, itemId, url, verdict];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'chanda_matches';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<ProductMatch> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<ProductMatch> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -4343,38 +3722,23 @@ class $ChandaMatchesTable extends ChandaMatches
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('item_id')) {
-      context.handle(
-        _itemIdMeta,
-        itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta),
-      );
+      context.handle(_itemIdMeta, itemId.isAcceptableOrUnknown(data['item_id']!, _itemIdMeta));
     } else if (isInserting) {
       context.missing(_itemIdMeta);
     }
     if (data.containsKey('url')) {
-      context.handle(
-        _urlMeta,
-        url.isAcceptableOrUnknown(data['url']!, _urlMeta),
-      );
+      context.handle(_urlMeta, url.isAcceptableOrUnknown(data['url']!, _urlMeta));
     } else if (isInserting) {
       context.missing(_urlMeta);
     }
     if (data.containsKey('verdict')) {
-      context.handle(
-        _verdictMeta,
-        verdict.isAcceptableOrUnknown(data['verdict']!, _verdictMeta),
-      );
+      context.handle(_verdictMeta, verdict.isAcceptableOrUnknown(data['verdict']!, _verdictMeta));
     } else if (isInserting) {
       context.missing(_verdictMeta);
     }
@@ -4387,30 +3751,12 @@ class $ChandaMatchesTable extends ChandaMatches
   ProductMatch map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ProductMatch(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      itemId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}item_id'],
-      )!,
-      url: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}url'],
-      )!,
-      verdict: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}verdict'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      itemId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}item_id'])!,
+      url: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}url'])!,
+      verdict: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}verdict'])!,
     );
   }
 
@@ -4460,10 +3806,7 @@ class ProductMatch extends DataClass implements Insertable<ProductMatch> {
     );
   }
 
-  factory ProductMatch.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory ProductMatch.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ProductMatch(
       id: serializer.fromJson<String>(json['id']),
@@ -4675,9 +4018,7 @@ class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
-  static const VerificationMeta _deletedMeta = const VerificationMeta(
-    'deleted',
-  );
+  static const VerificationMeta _deletedMeta = const VerificationMeta('deleted');
   @override
   late final GeneratedColumn<bool> deleted = GeneratedColumn<bool>(
     'deleted',
@@ -4685,9 +4026,7 @@ class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
     false,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("deleted" IN (0, 1))',
-    ),
+    defaultConstraints: GeneratedColumn.constraintIsAlways('CHECK ("deleted" IN (0, 1))'),
     defaultValue: const Constant(false),
   );
   static const VerificationMeta _valueMeta = const VerificationMeta('value');
@@ -4707,10 +4046,7 @@ class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
   String get actualTableName => $name;
   static const String $name = 'prefs';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<Pref> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<Pref> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -4719,22 +4055,13 @@ class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
       context.missing(_idMeta);
     }
     if (data.containsKey('hlc')) {
-      context.handle(
-        _hlcMeta,
-        hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta),
-      );
+      context.handle(_hlcMeta, hlc.isAcceptableOrUnknown(data['hlc']!, _hlcMeta));
     }
     if (data.containsKey('deleted')) {
-      context.handle(
-        _deletedMeta,
-        deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta),
-      );
+      context.handle(_deletedMeta, deleted.isAcceptableOrUnknown(data['deleted']!, _deletedMeta));
     }
     if (data.containsKey('value')) {
-      context.handle(
-        _valueMeta,
-        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
-      );
+      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
     } else if (isInserting) {
       context.missing(_valueMeta);
     }
@@ -4747,22 +4074,10 @@ class $PrefsTable extends Prefs with TableInfo<$PrefsTable, Pref> {
   Pref map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Pref(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
-      hlc: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}hlc'],
-      )!,
-      deleted: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}deleted'],
-      )!,
-      value: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}value'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      hlc: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}hlc'])!,
+      deleted: attachedDatabase.typeMapping.read(DriftSqlType.bool, data['${effectivePrefix}deleted'])!,
+      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
     );
   }
 
@@ -4777,12 +4092,7 @@ class Pref extends DataClass implements Insertable<Pref> {
   final String hlc;
   final bool deleted;
   final String value;
-  const Pref({
-    required this.id,
-    required this.hlc,
-    required this.deleted,
-    required this.value,
-  });
+  const Pref({required this.id, required this.hlc, required this.deleted, required this.value});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4794,18 +4104,10 @@ class Pref extends DataClass implements Insertable<Pref> {
   }
 
   PrefsCompanion toCompanion(bool nullToAbsent) {
-    return PrefsCompanion(
-      id: Value(id),
-      hlc: Value(hlc),
-      deleted: Value(deleted),
-      value: Value(value),
-    );
+    return PrefsCompanion(id: Value(id), hlc: Value(hlc), deleted: Value(deleted), value: Value(value));
   }
 
-  factory Pref.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory Pref.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Pref(
       id: serializer.fromJson<String>(json['id']),
@@ -4825,13 +4127,12 @@ class Pref extends DataClass implements Insertable<Pref> {
     };
   }
 
-  Pref copyWith({String? id, String? hlc, bool? deleted, String? value}) =>
-      Pref(
-        id: id ?? this.id,
-        hlc: hlc ?? this.hlc,
-        deleted: deleted ?? this.deleted,
-        value: value ?? this.value,
-      );
+  Pref copyWith({String? id, String? hlc, bool? deleted, String? value}) => Pref(
+    id: id ?? this.id,
+    hlc: hlc ?? this.hlc,
+    deleted: deleted ?? this.deleted,
+    value: value ?? this.value,
+  );
   Pref copyWithCompanion(PrefsCompanion data) {
     return Pref(
       id: data.id.present ? data.id.value : this.id,
@@ -4991,33 +4292,21 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxItem> {
   String get actualTableName => $name;
   static const String $name = 'outbox';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<OutboxItem> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<OutboxItem> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('entity')) {
-      context.handle(
-        _entityMeta,
-        entity.isAcceptableOrUnknown(data['entity']!, _entityMeta),
-      );
+      context.handle(_entityMeta, entity.isAcceptableOrUnknown(data['entity']!, _entityMeta));
     } else if (isInserting) {
       context.missing(_entityMeta);
     }
     if (data.containsKey('row_id')) {
-      context.handle(
-        _rowIdMeta,
-        rowId.isAcceptableOrUnknown(data['row_id']!, _rowIdMeta),
-      );
+      context.handle(_rowIdMeta, rowId.isAcceptableOrUnknown(data['row_id']!, _rowIdMeta));
     } else if (isInserting) {
       context.missing(_rowIdMeta);
     }
     if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
+      context.handle(_seqMeta, seq.isAcceptableOrUnknown(data['seq']!, _seqMeta));
     }
     return context;
   }
@@ -5028,18 +4317,9 @@ class $OutboxTable extends Outbox with TableInfo<$OutboxTable, OutboxItem> {
   OutboxItem map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OutboxItem(
-      entity: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}entity'],
-      )!,
-      rowId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}row_id'],
-      )!,
-      seq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seq'],
-      ),
+      entity: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}entity'])!,
+      rowId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}row_id'])!,
+      seq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}seq']),
     );
   }
 
@@ -5073,10 +4353,7 @@ class OutboxItem extends DataClass implements Insertable<OutboxItem> {
     );
   }
 
-  factory OutboxItem.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OutboxItem.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxItem(
       entity: serializer.fromJson<String>(json['entity']),
@@ -5094,11 +4371,7 @@ class OutboxItem extends DataClass implements Insertable<OutboxItem> {
     };
   }
 
-  OutboxItem copyWith({
-    String? entity,
-    String? rowId,
-    Value<int?> seq = const Value.absent(),
-  }) => OutboxItem(
+  OutboxItem copyWith({String? entity, String? rowId, Value<int?> seq = const Value.absent()}) => OutboxItem(
     entity: entity ?? this.entity,
     rowId: rowId ?? this.rowId,
     seq: seq.present ? seq.value : this.seq,
@@ -5208,15 +4481,12 @@ class OutboxCompanion extends UpdateCompanion<OutboxItem> {
   }
 }
 
-class $SyncCursorsTable extends SyncCursors
-    with TableInfo<$SyncCursorsTable, SyncCursor> {
+class $SyncCursorsTable extends SyncCursors with TableInfo<$SyncCursorsTable, SyncCursor> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SyncCursorsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
-    'deviceId',
-  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta('deviceId');
   @override
   late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
     'device_id',
@@ -5242,25 +4512,16 @@ class $SyncCursorsTable extends SyncCursors
   String get actualTableName => $name;
   static const String $name = 'sync_cursors';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<SyncCursor> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<SyncCursor> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('device_id')) {
-      context.handle(
-        _deviceIdMeta,
-        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
-      );
+      context.handle(_deviceIdMeta, deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
     }
     if (data.containsKey('seq')) {
-      context.handle(
-        _seqMeta,
-        seq.isAcceptableOrUnknown(data['seq']!, _seqMeta),
-      );
+      context.handle(_seqMeta, seq.isAcceptableOrUnknown(data['seq']!, _seqMeta));
     } else if (isInserting) {
       context.missing(_seqMeta);
     }
@@ -5273,14 +4534,8 @@ class $SyncCursorsTable extends SyncCursors
   SyncCursor map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncCursor(
-      deviceId: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}device_id'],
-      )!,
-      seq: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}seq'],
-      )!,
+      deviceId: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
+      seq: attachedDatabase.typeMapping.read(DriftSqlType.int, data['${effectivePrefix}seq'])!,
     );
   }
 
@@ -5306,10 +4561,7 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
     return SyncCursorsCompanion(deviceId: Value(deviceId), seq: Value(seq));
   }
 
-  factory SyncCursor.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory SyncCursor.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncCursor(
       deviceId: serializer.fromJson<String>(json['deviceId']),
@@ -5348,9 +4600,7 @@ class SyncCursor extends DataClass implements Insertable<SyncCursor> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is SyncCursor &&
-          other.deviceId == this.deviceId &&
-          other.seq == this.seq);
+      (other is SyncCursor && other.deviceId == this.deviceId && other.seq == this.seq);
 }
 
 class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
@@ -5362,12 +4612,9 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     this.seq = const Value.absent(),
     this.rowid = const Value.absent(),
   });
-  SyncCursorsCompanion.insert({
-    required String deviceId,
-    required int seq,
-    this.rowid = const Value.absent(),
-  }) : deviceId = Value(deviceId),
-       seq = Value(seq);
+  SyncCursorsCompanion.insert({required String deviceId, required int seq, this.rowid = const Value.absent()})
+    : deviceId = Value(deviceId),
+      seq = Value(seq);
   static Insertable<SyncCursor> custom({
     Expression<String>? deviceId,
     Expression<int>? seq,
@@ -5380,11 +4627,7 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
     });
   }
 
-  SyncCursorsCompanion copyWith({
-    Value<String>? deviceId,
-    Value<int>? seq,
-    Value<int>? rowid,
-  }) {
+  SyncCursorsCompanion copyWith({Value<String>? deviceId, Value<int>? seq, Value<int>? rowid}) {
     return SyncCursorsCompanion(
       deviceId: deviceId ?? this.deviceId,
       seq: seq ?? this.seq,
@@ -5418,8 +4661,7 @@ class SyncCursorsCompanion extends UpdateCompanion<SyncCursor> {
   }
 }
 
-class $LocalSettingsTable extends LocalSettings
-    with TableInfo<$LocalSettingsTable, LocalSetting> {
+class $LocalSettingsTable extends LocalSettings with TableInfo<$LocalSettingsTable, LocalSetting> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -5450,25 +4692,16 @@ class $LocalSettingsTable extends LocalSettings
   String get actualTableName => $name;
   static const String $name = 'local_settings';
   @override
-  VerificationContext validateIntegrity(
-    Insertable<LocalSetting> instance, {
-    bool isInserting = false,
-  }) {
+  VerificationContext validateIntegrity(Insertable<LocalSetting> instance, {bool isInserting = false}) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('value')) {
-      context.handle(
-        _valueMeta,
-        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
-      );
+      context.handle(_valueMeta, value.isAcceptableOrUnknown(data['value']!, _valueMeta));
     } else if (isInserting) {
       context.missing(_valueMeta);
     }
@@ -5481,14 +4714,8 @@ class $LocalSettingsTable extends LocalSettings
   LocalSetting map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalSetting(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      value: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}value'],
-      )!,
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      value: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}value'])!,
     );
   }
 
@@ -5514,10 +4741,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
     return LocalSettingsCompanion(key: Value(key), value: Value(value));
   }
 
-  factory LocalSetting.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory LocalSetting.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalSetting(
       key: serializer.fromJson<String>(json['key']),
@@ -5555,10 +4779,7 @@ class LocalSetting extends DataClass implements Insertable<LocalSetting> {
   int get hashCode => Object.hash(key, value);
   @override
   bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is LocalSetting &&
-          other.key == this.key &&
-          other.value == this.value);
+      identical(this, other) || (other is LocalSetting && other.key == this.key && other.value == this.value);
 }
 
 class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
@@ -5588,11 +4809,7 @@ class LocalSettingsCompanion extends UpdateCompanion<LocalSetting> {
     });
   }
 
-  LocalSettingsCompanion copyWith({
-    Value<String>? key,
-    Value<String>? value,
-    Value<int>? rowid,
-  }) {
+  LocalSettingsCompanion copyWith({Value<String>? key, Value<String>? value, Value<int>? rowid}) {
     return LocalSettingsCompanion(
       key: key ?? this.key,
       value: value ?? this.value,
@@ -5657,29 +4874,26 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
-typedef $$ChandaListsTableCreateCompanionBuilder =
-    ChandaListsCompanion Function({
-      required String id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      required String name,
-      required String created,
-      Value<int> ord,
-      Value<int> rowid,
-    });
-typedef $$ChandaListsTableUpdateCompanionBuilder =
-    ChandaListsCompanion Function({
-      Value<String> id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      Value<String> name,
-      Value<String> created,
-      Value<int> ord,
-      Value<int> rowid,
-    });
+typedef $$ChandaListsTableCreateCompanionBuilder = ChandaListsCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String name,
+  required String created,
+  Value<int> ord,
+  Value<int> rowid,
+});
+typedef $$ChandaListsTableUpdateCompanionBuilder = ChandaListsCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> name,
+  Value<String> created,
+  Value<int> ord,
+  Value<int> rowid,
+});
 
-class $$ChandaListsTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaListsTable> {
+class $$ChandaListsTableFilterComposer extends Composer<_$AppDatabase, $ChandaListsTable> {
   $$ChandaListsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5687,39 +4901,26 @@ class $$ChandaListsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get created => $composableBuilder(
-    column: $table.created,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get created =>
+      $composableBuilder(column: $table.created, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get ord => $composableBuilder(
-    column: $table.ord,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get ord =>
+      $composableBuilder(column: $table.ord, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaListsTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaListsTable> {
+class $$ChandaListsTableOrderingComposer extends Composer<_$AppDatabase, $ChandaListsTable> {
   $$ChandaListsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -5727,39 +4928,26 @@ class $$ChandaListsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get name => $composableBuilder(
-    column: $table.name,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get created => $composableBuilder(
-    column: $table.created,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get created =>
+      $composableBuilder(column: $table.created, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get ord => $composableBuilder(
-    column: $table.ord,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get ord =>
+      $composableBuilder(column: $table.ord, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaListsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaListsTable> {
+class $$ChandaListsTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaListsTable> {
   $$ChandaListsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -5767,23 +4955,19 @@ class $$ChandaListsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
-  GeneratedColumn<String> get name =>
-      $composableBuilder(column: $table.name, builder: (column) => column);
+  GeneratedColumn<String> get name => $composableBuilder(column: $table.name, builder: (column) => column);
 
   GeneratedColumn<String> get created =>
       $composableBuilder(column: $table.created, builder: (column) => column);
 
-  GeneratedColumn<int> get ord =>
-      $composableBuilder(column: $table.ord, builder: (column) => column);
+  GeneratedColumn<int> get ord => $composableBuilder(column: $table.ord, builder: (column) => column);
 }
 
 class $$ChandaListsTableTableManager
@@ -5797,10 +4981,7 @@ class $$ChandaListsTableTableManager
           $$ChandaListsTableAnnotationComposer,
           $$ChandaListsTableCreateCompanionBuilder,
           $$ChandaListsTableUpdateCompanionBuilder,
-          (
-            VaultList,
-            BaseReferences<_$AppDatabase, $ChandaListsTable, VaultList>,
-          ),
+          (VaultList, BaseReferences<_$AppDatabase, $ChandaListsTable, VaultList>),
           VaultList,
           PrefetchHooks Function()
         > {
@@ -5809,12 +4990,9 @@ class $$ChandaListsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaListsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaListsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaListsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaListsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaListsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaListsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -5855,11 +5033,7 @@ class $$ChandaListsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaListsTable, VaultList>(table),
-                  BaseReferences<_$AppDatabase, $ChandaListsTable, VaultList>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ChandaListsTable, VaultList>(db, table, e),
                 ),
               )
               .toList(),
@@ -5882,87 +5056,84 @@ typedef $$ChandaListsTableProcessedTableManager =
       VaultList,
       PrefetchHooks Function()
     >;
-typedef $$ChandaItemsTableCreateCompanionBuilder =
-    ChandaItemsCompanion Function({
-      required String id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      required String listId,
-      required String title,
-      Value<String> brand,
-      required String shop,
-      required String url,
-      Value<String> productKey,
-      Value<String> variant,
-      Value<String> note,
-      Value<String> tags,
-      Value<String> images,
-      Value<String> description,
-      Value<String> seller,
-      Value<String> gtin,
-      Value<String> mpn,
-      Value<double?> rating,
-      Value<int?> reviews,
-      Value<String> warranty,
-      required String currency,
-      Value<int?> price,
-      Value<int?> was,
-      Value<int?> shipping,
-      Value<bool> inStock,
-      Value<int?> target,
-      Value<bool> alertDrop,
-      Value<bool> alertStock,
-      Value<bool> watchClose,
-      Value<bool> bought,
-      required String added,
-      Value<String?> checked,
-      Value<String> status,
-      Value<int> failures,
-      Value<String> layer,
-      Value<int> rowid,
-    });
-typedef $$ChandaItemsTableUpdateCompanionBuilder =
-    ChandaItemsCompanion Function({
-      Value<String> id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      Value<String> listId,
-      Value<String> title,
-      Value<String> brand,
-      Value<String> shop,
-      Value<String> url,
-      Value<String> productKey,
-      Value<String> variant,
-      Value<String> note,
-      Value<String> tags,
-      Value<String> images,
-      Value<String> description,
-      Value<String> seller,
-      Value<String> gtin,
-      Value<String> mpn,
-      Value<double?> rating,
-      Value<int?> reviews,
-      Value<String> warranty,
-      Value<String> currency,
-      Value<int?> price,
-      Value<int?> was,
-      Value<int?> shipping,
-      Value<bool> inStock,
-      Value<int?> target,
-      Value<bool> alertDrop,
-      Value<bool> alertStock,
-      Value<bool> watchClose,
-      Value<bool> bought,
-      Value<String> added,
-      Value<String?> checked,
-      Value<String> status,
-      Value<int> failures,
-      Value<String> layer,
-      Value<int> rowid,
-    });
+typedef $$ChandaItemsTableCreateCompanionBuilder = ChandaItemsCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String listId,
+  required String title,
+  Value<String> brand,
+  required String shop,
+  required String url,
+  Value<String> productKey,
+  Value<String> variant,
+  Value<String> note,
+  Value<String> tags,
+  Value<String> images,
+  Value<String> description,
+  Value<String> seller,
+  Value<String> gtin,
+  Value<String> mpn,
+  Value<double?> rating,
+  Value<int?> reviews,
+  Value<String> warranty,
+  required String currency,
+  Value<int?> price,
+  Value<int?> was,
+  Value<int?> shipping,
+  Value<bool> inStock,
+  Value<int?> target,
+  Value<bool> alertDrop,
+  Value<bool> alertStock,
+  Value<bool> watchClose,
+  Value<bool> bought,
+  required String added,
+  Value<String?> checked,
+  Value<String> status,
+  Value<int> failures,
+  Value<String> layer,
+  Value<int> rowid,
+});
+typedef $$ChandaItemsTableUpdateCompanionBuilder = ChandaItemsCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> listId,
+  Value<String> title,
+  Value<String> brand,
+  Value<String> shop,
+  Value<String> url,
+  Value<String> productKey,
+  Value<String> variant,
+  Value<String> note,
+  Value<String> tags,
+  Value<String> images,
+  Value<String> description,
+  Value<String> seller,
+  Value<String> gtin,
+  Value<String> mpn,
+  Value<double?> rating,
+  Value<int?> reviews,
+  Value<String> warranty,
+  Value<String> currency,
+  Value<int?> price,
+  Value<int?> was,
+  Value<int?> shipping,
+  Value<bool> inStock,
+  Value<int?> target,
+  Value<bool> alertDrop,
+  Value<bool> alertStock,
+  Value<bool> watchClose,
+  Value<bool> bought,
+  Value<String> added,
+  Value<String?> checked,
+  Value<String> status,
+  Value<int> failures,
+  Value<String> layer,
+  Value<int> rowid,
+});
 
-class $$ChandaItemsTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaItemsTable> {
+class $$ChandaItemsTableFilterComposer extends Composer<_$AppDatabase, $ChandaItemsTable> {
   $$ChandaItemsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -5970,184 +5141,113 @@ class $$ChandaItemsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get listId => $composableBuilder(
-    column: $table.listId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get listId =>
+      $composableBuilder(column: $table.listId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get brand => $composableBuilder(
-    column: $table.brand,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get brand =>
+      $composableBuilder(column: $table.brand, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get shop => $composableBuilder(
-    column: $table.shop,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get productKey => $composableBuilder(
-    column: $table.productKey,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get productKey =>
+      $composableBuilder(column: $table.productKey, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get variant => $composableBuilder(
-    column: $table.variant,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get variant =>
+      $composableBuilder(column: $table.variant, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get tags => $composableBuilder(
-    column: $table.tags,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get images => $composableBuilder(
-    column: $table.images,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get images =>
+      $composableBuilder(column: $table.images, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get description =>
+      $composableBuilder(column: $table.description, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get seller => $composableBuilder(
-    column: $table.seller,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get seller =>
+      $composableBuilder(column: $table.seller, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get gtin => $composableBuilder(
-    column: $table.gtin,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get gtin =>
+      $composableBuilder(column: $table.gtin, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get mpn => $composableBuilder(
-    column: $table.mpn,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get mpn =>
+      $composableBuilder(column: $table.mpn, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get rating => $composableBuilder(
-    column: $table.rating,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get reviews => $composableBuilder(
-    column: $table.reviews,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get reviews =>
+      $composableBuilder(column: $table.reviews, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get warranty => $composableBuilder(
-    column: $table.warranty,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get warranty =>
+      $composableBuilder(column: $table.warranty, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get shipping => $composableBuilder(
-    column: $table.shipping,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get shipping =>
+      $composableBuilder(column: $table.shipping, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get target => $composableBuilder(
-    column: $table.target,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get target =>
+      $composableBuilder(column: $table.target, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get alertDrop => $composableBuilder(
-    column: $table.alertDrop,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get alertDrop =>
+      $composableBuilder(column: $table.alertDrop, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get alertStock => $composableBuilder(
-    column: $table.alertStock,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get alertStock =>
+      $composableBuilder(column: $table.alertStock, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get watchClose => $composableBuilder(
-    column: $table.watchClose,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get watchClose =>
+      $composableBuilder(column: $table.watchClose, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get bought => $composableBuilder(
-    column: $table.bought,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get bought =>
+      $composableBuilder(column: $table.bought, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get added => $composableBuilder(
-    column: $table.added,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get added =>
+      $composableBuilder(column: $table.added, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get checked => $composableBuilder(
-    column: $table.checked,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get checked =>
+      $composableBuilder(column: $table.checked, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get failures => $composableBuilder(
-    column: $table.failures,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get failures =>
+      $composableBuilder(column: $table.failures, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get layer => $composableBuilder(
-    column: $table.layer,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get layer =>
+      $composableBuilder(column: $table.layer, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaItemsTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaItemsTable> {
+class $$ChandaItemsTableOrderingComposer extends Composer<_$AppDatabase, $ChandaItemsTable> {
   $$ChandaItemsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6155,184 +5255,113 @@ class $$ChandaItemsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get listId => $composableBuilder(
-    column: $table.listId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get listId =>
+      $composableBuilder(column: $table.listId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get brand => $composableBuilder(
-    column: $table.brand,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get brand =>
+      $composableBuilder(column: $table.brand, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get shop => $composableBuilder(
-    column: $table.shop,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get productKey => $composableBuilder(
-    column: $table.productKey,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get productKey =>
+      $composableBuilder(column: $table.productKey, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get variant => $composableBuilder(
-    column: $table.variant,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get variant =>
+      $composableBuilder(column: $table.variant, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get tags => $composableBuilder(
-    column: $table.tags,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get tags =>
+      $composableBuilder(column: $table.tags, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get images => $composableBuilder(
-    column: $table.images,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get images =>
+      $composableBuilder(column: $table.images, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get description =>
+      $composableBuilder(column: $table.description, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get seller => $composableBuilder(
-    column: $table.seller,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get seller =>
+      $composableBuilder(column: $table.seller, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get gtin => $composableBuilder(
-    column: $table.gtin,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get gtin =>
+      $composableBuilder(column: $table.gtin, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get mpn => $composableBuilder(
-    column: $table.mpn,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get mpn =>
+      $composableBuilder(column: $table.mpn, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get rating => $composableBuilder(
-    column: $table.rating,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get reviews => $composableBuilder(
-    column: $table.reviews,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get reviews =>
+      $composableBuilder(column: $table.reviews, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get warranty => $composableBuilder(
-    column: $table.warranty,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get warranty =>
+      $composableBuilder(column: $table.warranty, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get shipping => $composableBuilder(
-    column: $table.shipping,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get shipping =>
+      $composableBuilder(column: $table.shipping, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get target => $composableBuilder(
-    column: $table.target,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get target =>
+      $composableBuilder(column: $table.target, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get alertDrop => $composableBuilder(
-    column: $table.alertDrop,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get alertDrop =>
+      $composableBuilder(column: $table.alertDrop, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get alertStock => $composableBuilder(
-    column: $table.alertStock,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get alertStock =>
+      $composableBuilder(column: $table.alertStock, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get watchClose => $composableBuilder(
-    column: $table.watchClose,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get watchClose =>
+      $composableBuilder(column: $table.watchClose, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get bought => $composableBuilder(
-    column: $table.bought,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get bought =>
+      $composableBuilder(column: $table.bought, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get added => $composableBuilder(
-    column: $table.added,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get added =>
+      $composableBuilder(column: $table.added, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get checked => $composableBuilder(
-    column: $table.checked,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get checked =>
+      $composableBuilder(column: $table.checked, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get failures => $composableBuilder(
-    column: $table.failures,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get failures =>
+      $composableBuilder(column: $table.failures, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get layer => $composableBuilder(
-    column: $table.layer,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get layer =>
+      $composableBuilder(column: $table.layer, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaItemsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaItemsTable> {
+class $$ChandaItemsTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaItemsTable> {
   $$ChandaItemsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6340,11 +5369,9 @@ class $$ChandaItemsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -6352,54 +5379,41 @@ class $$ChandaItemsTableAnnotationComposer
   GeneratedColumn<String> get listId =>
       $composableBuilder(column: $table.listId, builder: (column) => column);
 
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get brand =>
-      $composableBuilder(column: $table.brand, builder: (column) => column);
+  GeneratedColumn<String> get brand => $composableBuilder(column: $table.brand, builder: (column) => column);
 
-  GeneratedColumn<String> get shop =>
-      $composableBuilder(column: $table.shop, builder: (column) => column);
+  GeneratedColumn<String> get shop => $composableBuilder(column: $table.shop, builder: (column) => column);
 
-  GeneratedColumn<String> get url =>
-      $composableBuilder(column: $table.url, builder: (column) => column);
+  GeneratedColumn<String> get url => $composableBuilder(column: $table.url, builder: (column) => column);
 
-  GeneratedColumn<String> get productKey => $composableBuilder(
-    column: $table.productKey,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get productKey =>
+      $composableBuilder(column: $table.productKey, builder: (column) => column);
 
   GeneratedColumn<String> get variant =>
       $composableBuilder(column: $table.variant, builder: (column) => column);
 
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
+  GeneratedColumn<String> get note => $composableBuilder(column: $table.note, builder: (column) => column);
 
-  GeneratedColumn<String> get tags =>
-      $composableBuilder(column: $table.tags, builder: (column) => column);
+  GeneratedColumn<String> get tags => $composableBuilder(column: $table.tags, builder: (column) => column);
 
   GeneratedColumn<String> get images =>
       $composableBuilder(column: $table.images, builder: (column) => column);
 
-  GeneratedColumn<String> get description => $composableBuilder(
-    column: $table.description,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get description =>
+      $composableBuilder(column: $table.description, builder: (column) => column);
 
   GeneratedColumn<String> get seller =>
       $composableBuilder(column: $table.seller, builder: (column) => column);
 
-  GeneratedColumn<String> get gtin =>
-      $composableBuilder(column: $table.gtin, builder: (column) => column);
+  GeneratedColumn<String> get gtin => $composableBuilder(column: $table.gtin, builder: (column) => column);
 
-  GeneratedColumn<String> get mpn =>
-      $composableBuilder(column: $table.mpn, builder: (column) => column);
+  GeneratedColumn<String> get mpn => $composableBuilder(column: $table.mpn, builder: (column) => column);
 
   GeneratedColumn<double> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
 
-  GeneratedColumn<int> get reviews =>
-      $composableBuilder(column: $table.reviews, builder: (column) => column);
+  GeneratedColumn<int> get reviews => $composableBuilder(column: $table.reviews, builder: (column) => column);
 
   GeneratedColumn<String> get warranty =>
       $composableBuilder(column: $table.warranty, builder: (column) => column);
@@ -6407,11 +5421,9 @@ class $$ChandaItemsTableAnnotationComposer
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
 
-  GeneratedColumn<int> get price =>
-      $composableBuilder(column: $table.price, builder: (column) => column);
+  GeneratedColumn<int> get price => $composableBuilder(column: $table.price, builder: (column) => column);
 
-  GeneratedColumn<int> get was =>
-      $composableBuilder(column: $table.was, builder: (column) => column);
+  GeneratedColumn<int> get was => $composableBuilder(column: $table.was, builder: (column) => column);
 
   GeneratedColumn<int> get shipping =>
       $composableBuilder(column: $table.shipping, builder: (column) => column);
@@ -6419,27 +5431,20 @@ class $$ChandaItemsTableAnnotationComposer
   GeneratedColumn<bool> get inStock =>
       $composableBuilder(column: $table.inStock, builder: (column) => column);
 
-  GeneratedColumn<int> get target =>
-      $composableBuilder(column: $table.target, builder: (column) => column);
+  GeneratedColumn<int> get target => $composableBuilder(column: $table.target, builder: (column) => column);
 
   GeneratedColumn<bool> get alertDrop =>
       $composableBuilder(column: $table.alertDrop, builder: (column) => column);
 
-  GeneratedColumn<bool> get alertStock => $composableBuilder(
-    column: $table.alertStock,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get alertStock =>
+      $composableBuilder(column: $table.alertStock, builder: (column) => column);
 
-  GeneratedColumn<bool> get watchClose => $composableBuilder(
-    column: $table.watchClose,
-    builder: (column) => column,
-  );
+  GeneratedColumn<bool> get watchClose =>
+      $composableBuilder(column: $table.watchClose, builder: (column) => column);
 
-  GeneratedColumn<bool> get bought =>
-      $composableBuilder(column: $table.bought, builder: (column) => column);
+  GeneratedColumn<bool> get bought => $composableBuilder(column: $table.bought, builder: (column) => column);
 
-  GeneratedColumn<String> get added =>
-      $composableBuilder(column: $table.added, builder: (column) => column);
+  GeneratedColumn<String> get added => $composableBuilder(column: $table.added, builder: (column) => column);
 
   GeneratedColumn<String> get checked =>
       $composableBuilder(column: $table.checked, builder: (column) => column);
@@ -6450,8 +5455,7 @@ class $$ChandaItemsTableAnnotationComposer
   GeneratedColumn<int> get failures =>
       $composableBuilder(column: $table.failures, builder: (column) => column);
 
-  GeneratedColumn<String> get layer =>
-      $composableBuilder(column: $table.layer, builder: (column) => column);
+  GeneratedColumn<String> get layer => $composableBuilder(column: $table.layer, builder: (column) => column);
 }
 
 class $$ChandaItemsTableTableManager
@@ -6465,10 +5469,7 @@ class $$ChandaItemsTableTableManager
           $$ChandaItemsTableAnnotationComposer,
           $$ChandaItemsTableCreateCompanionBuilder,
           $$ChandaItemsTableUpdateCompanionBuilder,
-          (
-            VaultItem,
-            BaseReferences<_$AppDatabase, $ChandaItemsTable, VaultItem>,
-          ),
+          (VaultItem, BaseReferences<_$AppDatabase, $ChandaItemsTable, VaultItem>),
           VaultItem,
           PrefetchHooks Function()
         > {
@@ -6477,12 +5478,9 @@ class $$ChandaItemsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaItemsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaItemsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaItemsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaItemsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaItemsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaItemsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -6639,11 +5637,7 @@ class $$ChandaItemsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaItemsTable, VaultItem>(table),
-                  BaseReferences<_$AppDatabase, $ChandaItemsTable, VaultItem>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ChandaItemsTable, VaultItem>(db, table, e),
                 ),
               )
               .toList(),
@@ -6666,41 +5660,38 @@ typedef $$ChandaItemsTableProcessedTableManager =
       VaultItem,
       PrefetchHooks Function()
     >;
-typedef $$ChandaPricesTableCreateCompanionBuilder =
-    ChandaPricesCompanion Function({
-      required String id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      required String itemId,
-      required int price,
-      required String currency,
-      Value<int?> was,
-      Value<int?> shipping,
-      Value<bool> inStock,
-      required String seen,
-      Value<String> layer,
-      Value<String> source,
-      Value<int> rowid,
-    });
-typedef $$ChandaPricesTableUpdateCompanionBuilder =
-    ChandaPricesCompanion Function({
-      Value<String> id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      Value<String> itemId,
-      Value<int> price,
-      Value<String> currency,
-      Value<int?> was,
-      Value<int?> shipping,
-      Value<bool> inStock,
-      Value<String> seen,
-      Value<String> layer,
-      Value<String> source,
-      Value<int> rowid,
-    });
+typedef $$ChandaPricesTableCreateCompanionBuilder = ChandaPricesCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String itemId,
+  required int price,
+  required String currency,
+  Value<int?> was,
+  Value<int?> shipping,
+  Value<bool> inStock,
+  required String seen,
+  Value<String> layer,
+  Value<String> source,
+  Value<int> rowid,
+});
+typedef $$ChandaPricesTableUpdateCompanionBuilder = ChandaPricesCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> itemId,
+  Value<int> price,
+  Value<String> currency,
+  Value<int?> was,
+  Value<int?> shipping,
+  Value<bool> inStock,
+  Value<String> seen,
+  Value<String> layer,
+  Value<String> source,
+  Value<int> rowid,
+});
 
-class $$ChandaPricesTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaPricesTable> {
+class $$ChandaPricesTableFilterComposer extends Composer<_$AppDatabase, $ChandaPricesTable> {
   $$ChandaPricesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -6708,69 +5699,44 @@ class $$ChandaPricesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get shipping => $composableBuilder(
-    column: $table.shipping,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get shipping =>
+      $composableBuilder(column: $table.shipping, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get layer => $composableBuilder(
-    column: $table.layer,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get layer =>
+      $composableBuilder(column: $table.layer, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaPricesTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaPricesTable> {
+class $$ChandaPricesTableOrderingComposer extends Composer<_$AppDatabase, $ChandaPricesTable> {
   $$ChandaPricesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -6778,69 +5744,44 @@ class $$ChandaPricesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get shipping => $composableBuilder(
-    column: $table.shipping,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get shipping =>
+      $composableBuilder(column: $table.shipping, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get layer => $composableBuilder(
-    column: $table.layer,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get layer =>
+      $composableBuilder(column: $table.layer, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get source => $composableBuilder(
-    column: $table.source,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaPricesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaPricesTable> {
+class $$ChandaPricesTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaPricesTable> {
   $$ChandaPricesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -6848,11 +5789,9 @@ class $$ChandaPricesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -6860,14 +5799,12 @@ class $$ChandaPricesTableAnnotationComposer
   GeneratedColumn<String> get itemId =>
       $composableBuilder(column: $table.itemId, builder: (column) => column);
 
-  GeneratedColumn<int> get price =>
-      $composableBuilder(column: $table.price, builder: (column) => column);
+  GeneratedColumn<int> get price => $composableBuilder(column: $table.price, builder: (column) => column);
 
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
 
-  GeneratedColumn<int> get was =>
-      $composableBuilder(column: $table.was, builder: (column) => column);
+  GeneratedColumn<int> get was => $composableBuilder(column: $table.was, builder: (column) => column);
 
   GeneratedColumn<int> get shipping =>
       $composableBuilder(column: $table.shipping, builder: (column) => column);
@@ -6875,11 +5812,9 @@ class $$ChandaPricesTableAnnotationComposer
   GeneratedColumn<bool> get inStock =>
       $composableBuilder(column: $table.inStock, builder: (column) => column);
 
-  GeneratedColumn<String> get seen =>
-      $composableBuilder(column: $table.seen, builder: (column) => column);
+  GeneratedColumn<String> get seen => $composableBuilder(column: $table.seen, builder: (column) => column);
 
-  GeneratedColumn<String> get layer =>
-      $composableBuilder(column: $table.layer, builder: (column) => column);
+  GeneratedColumn<String> get layer => $composableBuilder(column: $table.layer, builder: (column) => column);
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
@@ -6896,10 +5831,7 @@ class $$ChandaPricesTableTableManager
           $$ChandaPricesTableAnnotationComposer,
           $$ChandaPricesTableCreateCompanionBuilder,
           $$ChandaPricesTableUpdateCompanionBuilder,
-          (
-            PricePoint,
-            BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>,
-          ),
+          (PricePoint, BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>),
           PricePoint,
           PrefetchHooks Function()
         > {
@@ -6908,12 +5840,9 @@ class $$ChandaPricesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaPricesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaPricesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaPricesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaPricesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaPricesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaPricesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -6978,11 +5907,7 @@ class $$ChandaPricesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaPricesTable, PricePoint>(table),
-                  BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>(db, table, e),
                 ),
               )
               .toList(),
@@ -7001,44 +5926,38 @@ typedef $$ChandaPricesTableProcessedTableManager =
       $$ChandaPricesTableAnnotationComposer,
       $$ChandaPricesTableCreateCompanionBuilder,
       $$ChandaPricesTableUpdateCompanionBuilder,
-      (
-        PricePoint,
-        BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>,
-      ),
+      (PricePoint, BaseReferences<_$AppDatabase, $ChandaPricesTable, PricePoint>),
       PricePoint,
       PrefetchHooks Function()
     >;
-typedef $$ChandaAlertsTableCreateCompanionBuilder =
-    ChandaAlertsCompanion Function({
-      required String id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      required String itemId,
-      required String kind,
-      Value<int?> before,
-      Value<int?> after,
-      Value<String> currency,
-      required String at,
-      Value<bool> seen,
-      Value<int> rowid,
-    });
-typedef $$ChandaAlertsTableUpdateCompanionBuilder =
-    ChandaAlertsCompanion Function({
-      Value<String> id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      Value<String> itemId,
-      Value<String> kind,
-      Value<int?> before,
-      Value<int?> after,
-      Value<String> currency,
-      Value<String> at,
-      Value<bool> seen,
-      Value<int> rowid,
-    });
+typedef $$ChandaAlertsTableCreateCompanionBuilder = ChandaAlertsCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String itemId,
+  required String kind,
+  Value<int?> before,
+  Value<int?> after,
+  Value<String> currency,
+  required String at,
+  Value<bool> seen,
+  Value<int> rowid,
+});
+typedef $$ChandaAlertsTableUpdateCompanionBuilder = ChandaAlertsCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> itemId,
+  Value<String> kind,
+  Value<int?> before,
+  Value<int?> after,
+  Value<String> currency,
+  Value<String> at,
+  Value<bool> seen,
+  Value<int> rowid,
+});
 
-class $$ChandaAlertsTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaAlertsTable> {
+class $$ChandaAlertsTableFilterComposer extends Composer<_$AppDatabase, $ChandaAlertsTable> {
   $$ChandaAlertsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -7046,59 +5965,38 @@ class $$ChandaAlertsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get before => $composableBuilder(
-    column: $table.before,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get before =>
+      $composableBuilder(column: $table.before, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get after => $composableBuilder(
-    column: $table.after,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get after =>
+      $composableBuilder(column: $table.after, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaAlertsTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaAlertsTable> {
+class $$ChandaAlertsTableOrderingComposer extends Composer<_$AppDatabase, $ChandaAlertsTable> {
   $$ChandaAlertsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7106,59 +6004,38 @@ class $$ChandaAlertsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get kind => $composableBuilder(
-    column: $table.kind,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get kind =>
+      $composableBuilder(column: $table.kind, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get before => $composableBuilder(
-    column: $table.before,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get before =>
+      $composableBuilder(column: $table.before, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get after => $composableBuilder(
-    column: $table.after,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get after =>
+      $composableBuilder(column: $table.after, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get at => $composableBuilder(
-    column: $table.at,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get at =>
+      $composableBuilder(column: $table.at, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaAlertsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaAlertsTable> {
+class $$ChandaAlertsTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaAlertsTable> {
   $$ChandaAlertsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -7166,11 +6043,9 @@ class $$ChandaAlertsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -7178,23 +6053,18 @@ class $$ChandaAlertsTableAnnotationComposer
   GeneratedColumn<String> get itemId =>
       $composableBuilder(column: $table.itemId, builder: (column) => column);
 
-  GeneratedColumn<String> get kind =>
-      $composableBuilder(column: $table.kind, builder: (column) => column);
+  GeneratedColumn<String> get kind => $composableBuilder(column: $table.kind, builder: (column) => column);
 
-  GeneratedColumn<int> get before =>
-      $composableBuilder(column: $table.before, builder: (column) => column);
+  GeneratedColumn<int> get before => $composableBuilder(column: $table.before, builder: (column) => column);
 
-  GeneratedColumn<int> get after =>
-      $composableBuilder(column: $table.after, builder: (column) => column);
+  GeneratedColumn<int> get after => $composableBuilder(column: $table.after, builder: (column) => column);
 
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
 
-  GeneratedColumn<String> get at =>
-      $composableBuilder(column: $table.at, builder: (column) => column);
+  GeneratedColumn<String> get at => $composableBuilder(column: $table.at, builder: (column) => column);
 
-  GeneratedColumn<bool> get seen =>
-      $composableBuilder(column: $table.seen, builder: (column) => column);
+  GeneratedColumn<bool> get seen => $composableBuilder(column: $table.seen, builder: (column) => column);
 }
 
 class $$ChandaAlertsTableTableManager
@@ -7208,10 +6078,7 @@ class $$ChandaAlertsTableTableManager
           $$ChandaAlertsTableAnnotationComposer,
           $$ChandaAlertsTableCreateCompanionBuilder,
           $$ChandaAlertsTableUpdateCompanionBuilder,
-          (
-            AlertEvent,
-            BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>,
-          ),
+          (AlertEvent, BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>),
           AlertEvent,
           PrefetchHooks Function()
         > {
@@ -7220,12 +6087,9 @@ class $$ChandaAlertsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaAlertsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaAlertsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaAlertsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaAlertsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaAlertsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaAlertsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7282,11 +6146,7 @@ class $$ChandaAlertsTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaAlertsTable, AlertEvent>(table),
-                  BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>(db, table, e),
                 ),
               )
               .toList(),
@@ -7305,52 +6165,46 @@ typedef $$ChandaAlertsTableProcessedTableManager =
       $$ChandaAlertsTableAnnotationComposer,
       $$ChandaAlertsTableCreateCompanionBuilder,
       $$ChandaAlertsTableUpdateCompanionBuilder,
-      (
-        AlertEvent,
-        BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>,
-      ),
+      (AlertEvent, BaseReferences<_$AppDatabase, $ChandaAlertsTable, AlertEvent>),
       AlertEvent,
       PrefetchHooks Function()
     >;
-typedef $$ChandaOffersTableCreateCompanionBuilder =
-    ChandaOffersCompanion Function({
-      required String id,
-      required String shop,
-      required String url,
-      required String title,
-      Value<String> image,
-      Value<int?> price,
-      required String currency,
-      Value<int?> was,
-      Value<double?> rating,
-      Value<int?> reviews,
-      Value<bool> inStock,
-      Value<String> query,
-      required String seen,
-      Value<String> dhash,
-      Value<int> rowid,
-    });
-typedef $$ChandaOffersTableUpdateCompanionBuilder =
-    ChandaOffersCompanion Function({
-      Value<String> id,
-      Value<String> shop,
-      Value<String> url,
-      Value<String> title,
-      Value<String> image,
-      Value<int?> price,
-      Value<String> currency,
-      Value<int?> was,
-      Value<double?> rating,
-      Value<int?> reviews,
-      Value<bool> inStock,
-      Value<String> query,
-      Value<String> seen,
-      Value<String> dhash,
-      Value<int> rowid,
-    });
+typedef $$ChandaOffersTableCreateCompanionBuilder = ChandaOffersCompanion Function({
+  required String id,
+  required String shop,
+  required String url,
+  required String title,
+  Value<String> image,
+  Value<int?> price,
+  required String currency,
+  Value<int?> was,
+  Value<double?> rating,
+  Value<int?> reviews,
+  Value<bool> inStock,
+  Value<String> query,
+  required String seen,
+  Value<String> dhash,
+  Value<int> rowid,
+});
+typedef $$ChandaOffersTableUpdateCompanionBuilder = ChandaOffersCompanion Function({
+  Value<String> id,
+  Value<String> shop,
+  Value<String> url,
+  Value<String> title,
+  Value<String> image,
+  Value<int?> price,
+  Value<String> currency,
+  Value<int?> was,
+  Value<double?> rating,
+  Value<int?> reviews,
+  Value<bool> inStock,
+  Value<String> query,
+  Value<String> seen,
+  Value<String> dhash,
+  Value<int> rowid,
+});
 
-class $$ChandaOffersTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaOffersTable> {
+class $$ChandaOffersTableFilterComposer extends Composer<_$AppDatabase, $ChandaOffersTable> {
   $$ChandaOffersTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -7358,79 +6212,50 @@ class $$ChandaOffersTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get shop => $composableBuilder(
-    column: $table.shop,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get image => $composableBuilder(
-    column: $table.image,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get image =>
+      $composableBuilder(column: $table.image, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<double> get rating => $composableBuilder(
-    column: $table.rating,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<double> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get reviews => $composableBuilder(
-    column: $table.reviews,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get reviews =>
+      $composableBuilder(column: $table.reviews, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get query => $composableBuilder(
-    column: $table.query,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get query =>
+      $composableBuilder(column: $table.query, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get dhash => $composableBuilder(
-    column: $table.dhash,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get dhash =>
+      $composableBuilder(column: $table.dhash, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaOffersTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaOffersTable> {
+class $$ChandaOffersTableOrderingComposer extends Composer<_$AppDatabase, $ChandaOffersTable> {
   $$ChandaOffersTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7438,79 +6263,50 @@ class $$ChandaOffersTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get shop => $composableBuilder(
-    column: $table.shop,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get shop =>
+      $composableBuilder(column: $table.shop, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get title => $composableBuilder(
-    column: $table.title,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get title =>
+      $composableBuilder(column: $table.title, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get image => $composableBuilder(
-    column: $table.image,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get image =>
+      $composableBuilder(column: $table.image, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get price => $composableBuilder(
-    column: $table.price,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get price =>
+      $composableBuilder(column: $table.price, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get currency => $composableBuilder(
-    column: $table.currency,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get currency =>
+      $composableBuilder(column: $table.currency, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get was => $composableBuilder(
-    column: $table.was,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get was =>
+      $composableBuilder(column: $table.was, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<double> get rating => $composableBuilder(
-    column: $table.rating,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<double> get rating =>
+      $composableBuilder(column: $table.rating, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get reviews => $composableBuilder(
-    column: $table.reviews,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get reviews =>
+      $composableBuilder(column: $table.reviews, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get inStock => $composableBuilder(
-    column: $table.inStock,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get inStock =>
+      $composableBuilder(column: $table.inStock, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get query => $composableBuilder(
-    column: $table.query,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get query =>
+      $composableBuilder(column: $table.query, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get seen => $composableBuilder(
-    column: $table.seen,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get seen =>
+      $composableBuilder(column: $table.seen, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get dhash => $composableBuilder(
-    column: $table.dhash,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get dhash =>
+      $composableBuilder(column: $table.dhash, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaOffersTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaOffersTable> {
+class $$ChandaOffersTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaOffersTable> {
   $$ChandaOffersTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -7518,47 +6314,36 @@ class $$ChandaOffersTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get shop =>
-      $composableBuilder(column: $table.shop, builder: (column) => column);
+  GeneratedColumn<String> get shop => $composableBuilder(column: $table.shop, builder: (column) => column);
 
-  GeneratedColumn<String> get url =>
-      $composableBuilder(column: $table.url, builder: (column) => column);
+  GeneratedColumn<String> get url => $composableBuilder(column: $table.url, builder: (column) => column);
 
-  GeneratedColumn<String> get title =>
-      $composableBuilder(column: $table.title, builder: (column) => column);
+  GeneratedColumn<String> get title => $composableBuilder(column: $table.title, builder: (column) => column);
 
-  GeneratedColumn<String> get image =>
-      $composableBuilder(column: $table.image, builder: (column) => column);
+  GeneratedColumn<String> get image => $composableBuilder(column: $table.image, builder: (column) => column);
 
-  GeneratedColumn<int> get price =>
-      $composableBuilder(column: $table.price, builder: (column) => column);
+  GeneratedColumn<int> get price => $composableBuilder(column: $table.price, builder: (column) => column);
 
   GeneratedColumn<String> get currency =>
       $composableBuilder(column: $table.currency, builder: (column) => column);
 
-  GeneratedColumn<int> get was =>
-      $composableBuilder(column: $table.was, builder: (column) => column);
+  GeneratedColumn<int> get was => $composableBuilder(column: $table.was, builder: (column) => column);
 
   GeneratedColumn<double> get rating =>
       $composableBuilder(column: $table.rating, builder: (column) => column);
 
-  GeneratedColumn<int> get reviews =>
-      $composableBuilder(column: $table.reviews, builder: (column) => column);
+  GeneratedColumn<int> get reviews => $composableBuilder(column: $table.reviews, builder: (column) => column);
 
   GeneratedColumn<bool> get inStock =>
       $composableBuilder(column: $table.inStock, builder: (column) => column);
 
-  GeneratedColumn<String> get query =>
-      $composableBuilder(column: $table.query, builder: (column) => column);
+  GeneratedColumn<String> get query => $composableBuilder(column: $table.query, builder: (column) => column);
 
-  GeneratedColumn<String> get seen =>
-      $composableBuilder(column: $table.seen, builder: (column) => column);
+  GeneratedColumn<String> get seen => $composableBuilder(column: $table.seen, builder: (column) => column);
 
-  GeneratedColumn<String> get dhash =>
-      $composableBuilder(column: $table.dhash, builder: (column) => column);
+  GeneratedColumn<String> get dhash => $composableBuilder(column: $table.dhash, builder: (column) => column);
 }
 
 class $$ChandaOffersTableTableManager
@@ -7572,10 +6357,7 @@ class $$ChandaOffersTableTableManager
           $$ChandaOffersTableAnnotationComposer,
           $$ChandaOffersTableCreateCompanionBuilder,
           $$ChandaOffersTableUpdateCompanionBuilder,
-          (
-            ShopOffer,
-            BaseReferences<_$AppDatabase, $ChandaOffersTable, ShopOffer>,
-          ),
+          (ShopOffer, BaseReferences<_$AppDatabase, $ChandaOffersTable, ShopOffer>),
           ShopOffer,
           PrefetchHooks Function()
         > {
@@ -7584,12 +6366,9 @@ class $$ChandaOffersTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaOffersTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaOffersTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaOffersTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaOffersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaOffersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaOffersTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7662,11 +6441,7 @@ class $$ChandaOffersTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaOffersTable, ShopOffer>(table),
-                  BaseReferences<_$AppDatabase, $ChandaOffersTable, ShopOffer>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $ChandaOffersTable, ShopOffer>(db, table, e),
                 ),
               )
               .toList(),
@@ -7689,29 +6464,26 @@ typedef $$ChandaOffersTableProcessedTableManager =
       ShopOffer,
       PrefetchHooks Function()
     >;
-typedef $$ChandaMatchesTableCreateCompanionBuilder =
-    ChandaMatchesCompanion Function({
-      required String id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      required String itemId,
-      required String url,
-      required String verdict,
-      Value<int> rowid,
-    });
-typedef $$ChandaMatchesTableUpdateCompanionBuilder =
-    ChandaMatchesCompanion Function({
-      Value<String> id,
-      Value<String> hlc,
-      Value<bool> deleted,
-      Value<String> itemId,
-      Value<String> url,
-      Value<String> verdict,
-      Value<int> rowid,
-    });
+typedef $$ChandaMatchesTableCreateCompanionBuilder = ChandaMatchesCompanion Function({
+  required String id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  required String itemId,
+  required String url,
+  required String verdict,
+  Value<int> rowid,
+});
+typedef $$ChandaMatchesTableUpdateCompanionBuilder = ChandaMatchesCompanion Function({
+  Value<String> id,
+  Value<String> hlc,
+  Value<bool> deleted,
+  Value<String> itemId,
+  Value<String> url,
+  Value<String> verdict,
+  Value<int> rowid,
+});
 
-class $$ChandaMatchesTableFilterComposer
-    extends Composer<_$AppDatabase, $ChandaMatchesTable> {
+class $$ChandaMatchesTableFilterComposer extends Composer<_$AppDatabase, $ChandaMatchesTable> {
   $$ChandaMatchesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -7719,39 +6491,26 @@ class $$ChandaMatchesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get verdict => $composableBuilder(
-    column: $table.verdict,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get verdict =>
+      $composableBuilder(column: $table.verdict, builder: (column) => ColumnFilters(column));
 }
 
-class $$ChandaMatchesTableOrderingComposer
-    extends Composer<_$AppDatabase, $ChandaMatchesTable> {
+class $$ChandaMatchesTableOrderingComposer extends Composer<_$AppDatabase, $ChandaMatchesTable> {
   $$ChandaMatchesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7759,39 +6518,26 @@ class $$ChandaMatchesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get itemId => $composableBuilder(
-    column: $table.itemId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get itemId =>
+      $composableBuilder(column: $table.itemId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get url => $composableBuilder(
-    column: $table.url,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get url =>
+      $composableBuilder(column: $table.url, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get verdict => $composableBuilder(
-    column: $table.verdict,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get verdict =>
+      $composableBuilder(column: $table.verdict, builder: (column) => ColumnOrderings(column));
 }
 
-class $$ChandaMatchesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $ChandaMatchesTable> {
+class $$ChandaMatchesTableAnnotationComposer extends Composer<_$AppDatabase, $ChandaMatchesTable> {
   $$ChandaMatchesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -7799,11 +6545,9 @@ class $$ChandaMatchesTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
@@ -7811,8 +6555,7 @@ class $$ChandaMatchesTableAnnotationComposer
   GeneratedColumn<String> get itemId =>
       $composableBuilder(column: $table.itemId, builder: (column) => column);
 
-  GeneratedColumn<String> get url =>
-      $composableBuilder(column: $table.url, builder: (column) => column);
+  GeneratedColumn<String> get url => $composableBuilder(column: $table.url, builder: (column) => column);
 
   GeneratedColumn<String> get verdict =>
       $composableBuilder(column: $table.verdict, builder: (column) => column);
@@ -7829,10 +6572,7 @@ class $$ChandaMatchesTableTableManager
           $$ChandaMatchesTableAnnotationComposer,
           $$ChandaMatchesTableCreateCompanionBuilder,
           $$ChandaMatchesTableUpdateCompanionBuilder,
-          (
-            ProductMatch,
-            BaseReferences<_$AppDatabase, $ChandaMatchesTable, ProductMatch>,
-          ),
+          (ProductMatch, BaseReferences<_$AppDatabase, $ChandaMatchesTable, ProductMatch>),
           ProductMatch,
           PrefetchHooks Function()
         > {
@@ -7841,12 +6581,9 @@ class $$ChandaMatchesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$ChandaMatchesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$ChandaMatchesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$ChandaMatchesTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$ChandaMatchesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$ChandaMatchesTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$ChandaMatchesTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
@@ -7887,11 +6624,7 @@ class $$ChandaMatchesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$ChandaMatchesTable, ProductMatch>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $ChandaMatchesTable,
-                    ProductMatch
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $ChandaMatchesTable, ProductMatch>(db, table, e),
                 ),
               )
               .toList(),
@@ -7910,10 +6643,7 @@ typedef $$ChandaMatchesTableProcessedTableManager =
       $$ChandaMatchesTableAnnotationComposer,
       $$ChandaMatchesTableCreateCompanionBuilder,
       $$ChandaMatchesTableUpdateCompanionBuilder,
-      (
-        ProductMatch,
-        BaseReferences<_$AppDatabase, $ChandaMatchesTable, ProductMatch>,
-      ),
+      (ProductMatch, BaseReferences<_$AppDatabase, $ChandaMatchesTable, ProductMatch>),
       ProductMatch,
       PrefetchHooks Function()
     >;
@@ -7940,29 +6670,20 @@ class $$PrefsTableFilterComposer extends Composer<_$AppDatabase, $PrefsTable> {
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnFilters(column));
 }
 
-class $$PrefsTableOrderingComposer
-    extends Composer<_$AppDatabase, $PrefsTable> {
+class $$PrefsTableOrderingComposer extends Composer<_$AppDatabase, $PrefsTable> {
   $$PrefsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -7970,29 +6691,20 @@ class $$PrefsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get hlc => $composableBuilder(
-    column: $table.hlc,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get hlc =>
+      $composableBuilder(column: $table.hlc, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<bool> get deleted => $composableBuilder(
-    column: $table.deleted,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<bool> get deleted =>
+      $composableBuilder(column: $table.deleted, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnOrderings(column));
 }
 
-class $$PrefsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $PrefsTable> {
+class $$PrefsTableAnnotationComposer extends Composer<_$AppDatabase, $PrefsTable> {
   $$PrefsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8000,17 +6712,14 @@ class $$PrefsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
+  GeneratedColumn<String> get id => $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get hlc =>
-      $composableBuilder(column: $table.hlc, builder: (column) => column);
+  GeneratedColumn<String> get hlc => $composableBuilder(column: $table.hlc, builder: (column) => column);
 
   GeneratedColumn<bool> get deleted =>
       $composableBuilder(column: $table.deleted, builder: (column) => column);
 
-  GeneratedColumn<String> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => column);
+  GeneratedColumn<String> get value => $composableBuilder(column: $table.value, builder: (column) => column);
 }
 
 class $$PrefsTableTableManager
@@ -8033,49 +6742,28 @@ class $$PrefsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$PrefsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$PrefsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$PrefsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> id = const Value.absent(),
-                Value<String> hlc = const Value.absent(),
-                Value<bool> deleted = const Value.absent(),
-                Value<String> value = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => PrefsCompanion(
-                id: id,
-                hlc: hlc,
-                deleted: deleted,
-                value: value,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String id,
-                Value<String> hlc = const Value.absent(),
-                Value<bool> deleted = const Value.absent(),
-                required String value,
-                Value<int> rowid = const Value.absent(),
-              }) => PrefsCompanion.insert(
-                id: id,
-                hlc: hlc,
-                deleted: deleted,
-                value: value,
-                rowid: rowid,
-              ),
+          createFilteringComposer: () => $$PrefsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$PrefsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$PrefsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> hlc = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
+            Value<String> value = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => PrefsCompanion(id: id, hlc: hlc, deleted: deleted, value: value, rowid: rowid),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> hlc = const Value.absent(),
+            Value<bool> deleted = const Value.absent(),
+            required String value,
+            Value<int> rowid = const Value.absent(),
+          }) => PrefsCompanion.insert(id: id, hlc: hlc, deleted: deleted, value: value, rowid: rowid),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$PrefsTable, Pref>(table),
-                  BaseReferences<_$AppDatabase, $PrefsTable, Pref>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $PrefsTable, Pref>(db, table, e),
                 ),
               )
               .toList(),
@@ -8111,8 +6799,7 @@ typedef $$OutboxTableUpdateCompanionBuilder = OutboxCompanion Function({
   Value<int> rowid,
 });
 
-class $$OutboxTableFilterComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableFilterComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -8120,24 +6807,17 @@ class $$OutboxTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get entity => $composableBuilder(
-    column: $table.entity,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get rowId => $composableBuilder(
-    column: $table.rowId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get rowId =>
+      $composableBuilder(column: $table.rowId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => ColumnFilters(column));
 }
 
-class $$OutboxTableOrderingComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableOrderingComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -8145,24 +6825,17 @@ class $$OutboxTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get entity => $composableBuilder(
-    column: $table.entity,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get entity =>
+      $composableBuilder(column: $table.entity, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get rowId => $composableBuilder(
-    column: $table.rowId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get rowId =>
+      $composableBuilder(column: $table.rowId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => ColumnOrderings(column));
 }
 
-class $$OutboxTableAnnotationComposer
-    extends Composer<_$AppDatabase, $OutboxTable> {
+class $$OutboxTableAnnotationComposer extends Composer<_$AppDatabase, $OutboxTable> {
   $$OutboxTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8173,11 +6846,9 @@ class $$OutboxTableAnnotationComposer
   GeneratedColumn<String> get entity =>
       $composableBuilder(column: $table.entity, builder: (column) => column);
 
-  GeneratedColumn<String> get rowId =>
-      $composableBuilder(column: $table.rowId, builder: (column) => column);
+  GeneratedColumn<String> get rowId => $composableBuilder(column: $table.rowId, builder: (column) => column);
 
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
+  GeneratedColumn<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => column);
 }
 
 class $$OutboxTableTableManager
@@ -8200,45 +6871,26 @@ class $$OutboxTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$OutboxTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$OutboxTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$OutboxTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> entity = const Value.absent(),
-                Value<String> rowId = const Value.absent(),
-                Value<int?> seq = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => OutboxCompanion(
-                entity: entity,
-                rowId: rowId,
-                seq: seq,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String entity,
-                required String rowId,
-                Value<int?> seq = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => OutboxCompanion.insert(
-                entity: entity,
-                rowId: rowId,
-                seq: seq,
-                rowid: rowid,
-              ),
+          createFilteringComposer: () => $$OutboxTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$OutboxTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$OutboxTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> entity = const Value.absent(),
+            Value<String> rowId = const Value.absent(),
+            Value<int?> seq = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => OutboxCompanion(entity: entity, rowId: rowId, seq: seq, rowid: rowid),
+          createCompanionCallback: ({
+            required String entity,
+            required String rowId,
+            Value<int?> seq = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => OutboxCompanion.insert(entity: entity, rowId: rowId, seq: seq, rowid: rowid),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$OutboxTable, OutboxItem>(table),
-                  BaseReferences<_$AppDatabase, $OutboxTable, OutboxItem>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $OutboxTable, OutboxItem>(db, table, e),
                 ),
               )
               .toList(),
@@ -8261,21 +6913,18 @@ typedef $$OutboxTableProcessedTableManager =
       OutboxItem,
       PrefetchHooks Function()
     >;
-typedef $$SyncCursorsTableCreateCompanionBuilder =
-    SyncCursorsCompanion Function({
-      required String deviceId,
-      required int seq,
-      Value<int> rowid,
-    });
-typedef $$SyncCursorsTableUpdateCompanionBuilder =
-    SyncCursorsCompanion Function({
-      Value<String> deviceId,
-      Value<int> seq,
-      Value<int> rowid,
-    });
+typedef $$SyncCursorsTableCreateCompanionBuilder = SyncCursorsCompanion Function({
+  required String deviceId,
+  required int seq,
+  Value<int> rowid,
+});
+typedef $$SyncCursorsTableUpdateCompanionBuilder = SyncCursorsCompanion Function({
+  Value<String> deviceId,
+  Value<int> seq,
+  Value<int> rowid,
+});
 
-class $$SyncCursorsTableFilterComposer
-    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+class $$SyncCursorsTableFilterComposer extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -8283,19 +6932,14 @@ class $$SyncCursorsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => ColumnFilters(column));
 }
 
-class $$SyncCursorsTableOrderingComposer
-    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+class $$SyncCursorsTableOrderingComposer extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -8303,19 +6947,14 @@ class $$SyncCursorsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get deviceId => $composableBuilder(
-    column: $table.deviceId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get seq => $composableBuilder(
-    column: $table.seq,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get seq =>
+      $composableBuilder(column: $table.seq, builder: (column) => ColumnOrderings(column));
 }
 
-class $$SyncCursorsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $SyncCursorsTable> {
+class $$SyncCursorsTableAnnotationComposer extends Composer<_$AppDatabase, $SyncCursorsTable> {
   $$SyncCursorsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8326,8 +6965,7 @@ class $$SyncCursorsTableAnnotationComposer
   GeneratedColumn<String> get deviceId =>
       $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
-  GeneratedColumn<int> get seq =>
-      $composableBuilder(column: $table.seq, builder: (column) => column);
+  GeneratedColumn<int> get seq => $composableBuilder(column: $table.seq, builder: (column) => column);
 }
 
 class $$SyncCursorsTableTableManager
@@ -8341,10 +6979,7 @@ class $$SyncCursorsTableTableManager
           $$SyncCursorsTableAnnotationComposer,
           $$SyncCursorsTableCreateCompanionBuilder,
           $$SyncCursorsTableUpdateCompanionBuilder,
-          (
-            SyncCursor,
-            BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>,
-          ),
+          (SyncCursor, BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>),
           SyncCursor,
           PrefetchHooks Function()
         > {
@@ -8353,41 +6988,24 @@ class $$SyncCursorsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$SyncCursorsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$SyncCursorsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$SyncCursorsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> deviceId = const Value.absent(),
-                Value<int> seq = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => SyncCursorsCompanion(
-                deviceId: deviceId,
-                seq: seq,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required String deviceId,
-                required int seq,
-                Value<int> rowid = const Value.absent(),
-              }) => SyncCursorsCompanion.insert(
-                deviceId: deviceId,
-                seq: seq,
-                rowid: rowid,
-              ),
+          createFilteringComposer: () => $$SyncCursorsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$SyncCursorsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$SyncCursorsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> deviceId = const Value.absent(),
+            Value<int> seq = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => SyncCursorsCompanion(deviceId: deviceId, seq: seq, rowid: rowid),
+          createCompanionCallback: ({
+            required String deviceId,
+            required int seq,
+            Value<int> rowid = const Value.absent(),
+          }) => SyncCursorsCompanion.insert(deviceId: deviceId, seq: seq, rowid: rowid),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$SyncCursorsTable, SyncCursor>(table),
-                  BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>(
-                    db,
-                    table,
-                    e,
-                  ),
+                  BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>(db, table, e),
                 ),
               )
               .toList(),
@@ -8406,28 +7024,22 @@ typedef $$SyncCursorsTableProcessedTableManager =
       $$SyncCursorsTableAnnotationComposer,
       $$SyncCursorsTableCreateCompanionBuilder,
       $$SyncCursorsTableUpdateCompanionBuilder,
-      (
-        SyncCursor,
-        BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>,
-      ),
+      (SyncCursor, BaseReferences<_$AppDatabase, $SyncCursorsTable, SyncCursor>),
       SyncCursor,
       PrefetchHooks Function()
     >;
-typedef $$LocalSettingsTableCreateCompanionBuilder =
-    LocalSettingsCompanion Function({
-      required String key,
-      required String value,
-      Value<int> rowid,
-    });
-typedef $$LocalSettingsTableUpdateCompanionBuilder =
-    LocalSettingsCompanion Function({
-      Value<String> key,
-      Value<String> value,
-      Value<int> rowid,
-    });
+typedef $$LocalSettingsTableCreateCompanionBuilder = LocalSettingsCompanion Function({
+  required String key,
+  required String value,
+  Value<int> rowid,
+});
+typedef $$LocalSettingsTableUpdateCompanionBuilder = LocalSettingsCompanion Function({
+  Value<String> key,
+  Value<String> value,
+  Value<int> rowid,
+});
 
-class $$LocalSettingsTableFilterComposer
-    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+class $$LocalSettingsTableFilterComposer extends Composer<_$AppDatabase, $LocalSettingsTable> {
   $$LocalSettingsTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -8435,19 +7047,14 @@ class $$LocalSettingsTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnFilters(column));
 }
 
-class $$LocalSettingsTableOrderingComposer
-    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+class $$LocalSettingsTableOrderingComposer extends Composer<_$AppDatabase, $LocalSettingsTable> {
   $$LocalSettingsTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -8455,19 +7062,14 @@ class $$LocalSettingsTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get value => $composableBuilder(
-    column: $table.value,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => ColumnOrderings(column));
 }
 
-class $$LocalSettingsTableAnnotationComposer
-    extends Composer<_$AppDatabase, $LocalSettingsTable> {
+class $$LocalSettingsTableAnnotationComposer extends Composer<_$AppDatabase, $LocalSettingsTable> {
   $$LocalSettingsTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -8475,11 +7077,9 @@ class $$LocalSettingsTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<String> get key =>
-      $composableBuilder(column: $table.key, builder: (column) => column);
+  GeneratedColumn<String> get key => $composableBuilder(column: $table.key, builder: (column) => column);
 
-  GeneratedColumn<String> get value =>
-      $composableBuilder(column: $table.value, builder: (column) => column);
+  GeneratedColumn<String> get value => $composableBuilder(column: $table.value, builder: (column) => column);
 }
 
 class $$LocalSettingsTableTableManager
@@ -8493,10 +7093,7 @@ class $$LocalSettingsTableTableManager
           $$LocalSettingsTableAnnotationComposer,
           $$LocalSettingsTableCreateCompanionBuilder,
           $$LocalSettingsTableUpdateCompanionBuilder,
-          (
-            LocalSetting,
-            BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>,
-          ),
+          (LocalSetting, BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>),
           LocalSetting,
           PrefetchHooks Function()
         > {
@@ -8505,36 +7102,24 @@ class $$LocalSettingsTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$LocalSettingsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$LocalSettingsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$LocalSettingsTableAnnotationComposer($db: db, $table: table),
+          createFilteringComposer: () => $$LocalSettingsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$LocalSettingsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () => $$LocalSettingsTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> key = const Value.absent(),
             Value<String> value = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) => LocalSettingsCompanion(key: key, value: value, rowid: rowid),
-          createCompanionCallback:
-              ({
-                required String key,
-                required String value,
-                Value<int> rowid = const Value.absent(),
-              }) => LocalSettingsCompanion.insert(
-                key: key,
-                value: value,
-                rowid: rowid,
-              ),
+          createCompanionCallback: ({
+            required String key,
+            required String value,
+            Value<int> rowid = const Value.absent(),
+          }) => LocalSettingsCompanion.insert(key: key, value: value, rowid: rowid),
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
                   e.readTable<$LocalSettingsTable, LocalSetting>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $LocalSettingsTable,
-                    LocalSetting
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>(db, table, e),
                 ),
               )
               .toList(),
@@ -8553,10 +7138,7 @@ typedef $$LocalSettingsTableProcessedTableManager =
       $$LocalSettingsTableAnnotationComposer,
       $$LocalSettingsTableCreateCompanionBuilder,
       $$LocalSettingsTableUpdateCompanionBuilder,
-      (
-        LocalSetting,
-        BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>,
-      ),
+      (LocalSetting, BaseReferences<_$AppDatabase, $LocalSettingsTable, LocalSetting>),
       LocalSetting,
       PrefetchHooks Function()
     >;
@@ -8564,24 +7146,16 @@ typedef $$LocalSettingsTableProcessedTableManager =
 class $AppDatabaseManager {
   final _$AppDatabase _db;
   $AppDatabaseManager(this._db);
-  $$ChandaListsTableTableManager get chandaLists =>
-      $$ChandaListsTableTableManager(_db, _db.chandaLists);
-  $$ChandaItemsTableTableManager get chandaItems =>
-      $$ChandaItemsTableTableManager(_db, _db.chandaItems);
-  $$ChandaPricesTableTableManager get chandaPrices =>
-      $$ChandaPricesTableTableManager(_db, _db.chandaPrices);
-  $$ChandaAlertsTableTableManager get chandaAlerts =>
-      $$ChandaAlertsTableTableManager(_db, _db.chandaAlerts);
-  $$ChandaOffersTableTableManager get chandaOffers =>
-      $$ChandaOffersTableTableManager(_db, _db.chandaOffers);
+  $$ChandaListsTableTableManager get chandaLists => $$ChandaListsTableTableManager(_db, _db.chandaLists);
+  $$ChandaItemsTableTableManager get chandaItems => $$ChandaItemsTableTableManager(_db, _db.chandaItems);
+  $$ChandaPricesTableTableManager get chandaPrices => $$ChandaPricesTableTableManager(_db, _db.chandaPrices);
+  $$ChandaAlertsTableTableManager get chandaAlerts => $$ChandaAlertsTableTableManager(_db, _db.chandaAlerts);
+  $$ChandaOffersTableTableManager get chandaOffers => $$ChandaOffersTableTableManager(_db, _db.chandaOffers);
   $$ChandaMatchesTableTableManager get chandaMatches =>
       $$ChandaMatchesTableTableManager(_db, _db.chandaMatches);
-  $$PrefsTableTableManager get prefs =>
-      $$PrefsTableTableManager(_db, _db.prefs);
-  $$OutboxTableTableManager get outbox =>
-      $$OutboxTableTableManager(_db, _db.outbox);
-  $$SyncCursorsTableTableManager get syncCursors =>
-      $$SyncCursorsTableTableManager(_db, _db.syncCursors);
+  $$PrefsTableTableManager get prefs => $$PrefsTableTableManager(_db, _db.prefs);
+  $$OutboxTableTableManager get outbox => $$OutboxTableTableManager(_db, _db.outbox);
+  $$SyncCursorsTableTableManager get syncCursors => $$SyncCursorsTableTableManager(_db, _db.syncCursors);
   $$LocalSettingsTableTableManager get localSettings =>
       $$LocalSettingsTableTableManager(_db, _db.localSettings);
 }

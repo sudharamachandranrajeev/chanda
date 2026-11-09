@@ -36,7 +36,11 @@ class _FakeSender implements AlertSender {
   Future<void> send(VaultItem item, List<AlertEvent> alerts) async => sent.add(alerts);
 }
 
-Evidence _priced(int pounds, {bool inStock = true, String url = 'https://www.amazon.co.uk/dp/B000000001'}) => Evidence(
+Evidence _priced(
+  int pounds, {
+  bool inStock = true,
+  String url = 'https://www.amazon.co.uk/dp/B000000001',
+}) => Evidence(
   url: url,
   h1: 'Desk lamp',
   ld: [
@@ -95,7 +99,10 @@ void main() {
         const Evidence(
           url: _url,
           h1: 'Brass desk lamp',
-          prices: [PriceSeen('£18.99', size: 14, struck: true, score: 5), PriceSeen('£12.99', size: 28, score: 10)],
+          prices: [
+            PriceSeen('£18.99', size: 14, struck: true, score: 5),
+            PriceSeen('£12.99', size: 28, score: 10),
+          ],
         ),
         hint: 'GBP',
       );
@@ -118,8 +125,14 @@ void main() {
     test('saving the same product twice updates one item', () async {
       final v = await memoryVault();
       final list = await v.defaultList();
-      final a = await v.saveReading(reading(url: 'https://www.amazon.co.uk/x/dp/B000000001?tag=x-21'), listId: list);
-      final b = await v.saveReading(reading(url: 'https://www.amazon.co.uk/dp/B000000001', price: 3999), listId: list);
+      final a = await v.saveReading(
+        reading(url: 'https://www.amazon.co.uk/x/dp/B000000001?tag=x-21'),
+        listId: list,
+      );
+      final b = await v.saveReading(
+        reading(url: 'https://www.amazon.co.uk/dp/B000000001', price: 3999),
+        listId: list,
+      );
       expect(b, a);
       expect((await v.items()).single.price, 3999);
       expect((await v.item(a))!.url, 'https://www.amazon.co.uk/dp/B000000001');

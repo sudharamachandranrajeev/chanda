@@ -12,7 +12,14 @@ import 'common.dart';
 import 'item_bits.dart';
 import 'look.dart';
 
-const _hues = [NithyaHues.amber, NithyaHues.rose, NithyaHues.red, NithyaHues.sky, NithyaHues.violet, NithyaHues.teal];
+const _hues = [
+  NithyaHues.amber,
+  NithyaHues.rose,
+  NithyaHues.red,
+  NithyaHues.sky,
+  NithyaHues.violet,
+  NithyaHues.teal,
+];
 
 /// The shops: open one inside Chanda to browse, sign in and save. Items
 /// whose shop turned Chanda's check away are listed first, to open.

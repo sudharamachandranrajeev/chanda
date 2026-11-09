@@ -30,7 +30,10 @@ class ItemPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final item = ref.watch(itemProvider(id));
     return Scaffold(
-      body: AsyncView(item, builder: (i) => i == null ? const Center(child: Text('This item was deleted.')) : _Body(i)),
+      body: AsyncView(
+        item,
+        builder: (i) => i == null ? const Center(child: Text('This item was deleted.')) : _Body(i),
+      ),
     );
   }
 }
@@ -127,7 +130,9 @@ class _BodyState extends ConsumerState<_Body> {
       onSave: () async {
         if (title.text.trim().isEmpty) return 'Give it a name.';
         final t = tags.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).join(',');
-        await ref.mutate((v) => v.updateItem(i.copyWith(title: title.text.trim(), note: note.text.trim(), tags: t)));
+        await ref.mutate(
+          (v) => v.updateItem(i.copyWith(title: title.text.trim(), note: note.text.trim(), tags: t)),
+        );
         return null;
       },
     );
@@ -232,7 +237,9 @@ class _BodyState extends ConsumerState<_Body> {
             ? Padding(
                 padding: const EdgeInsets.only(bottom: 4),
                 child: Text(
-                  history.isEmpty ? 'No prices yet.' : 'One price so far. Chanda adds a point each day it checks.',
+                  history.isEmpty
+                      ? 'No prices yet.'
+                      : 'One price so far. Chanda adds a point each day it checks.',
                   style: text.bodyMedium?.copyWith(color: p.muted),
                 ),
               )
@@ -311,7 +318,11 @@ class _BodyState extends ConsumerState<_Body> {
 
     return CustomScrollView(
       slivers: [
-        SliverAppBar(pinned: true, backgroundColor: p.background.withValues(alpha: 0.85), title: Text(shop.name)),
+        SliverAppBar(
+          pinned: true,
+          backgroundColor: p.background.withValues(alpha: 0.85),
+          title: Text(shop.name),
+        ),
         SliverToBoxAdapter(
           child: Readable(
             child: Padding(
@@ -347,7 +358,10 @@ class _BodyState extends ConsumerState<_Body> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Center(
-                          child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480), child: gallery),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 480),
+                            child: gallery,
+                          ),
                         ),
                         const SizedBox(height: 20),
                         FadeIn(child: head),
@@ -412,7 +426,10 @@ class _Details extends StatelessWidget {
     final rows = <(String, String)>[
       if (i.seller.isNotEmpty) ('Sold by', i.seller),
       if (i.rating != null)
-        ('Rating', '${i.rating!.toStringAsFixed(1)} of 5${i.reviews == null ? '' : ' from ${i.reviews} reviews'}'),
+        (
+          'Rating',
+          '${i.rating!.toStringAsFixed(1)} of 5${i.reviews == null ? '' : ' from ${i.reviews} reviews'}',
+        ),
       if (i.warranty.isNotEmpty) ('Warranty', i.warranty),
       for (final e in variant.entries) (e.key, e.value),
       if (i.gtin.isNotEmpty) ('Barcode', i.gtin),

@@ -24,11 +24,15 @@ final _sign = RegExp(r'[£$€¥₹₩]|\b[A-Z]{3}\b|\d[.,]\d{2}\b');
 /// the price is the tallest price-only line (shops draw the current price
 /// biggest), the title the tallest line of words in the top half.
 Reading withScreenText(Reading r, List<ScreenLine> lines, {required double screenHeight}) {
-  final prices = [
-    for (final l in lines)
-      if (l.text.trim().length <= 24 && _sign.hasMatch(l.text) && !_notPrice.hasMatch(l.text))
-        if (parsePrice(l.text, hint: r.currency) case final p?) (l, p),
-  ]..sort((a, b) => b.$1.height != a.$1.height ? b.$1.height.compareTo(a.$1.height) : a.$1.top.compareTo(b.$1.top));
+  final prices =
+      [
+        for (final l in lines)
+          if (l.text.trim().length <= 24 && _sign.hasMatch(l.text) && !_notPrice.hasMatch(l.text))
+            if (parsePrice(l.text, hint: r.currency) case final p?) (l, p),
+      ]..sort(
+        (a, b) =>
+            b.$1.height != a.$1.height ? b.$1.height.compareTo(a.$1.height) : a.$1.top.compareTo(b.$1.top),
+      );
   if (prices.isEmpty) return r;
   final (_, price) = prices.first;
   String? title;

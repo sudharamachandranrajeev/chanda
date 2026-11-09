@@ -63,7 +63,12 @@ const _enoughReviews = 20;
 /// and the best one: the cheapest delivered, in stock, from a seller rated
 /// at least [minRating] or not rated (or rated by too few to tell). A price
 /// over a day old still counts, but the reason says so.
-(List<Costed>, Best?) compareDeals(Iterable<Deal> deals, {required String home, required FxRates? fx, DateTime? now}) {
+(List<Costed>, Best?) compareDeals(
+  Iterable<Deal> deals, {
+  required String home,
+  required FxRates? fx,
+  DateTime? now,
+}) {
   final costed = [
     for (final d in deals)
       Costed(
@@ -90,7 +95,9 @@ const _enoughReviews = 20;
   } else {
     final saving = rest.first.landed!.total - best.landed!.total;
     why.add(
-      saving > 0 ? '${showPrice(saving, home)} less delivered than the next' : 'the same delivered price as the next',
+      saving > 0
+          ? '${showPrice(saving, home)} less delivered than the next'
+          : 'the same delivered price as the next',
     );
   }
   final cheaper = costed.where((c) => c.landed != null && c.landed!.total < best.landed!.total).toList();
@@ -99,7 +106,9 @@ const _enoughReviews = 20;
     why.add('a cheaper one is rated under ${minRating.toStringAsFixed(1)}');
   }
   if (best.deal.rating != null) {
-    why.add('rated ${best.deal.rating!.toStringAsFixed(1)}${best.deal.reviews == null ? '' : ' by ${best.deal.reviews}'}');
+    why.add(
+      'rated ${best.deal.rating!.toStringAsFixed(1)}${best.deal.reviews == null ? '' : ' by ${best.deal.reviews}'}',
+    );
   }
   if (best.deal.warranty.isNotEmpty) why.add('states its warranty or returns');
   if (best.landed!.estimate) why.add('the total is an estimate');

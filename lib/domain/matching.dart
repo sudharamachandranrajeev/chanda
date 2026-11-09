@@ -87,7 +87,8 @@ Map<String, String> sizesOf(Listing l) {
     };
     out.putIfAbsent(unit, () => _num(m[1]!));
   }
-  final pack = RegExp(r'(\d+)\s?(?:-?pack|pcs|pieces|pairs?|pc)\b').firstMatch(t) ??
+  final pack =
+      RegExp(r'(\d+)\s?(?:-?pack|pcs|pieces|pairs?|pc)\b').firstMatch(t) ??
       RegExp(r'\bpack of (\d+)\b').firstMatch(t);
   if (pack != null) out['pack'] = pack[1]!;
   for (final e in l.variant.entries) {
@@ -145,7 +146,9 @@ int hamming(String a, String b) {
 String? dhashOf(Uint8List bytes) {
   final decoded = img.decodeImage(bytes);
   if (decoded == null) return null;
-  final small = img.grayscale(img.copyResize(decoded, width: 9, height: 8, interpolation: img.Interpolation.average));
+  final small = img.grayscale(
+    img.copyResize(decoded, width: 9, height: 8, interpolation: img.Interpolation.average),
+  );
   var bits = BigInt.zero;
   for (var y = 0; y < 8; y++) {
     for (var x = 0; x < 8; x++) {

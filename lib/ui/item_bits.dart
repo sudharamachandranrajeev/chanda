@@ -65,7 +65,11 @@ Widget freshnessTag(VaultItem i, {DateTime? now}) {
     'needs-you' => const Tag('Open the shop to check', icon: Icons.touch_app_outlined, color: attention),
     'gone' => const Tag('Listing gone', icon: Icons.link_off, color: NithyaAccent.danger),
     'failed' => Tag('Could not read · ${ago(i.checked, t)}', icon: Icons.error_outline, color: attention),
-    _ when !i.inStock => const Tag('Out of stock', icon: Icons.remove_shopping_cart_outlined, color: attention),
+    _ when !i.inStock => const Tag(
+      'Out of stock',
+      icon: Icons.remove_shopping_cart_outlined,
+      color: attention,
+    ),
     _ => switch (freshness(i.checked, t)) {
       Freshness.fresh => Tag('Checked ${ago(i.checked, t)}', icon: Icons.check),
       Freshness.stale => Tag('Checked ${ago(i.checked, t)}', icon: Icons.schedule),
@@ -100,7 +104,9 @@ class PriceLine extends StatelessWidget {
             padding: const EdgeInsets.only(bottom: 2),
             child: Text(
               showPrice(item.was!, item.currency),
-              style: NithyaType.caption.toStyle(color: p.muted).copyWith(decoration: TextDecoration.lineThrough),
+              style: NithyaType.caption
+                  .toStyle(color: p.muted)
+                  .copyWith(decoration: TextDecoration.lineThrough),
             ),
           ),
       ],

@@ -28,7 +28,10 @@ void main() {
     expect(body['fallbacks'], 'default');
     final format = (body['output_config'] as Map)['format'] as Map;
     expect(format['type'], 'json_schema');
-    expect(((format['schema'] as Map)['required'] as List), containsAll(['title', 'price', 'currency', 'in_stock']));
+    expect(
+      ((format['schema'] as Map)['required'] as List),
+      containsAll(['title', 'price', 'currency', 'in_stock']),
+    );
     expect(jsonEncode(body), contains('Desk lamp, brass'));
   });
 
@@ -47,7 +50,11 @@ void main() {
   });
 
   test('empty values keep what Chanda read', () {
-    final r = applyAiResponse(page, 200, answer({'title': '', 'price': '', 'currency': '', 'in_stock': false}));
+    final r = applyAiResponse(
+      page,
+      200,
+      answer({'title': '', 'price': '', 'currency': '', 'in_stock': false}),
+    );
     expect(r.title, 'Lamp');
     expect(r.price, isNull);
     expect(r.inStock, isFalse);
@@ -59,21 +66,32 @@ void main() {
       () => applyAiResponse(page, 200, answer({}, stop: 'refusal')),
       throwsA(predicate((e) => '$e'.contains('declined'))),
     );
-    expect(() => applyAiResponse(page, 200, '{"content":[{"type":"text","text":"no"}]}'), throwsA(isA<AiReadError>()));
+    expect(
+      () => applyAiResponse(page, 200, '{"content":[{"type":"text","text":"no"}]}'),
+      throwsA(isA<AiReadError>()),
+    );
   });
 
   test('sends the key and never a payment page', () async {
     late http.Request sent;
     final client = MockClient((req) async {
       sent = req;
-      return http.Response(answer({'title': 'Lamp', 'price': '£20', 'currency': 'GBP', 'in_stock': true}), 200);
+      return http.Response(
+        answer({'title': 'Lamp', 'price': '£20', 'currency': 'GBP', 'in_stock': true}),
+        200,
+      );
     });
     final r = await readWithAi(page, ' sk-ant-test ', client: client);
     expect(r.price, 2000);
     expect(sent.headers['x-api-key'], 'sk-ant-test');
     expect(sent.headers['anthropic-version'], isNotEmpty);
 
-    const pay = Reading(url: 'https://shop.example/checkout/payment', title: 'x', currency: 'GBP', text: 'card');
+    const pay = Reading(
+      url: 'https://shop.example/checkout/payment',
+      title: 'x',
+      currency: 'GBP',
+      text: 'card',
+    );
     expect(() => readWithAi(pay, 'sk-ant-test', client: client), throwsA(isA<AiReadError>()));
   });
 

@@ -8,7 +8,14 @@ const _tracking = {
   'pd_rd_r', 'pd_rd_wg', 'pd_rd_i', 'pf_rd_p', 'pf_rd_r', 'content-id', 'dib', 'dib_tag', 'qid', 'sr',
   'keywords', 'crid', 'sprefix', 'th',
   // AliExpress affiliate and tracking.
-  'aff_platform', 'aff_trace_key', 'aff_fcid', 'aff_fsk', 'aff_short_key', 'sk', 'terminal_id', 'afsmartredirect',
+  'aff_platform',
+  'aff_trace_key',
+  'aff_fcid',
+  'aff_fsk',
+  'aff_short_key',
+  'sk',
+  'terminal_id',
+  'afsmartredirect',
   'spm', 'scm', 'algo_pvid', 'algo_exp_id', 'pdp_npi', 'pdp_ext_f', 'src', 'gatewayadapt', 'utparam-url',
   'businesstype', 'srcsns', 'sharetype', 'social_params', 'tt', 'invitationcode', 'bizfrom', 'shareid',
   // Temu and Shein referral and ad tracking.

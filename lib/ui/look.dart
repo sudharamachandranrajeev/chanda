@@ -21,7 +21,8 @@ const drop = NithyaAccent.success;
 /// Things that need the user.
 const attention = NithyaAccent.warning;
 
-String themeLabel(String choice) => choice == 'system' ? 'Match system' : nithyaPalettes[choice]?.label ?? choice;
+String themeLabel(String choice) =>
+    choice == 'system' ? 'Match system' : nithyaPalettes[choice]?.label ?? choice;
 
 NithyaPalette paletteFor(String choice, Brightness platform) {
   if (choice == 'system') return nithyaPalettes[platform == Brightness.dark ? 'lagoon' : 'daylight']!;
@@ -196,7 +197,8 @@ class Backdrop extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) => Stack(fit: StackFit.expand, children: [const NithyaBackdrop(), child]);
+  Widget build(BuildContext context) =>
+      Stack(fit: StackFit.expand, children: [const NithyaBackdrop(), child]);
 }
 
 /// A raised tile: the card stands off the page on layered shadows (a
@@ -267,7 +269,9 @@ class _ExtrudedState extends State<Extruded> {
           colors: [Color.lerp(p.panel, p.foreground, dark ? 0.05 : 0.0)!, p.panel],
         ),
         border: Border.all(
-          color: widget.selected ? NithyaAccent.primary : Color.lerp(p.panelBorder, p.foreground, _hover ? 0.12 : 0)!,
+          color: widget.selected
+              ? NithyaAccent.primary
+              : Color.lerp(p.panelBorder, p.foreground, _hover ? 0.12 : 0)!,
           width: widget.selected ? 1.6 : 1,
         ),
         boxShadow: [
@@ -398,7 +402,9 @@ class _GlowBadgeState extends State<GlowBadge> with SingleTickerProviderStateMix
                 widget.label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: NithyaType.label.toStyle(color: c).copyWith(fontSize: 11.5, fontFeatures: tabular.fontFeatures),
+                style: NithyaType.label
+                    .toStyle(color: c)
+                    .copyWith(fontSize: 11.5, fontFeatures: tabular.fontFeatures),
               ),
             ),
           ],

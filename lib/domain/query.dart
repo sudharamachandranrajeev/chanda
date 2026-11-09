@@ -58,22 +58,79 @@ class Query {
 }
 
 const colours = {
-  'black', 'white', 'grey', 'gray', 'silver', 'gold', 'brass', 'red', 'burgundy', 'pink', 'rose',
-  'orange', 'yellow', 'mustard', 'beige', 'cream', 'ivory', 'khaki', 'brown', 'camel', 'tan', 'green',
-  'olive', 'sage', 'mint', 'teal', 'turquoise', 'blue', 'navy', 'purple', 'lilac', 'lavender',
-  'multicolour', 'clear', 'transparent',
+  'black',
+  'white',
+  'grey',
+  'gray',
+  'silver',
+  'gold',
+  'brass',
+  'red',
+  'burgundy',
+  'pink',
+  'rose',
+  'orange',
+  'yellow',
+  'mustard',
+  'beige',
+  'cream',
+  'ivory',
+  'khaki',
+  'brown',
+  'camel',
+  'tan',
+  'green',
+  'olive',
+  'sage',
+  'mint',
+  'teal',
+  'turquoise',
+  'blue',
+  'navy',
+  'purple',
+  'lilac',
+  'lavender',
+  'multicolour',
+  'clear',
+  'transparent',
 };
 
 const materials = {
-  'cotton', 'linen', 'wool', 'cashmere', 'silk', 'satin', 'denim', 'leather', 'suede', 'polyester',
-  'nylon', 'velvet', 'fleece', 'wood', 'wooden', 'bamboo', 'metal', 'steel', 'aluminium', 'glass',
-  'ceramic', 'porcelain', 'plastic', 'acrylic', 'marble', 'rattan',
+  'cotton',
+  'linen',
+  'wool',
+  'cashmere',
+  'silk',
+  'satin',
+  'denim',
+  'leather',
+  'suede',
+  'polyester',
+  'nylon',
+  'velvet',
+  'fleece',
+  'wood',
+  'wooden',
+  'bamboo',
+  'metal',
+  'steel',
+  'aluminium',
+  'glass',
+  'ceramic',
+  'porcelain',
+  'plastic',
+  'acrylic',
+  'marble',
+  'rattan',
 };
 
 final _amount = r'(?:([£$€])\s?)?(\d+(?:[.,]\d{1,2})?)';
 final _budgets = <(RegExp, String)>[
   (RegExp('(?:between\\s+)?$_amount\\s*(?:-|–|to|and)\\s*$_amount', caseSensitive: false), 'range'),
-  (RegExp('(?:under|below|less than|up to|max(?:imum)?|cheaper than|<)\\s*$_amount', caseSensitive: false), 'max'),
+  (
+    RegExp('(?:under|below|less than|up to|max(?:imum)?|cheaper than|<)\\s*$_amount', caseSensitive: false),
+    'max',
+  ),
   (RegExp('$_amount\\s*(?:or less|or under|max)', caseSensitive: false), 'max'),
   (RegExp('(?:over|above|more than|at least|min(?:imum)?|>)\\s*$_amount', caseSensitive: false), 'min'),
 ];
@@ -130,7 +187,10 @@ Query readQuery(String text, {String currency = 'GBP'}) {
   // Shops: "on Amazon", "from temu", or the name alone.
   for (final s in shops) {
     final name = s.name.split(' ').first.toLowerCase();
-    final m = RegExp('\\b(?:on |from |at )?${RegExp.escape(name)}(?: uk)?\\b', caseSensitive: false).firstMatch(rest);
+    final m = RegExp(
+      '\\b(?:on |from |at )?${RegExp.escape(name)}(?: uk)?\\b',
+      caseSensitive: false,
+    ).firstMatch(rest);
     if (m == null) continue;
     facets.add(Facet('shop', s.id, s.name));
     rest = rest.replaceRange(m.start, m.end, ' ');

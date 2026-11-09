@@ -97,7 +97,12 @@ void main() {
             'content': [
               {
                 'type': 'text',
-                'text': jsonEncode({'title': 'Linen shirt', 'price': '£24.99', 'currency': 'GBP', 'in_stock': true}),
+                'text': jsonEncode({
+                  'title': 'Linen shirt',
+                  'price': '£24.99',
+                  'currency': 'GBP',
+                  'in_stock': true,
+                }),
               },
             ],
           }),
@@ -108,7 +113,12 @@ void main() {
     final context = tester.element(find.byType(Scaffold).first);
     showSaveSheet(
       context,
-      const Reading(url: 'https://www.hacoo.com/p/1', title: 'Linen shirt', currency: 'GBP', text: 'Linen shirt £24.99'),
+      const Reading(
+        url: 'https://www.hacoo.com/p/1',
+        title: 'Linen shirt',
+        currency: 'GBP',
+        text: 'Linen shirt £24.99',
+      ),
     );
     await app.settle();
     expect(find.text('No price found'), findsOneWidget);
@@ -125,7 +135,11 @@ void main() {
     await app.open();
     await app.run();
     await app.go('Settings');
-    await tester.scrollUntilVisible(find.text('Smarter search'), 300, scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      find.text('Smarter search'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.textContaining('Download ('), findsOneWidget);
     expect(find.text('Add key'), findsOneWidget);
     await app.close();
@@ -161,8 +175,22 @@ void main() {
     await app.run(
       offers: {
         'amazon-uk': const [
-          Offer(shop: 'amazon-uk', url: 'https://www.amazon.co.uk/dp/B0LAMP0001', title: 'Brass desk lamp, LED', price: 2999, currency: 'GBP', rating: 4.6, reviews: 120),
-          Offer(shop: 'amazon-uk', url: 'https://www.amazon.co.uk/dp/B0LAMP0002', title: 'Marble desk lamp', price: 8999, currency: 'GBP'),
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0LAMP0001',
+            title: 'Brass desk lamp, LED',
+            price: 2999,
+            currency: 'GBP',
+            rating: 4.6,
+            reviews: 120,
+          ),
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0LAMP0002',
+            title: 'Marble desk lamp',
+            price: 8999,
+            currency: 'GBP',
+          ),
         ],
       },
     );
@@ -193,8 +221,20 @@ void main() {
     await app.run(
       offers: {
         'aliexpress': const [
-          Offer(shop: 'aliexpress', url: 'https://www.aliexpress.com/item/2001.html', title: 'Brass desk lamp with switch', price: 1999, currency: 'GBP'),
-          Offer(shop: 'aliexpress', url: 'https://www.aliexpress.com/item/2002.html', title: 'Oak bookshelf', price: 999, currency: 'GBP'),
+          Offer(
+            shop: 'aliexpress',
+            url: 'https://www.aliexpress.com/item/2001.html',
+            title: 'Brass desk lamp with switch',
+            price: 1999,
+            currency: 'GBP',
+          ),
+          Offer(
+            shop: 'aliexpress',
+            url: 'https://www.aliexpress.com/item/2002.html',
+            title: 'Oak bookshelf',
+            price: 999,
+            currency: 'GBP',
+          ),
         ],
       },
     );

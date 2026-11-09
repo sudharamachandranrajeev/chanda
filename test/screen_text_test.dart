@@ -28,8 +28,17 @@ void main() {
 
   test('a title already read is kept; no price leaves the reading alone', () {
     const named = Reading(url: 'https://shop.example/p', title: 'Lamp', currency: 'GBP');
-    expect(withScreenText(named, const [ScreenLine('€12,99', top: 5, height: 40)], screenHeight: 100).title, 'Lamp');
-    expect(identical(withScreenText(named, const [ScreenLine('Add to basket', top: 5, height: 40)], screenHeight: 100), named), isTrue);
+    expect(
+      withScreenText(named, const [ScreenLine('€12,99', top: 5, height: 40)], screenHeight: 100).title,
+      'Lamp',
+    );
+    expect(
+      identical(
+        withScreenText(named, const [ScreenLine('Add to basket', top: 5, height: 40)], screenHeight: 100),
+        named,
+      ),
+      isTrue,
+    );
   });
 
   test('png height from the header', () {

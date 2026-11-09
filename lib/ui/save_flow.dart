@@ -113,8 +113,12 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
     final price = _amount(_price);
     final target = _amount(_target);
     if (title.isEmpty) return setState(() => _error = 'Give it a name.');
-    if (_price.text.trim().isNotEmpty && price == null) return setState(() => _error = 'The price is not a number.');
-    if (_target.text.trim().isNotEmpty && target == null) return setState(() => _error = 'The target is not a number.');
+    if (_price.text.trim().isNotEmpty && price == null) {
+      return setState(() => _error = 'The price is not a number.');
+    }
+    if (_target.text.trim().isNotEmpty && target == null) {
+      return setState(() => _error = 'The target is not a number.');
+    }
     setState(() {
       _busy = true;
       _error = null;
@@ -122,10 +126,21 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
     try {
       final id = await ref.mutate((v) async {
         final listId = _listId ?? await v.defaultList();
-        final id = await v.saveReading(r, listId: listId, note: _note.text.trim(), target: target, tags: _tagText());
+        final id = await v.saveReading(
+          r,
+          listId: listId,
+          note: _note.text.trim(),
+          target: target,
+          tags: _tagText(),
+        );
         final saved = (await v.item(id))!;
         await v.updateItem(
-          saved.copyWith(title: title, alertDrop: _alertDrop, alertStock: _alertStock, watchClose: _watchClose),
+          saved.copyWith(
+            title: title,
+            alertDrop: _alertDrop,
+            alertStock: _alertStock,
+            watchClose: _watchClose,
+          ),
         );
         // The user read the price themselves where Chanda could not, or
         // corrected it.
@@ -199,7 +214,8 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
                               : Image.network(
                                   r.images.first,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => Icon(Icons.shopping_bag_outlined, color: p.muted),
+                                  errorBuilder: (_, _, _) =>
+                                      Icon(Icons.shopping_bag_outlined, color: p.muted),
                                 ),
                         ),
                       ),
@@ -243,14 +259,21 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
                         style: text.bodyMedium,
                       ),
                     ),
-                  if (aiKey.isNotEmpty && r.layer != 'ai' && r.confidence != 'high' && r.text.trim().isNotEmpty)
+                  if (aiKey.isNotEmpty &&
+                      r.layer != 'ai' &&
+                      r.confidence != 'high' &&
+                      r.text.trim().isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: OutlinedButton.icon(
                           icon: _reading
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
                               : const Icon(Icons.auto_awesome_outlined),
                           label: const Text('Read with AI'),
                           onPressed: _reading ? null : () => _readWithAi(aiKey),

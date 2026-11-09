@@ -18,7 +18,8 @@ import 'package:http/http.dart' as http;
 /// The local setting that turns smarter search on once downloaded.
 const smartSearchSetting = 'chanda.smart_search';
 
-const _repo = 'https://huggingface.co/Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q/resolve/'
+const _repo =
+    'https://huggingface.co/Qdrant/paraphrase-multilingual-MiniLM-L12-v2-onnx-Q/resolve/'
     'faf4aa4225822f3bc6376869cb1164e8e3feedd0';
 
 class ModelFile {
@@ -30,18 +31,21 @@ class ModelFile {
 }
 
 const modelFiles = [
-  ModelFile('model_optimized.onnx', 235052644, '634d0f66c29dc934c8fa72b8a4fe91dd4d420a22f1d82a241058d4316e659a99'),
+  ModelFile(
+    'model_optimized.onnx',
+    235052644,
+    '634d0f66c29dc934c8fa72b8a4fe91dd4d420a22f1d82a241058d4316e659a99',
+  ),
   ModelFile('tokenizer.json', 17083009, 'fa685fc160bbdbab64058d4fc91b60e62d207e8dc60b9af5c002c5ab946ded00'),
 ];
 
 final modelBytes = modelFiles.fold<int>(0, (n, f) => n + f.size);
 
 /// Every model file is in [dir] at its full size.
-bool modelPresent(Directory dir) =>
-    modelFiles.every((f) {
-      final file = File('${dir.path}/${f.name}');
-      return file.existsSync() && file.lengthSync() == f.size;
-    });
+bool modelPresent(Directory dir) => modelFiles.every((f) {
+  final file = File('${dir.path}/${f.name}');
+  return file.existsSync() && file.lengthSync() == f.size;
+});
 
 /// Downloads the model into [dir], checking each file's SHA-256 before it
 /// is kept. [progress] gets bytes done of [modelBytes]. A file already
@@ -209,9 +213,8 @@ double cosine(Float32List a, Float32List b) {
 
 Uint8List vectorBytes(Float32List v) => v.buffer.asUint8List(v.offsetInBytes, v.lengthInBytes);
 
-Float32List vectorOf(Uint8List bytes) => Float32List.fromList(
-  Float32List.view(Uint8List.fromList(bytes).buffer, 0, bytes.length ~/ 4),
-);
+Float32List vectorOf(Uint8List bytes) =>
+    Float32List.fromList(Float32List.view(Uint8List.fromList(bytes).buffer, 0, bytes.length ~/ 4));
 
 /// Reciprocal rank fusion: one ranking from several, each key scoring
 /// 1 / (k + rank) in every list it is in.

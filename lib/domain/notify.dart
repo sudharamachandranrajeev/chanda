@@ -73,7 +73,14 @@ class AlertNotifier implements AlertSender {
   /// they arrive. Throws when ntfy refuses.
   Future<void> test() => _deliver(1, 'Chanda test alert', 'Price alerts reach you here.', strict: true);
 
-  Future<void> _deliver(int id, String title, String body, {String? payload, String? link, bool strict = false}) async {
+  Future<void> _deliver(
+    int id,
+    String title,
+    String body, {
+    String? payload,
+    String? link,
+    bool strict = false,
+  }) async {
     if (local) {
       try {
         await init();

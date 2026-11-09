@@ -41,7 +41,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
     super.dispose();
   }
 
-  void _toggle(String id) => setState(() => _selected.contains(id) ? _selected.remove(id) : _selected.add(id));
+  void _toggle(String id) =>
+      setState(() => _selected.contains(id) ? _selected.remove(id) : _selected.add(id));
 
   Future<void> _add() async {
     final clip = linkIn(await clipboardText());
@@ -69,7 +70,9 @@ class _VaultPageState extends ConsumerState<VaultPage> {
           icon: const Icon(Icons.sort),
           initialValue: view.sort,
           onSelected: (s) => ref.read(vaultViewProvider.notifier).set(view.copyWith(sort: s)),
-          itemBuilder: (_) => [for (final e in _sortNames.entries) PopupMenuItem(value: e.key, child: Text(e.value))],
+          itemBuilder: (_) => [
+            for (final e in _sortNames.entries) PopupMenuItem(value: e.key, child: Text(e.value)),
+          ],
         ),
       ],
       fab: _selected.isEmpty
@@ -109,7 +112,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                       },
                                     ),
                             ),
-                            onChanged: (q) => ref.read(vaultViewProvider.notifier).set(view.copyWith(query: q)),
+                            onChanged: (q) =>
+                                ref.read(vaultViewProvider.notifier).set(view.copyWith(query: q)),
                           ),
                           const SizedBox(height: 12),
                           _ListChips(view: view),
@@ -150,9 +154,8 @@ class _VaultPageState extends ConsumerState<VaultPage> {
                                     selected: _selected.contains(i.id),
                                     onTap: _selected.isNotEmpty
                                         ? () => _toggle(i.id)
-                                        : () =>
-                                              Navigator.of(context)
-                                                  .push(MaterialPageRoute<void>(builder: (_) => ItemPage(i.id))),
+                                        : () => Navigator.of(context)
+                                              .push(MaterialPageRoute<void>(builder: (_) => ItemPage(i.id))),
                                     onLongPress: () => _toggle(i.id),
                                   ),
                                 );
@@ -444,7 +447,11 @@ class _Empty extends StatelessWidget {
               'Open a shop on the Shops page and press Save on anything you like, share a product to Chanda from '
               'another app, or paste a link.',
           actions: [
-            FilledButton.icon(icon: const Icon(Icons.add_link), label: const Text('Paste a link'), onPressed: onAdd),
+            FilledButton.icon(
+              icon: const Icon(Icons.add_link),
+              label: const Text('Paste a link'),
+              onPressed: onAdd,
+            ),
           ],
         );
 }
@@ -520,7 +527,10 @@ class ItemCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(shopOf(item.shop).name.toUpperCase(), style: text.labelSmall?.copyWith(color: p.muted)),
+                    Text(
+                      shopOf(item.shop).name.toUpperCase(),
+                      style: text.labelSmall?.copyWith(color: p.muted),
+                    ),
                     const SizedBox(height: 3),
                     Text(item.title, maxLines: 2, overflow: TextOverflow.ellipsis, style: text.titleSmall),
                     const Spacer(),

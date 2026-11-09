@@ -68,7 +68,9 @@ void main() {
 
     test('tracking and affiliate parameters go; the rest stays', () {
       final u = cleanLink(
-        Uri.parse('https://shop.example.com/item?id=7&colour=red&utm_source=x&gclid=1&aff_id=9&spm=a.b#reviews'),
+        Uri.parse(
+          'https://shop.example.com/item?id=7&colour=red&utm_source=x&gclid=1&aff_id=9&spm=a.b#reviews',
+        ),
       );
       expect(u.queryParameters, {'id': '7', 'colour': 'red'});
       expect(u.fragment, isEmpty);
@@ -125,7 +127,14 @@ void main() {
     });
 
     test('low-value goods priced in pounds from abroad already carry VAT', () {
-      final l = landedCost(price: 1000, shipping: 199, currency: 'GBP', home: 'GBP', fromAbroad: true, fx: fx)!;
+      final l = landedCost(
+        price: 1000,
+        shipping: 199,
+        currency: 'GBP',
+        home: 'GBP',
+        fromAbroad: true,
+        fx: fx,
+      )!;
       expect(l.total, 1199);
       expect(l.estimate, isFalse);
     });
@@ -146,7 +155,12 @@ void main() {
         fx: fx,
         rules: const UkImportRules(dutyPercent: 10, handlingFee: 800),
       )!;
-      expect(l.parts, [('Price', 20000), ('Customs duty', 2000), ('Import VAT', 4400), ('Handling fee', 800)]);
+      expect(l.parts, [
+        ('Price', 20000),
+        ('Customs duty', 2000),
+        ('Import VAT', 4400),
+        ('Handling fee', 800),
+      ]);
       expect(l.total, 27200);
     });
 
@@ -169,7 +183,9 @@ void main() {
       final item = await saved(v, reading(price: 10000));
       expect(alertsFor(item, reading(price: 9400), before: 10000).map((a) => a.kind), ['drop']);
       expect(alertsFor(item, reading(price: 9600), before: 10000), isEmpty);
-      expect(alertsFor(item, reading(price: 9600), before: 10000, dropPercent: 3).map((a) => a.kind), ['drop']);
+      expect(alertsFor(item, reading(price: 9600), before: 10000, dropPercent: 3).map((a) => a.kind), [
+        'drop',
+      ]);
       expect(alertsFor(item, reading(price: 10500), before: 10000), isEmpty);
     });
 
@@ -185,7 +201,9 @@ void main() {
     test('back in stock alerts; out of stock and other currencies do not', () async {
       final v = await memoryVault();
       final item = await saved(v, reading(price: 10000));
-      expect(alertsFor(item, reading(price: 10000), before: 10000, beforeStock: false).map((a) => a.kind), ['stock']);
+      expect(alertsFor(item, reading(price: 10000), before: 10000, beforeStock: false).map((a) => a.kind), [
+        'stock',
+      ]);
       expect(alertsFor(item, reading(price: 5000, inStock: false), before: 10000), isEmpty);
       expect(alertsFor(item, reading(price: 5000, currency: 'EUR'), before: 10000), isEmpty);
     });

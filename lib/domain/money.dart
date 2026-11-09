@@ -130,7 +130,8 @@ int? parseAmount(String raw, {int scale = 2}) {
   // A fraction finer than the currency's minor unit is rounded, not cut
   // ("¥1,280.5" is ¥1,281).
   final f = fraction.padRight(scale + 1, '0');
-  final minor = int.parse(whole) * pow(10, scale).toInt() + (scale == 0 ? 0 : int.parse(f.substring(0, scale)));
+  final minor =
+      int.parse(whole) * pow(10, scale).toInt() + (scale == 0 ? 0 : int.parse(f.substring(0, scale)));
   return f.codeUnitAt(scale) >= 0x35 ? minor + 1 : minor;
 }
 
@@ -240,7 +241,9 @@ Landed? landedCost({
   if (goods == null || ship == null) return null;
   final parts = <(String, int)>[('Price', goods), if (shipping != null && ship > 0) ('Delivery', ship)];
   var estimate = currency != home;
-  var note = currency != home ? 'Converted at the ECB reference rate${fx == null ? '' : ' of ${fx.day}'}.' : '';
+  var note = currency != home
+      ? 'Converted at the ECB reference rate${fx == null ? '' : ' of ${fx.day}'}.'
+      : '';
   if (fromAbroad && home == 'GBP') {
     final inPounds = currency == 'GBP';
     if (goods > UkImportRules.lowValueLimit) {
@@ -252,8 +255,9 @@ Landed? landedCost({
       parts.add(('Import VAT', vat));
       if (rules.handlingFee > 0) parts.add(('Handling fee', rules.handlingFee));
       estimate = true;
-      note = '$note Over £135: import VAT${duty > 0 ? ' and duty' : ''} due on delivery (${UkImportRules.version}).'
-          .trim();
+      note =
+          '$note Over £135: import VAT${duty > 0 ? ' and duty' : ''} due on delivery (${UkImportRules.version}).'
+              .trim();
     } else if (!inPounds) {
       // Low value but priced abroad: the seller may not have charged UK VAT.
       final vat = ((goods + ship) * UkImportRules.vatPercent / 100).round();

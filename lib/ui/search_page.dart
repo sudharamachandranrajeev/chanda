@@ -64,7 +64,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     if (!mounted || _q != q) return;
     setState(() {
       _vault = [for (final h in hits) ?h.item];
-      _before = [for (final h in hits) if (h.offer case final o?) offerOf(o)];
+      _before = [
+        for (final h in hits)
+          if (h.offer case final o?) offerOf(o),
+      ];
     });
     if (q.words.trim().isEmpty) return;
     _sub = searchShops(ref.read(searcherProvider), q, shops).listen((r) async {
@@ -81,7 +84,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final offers = await openSearchInApp(context, shop, q.words);
     if (offers == null || !mounted) return;
     await ref.read(localSearchProvider).keepOffers(offers, q.raw);
-    if (mounted && _q == q) setState(() => _results[shop.id] = ShopResult(shop, SearchState.done, offers: offers));
+    if (mounted && _q == q) {
+      setState(() => _results[shop.id] = ShopResult(shop, SearchState.done, offers: offers));
+    }
   }
 
   void _add(String words) {
@@ -94,7 +99,8 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     final q = _q;
     final found = {
       for (final o in _before) o.id: o,
-      for (final r in _results.values) for (final o in r.offers) o.id: o,
+      for (final r in _results.values)
+        for (final o in r.offers) o.id: o,
     };
     final offers = q == null ? const <Offer>[] : rankOffers(q, found.values);
     return PageScaffold(
@@ -126,16 +132,19 @@ class _SearchPageState extends ConsumerState<SearchPage> {
           if (_vault.isNotEmpty) ...[
             const SizedBox(height: 16),
             _Heading('In your vault', '${_vault.length}'),
-            _Grid(children: [
-              for (final i in _vault)
-                SizedBox(
-                  height: 300,
-                  child: ItemCard(
-                    i,
-                    onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ItemPage(i.id))),
+            _Grid(
+              children: [
+                for (final i in _vault)
+                  SizedBox(
+                    height: 300,
+                    child: ItemCard(
+                      i,
+                      onTap: () =>
+                          Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => ItemPage(i.id))),
+                    ),
                   ),
-                ),
-            ]),
+              ],
+            ),
           ],
           const SizedBox(height: 16),
           _Heading('At the shops', offers.isEmpty ? '' : '${offers.length}'),
@@ -221,7 +230,8 @@ class _Vague extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: [
-                for (final n in [20, 50, 100]) ActionChip(label: Text('Under $sign$n'), onPressed: () => onAdd('under $sign$n')),
+                for (final n in [20, 50, 100])
+                  ActionChip(label: Text('Under $sign$n'), onPressed: () => onAdd('under $sign$n')),
                 ActionChip(label: Text('Over ${sign}100'), onPressed: () => onAdd('over ${sign}100')),
               ],
             ),
@@ -369,7 +379,9 @@ class OfferCard extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 2),
                           child: Text(
                             showPrice(o.was!, o.currency),
-                            style: NithyaType.caption.toStyle(color: p.muted).copyWith(decoration: TextDecoration.lineThrough),
+                            style: NithyaType.caption
+                                .toStyle(color: p.muted)
+                                .copyWith(decoration: TextDecoration.lineThrough),
                           ),
                         ),
                       ],
@@ -378,7 +390,9 @@ class OfferCard extends StatelessWidget {
                         tooltip: 'Save',
                         icon: const Icon(Icons.favorite_border),
                         onPressed: () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(builder: (_) => BrowserPage(url: Uri.parse(o.url), saveOnLoad: true)),
+                          MaterialPageRoute<void>(
+                            builder: (_) => BrowserPage(url: Uri.parse(o.url), saveOnLoad: true),
+                          ),
                         ),
                       ),
                     ],

@@ -19,13 +19,16 @@ import 'package:image/image.dart' as img;
 
 import 'support.dart';
 
-Offer offer(String title, int price, {String shop = 'amazon-uk', String? url, String currency = 'GBP'}) => Offer(
-  shop: shop,
-  url: url ?? 'https://www.amazon.co.uk/dp/B0${title.hashCode.abs().toString().padLeft(8, '0').substring(0, 8)}',
-  title: title,
-  price: price,
-  currency: currency,
-);
+Offer offer(String title, int price, {String shop = 'amazon-uk', String? url, String currency = 'GBP'}) =>
+    Offer(
+      shop: shop,
+      url:
+          url ??
+          'https://www.amazon.co.uk/dp/B0${title.hashCode.abs().toString().padLeft(8, '0').substring(0, 8)}',
+      title: title,
+      price: price,
+      currency: currency,
+    );
 
 /// Stands in for the meaning model: texts that name the same concept get
 /// the same unit vector.
@@ -90,7 +93,10 @@ void main() {
     });
 
     test('shop search pages', () {
-      expect('${shopById('amazon-uk')!.searchFor('reading glasses')}', 'https://www.amazon.co.uk/s?k=reading%20glasses');
+      expect(
+        '${shopById('amazon-uk')!.searchFor('reading glasses')}',
+        'https://www.amazon.co.uk/s?k=reading%20glasses',
+      );
       expect(
         '${shopById('aliexpress')!.searchFor('Reading glasses +2.0')}',
         'https://www.aliexpress.com/w/wholesale-reading-glasses-2-0.html',
@@ -108,8 +114,19 @@ void main() {
       final offers = parseOffers(
         amazon,
         jsonEncode([
-          {'title': 'Reading glasses +2.0', 'price': '£8.42', 'was': '£9.67', 'url': 'https://www.amazon.co.uk/x/dp/B01KW9ZHU6?ref=sr', 'rating': 4.6, 'reviews': 1602},
-          {'title': 'Reading glasses +2.0', 'price': '£8.42', 'url': 'https://www.amazon.co.uk/dp/B01KW9ZHU6'},
+          {
+            'title': 'Reading glasses +2.0',
+            'price': '£8.42',
+            'was': '£9.67',
+            'url': 'https://www.amazon.co.uk/x/dp/B01KW9ZHU6?ref=sr',
+            'rating': 4.6,
+            'reviews': 1602,
+          },
+          {
+            'title': 'Reading glasses +2.0',
+            'price': '£8.42',
+            'url': 'https://www.amazon.co.uk/dp/B01KW9ZHU6',
+          },
           {'title': 'Learn more', 'price': '£1.00', 'url': 'https://www.amazon.co.uk/gp/browse.html?node=1'},
           {'title': 'No price', 'price': '', 'url': 'https://www.amazon.co.uk/dp/B000000002'},
         ]),
@@ -122,7 +139,11 @@ void main() {
 
     test('fullwidth pound signs read as pounds', () {
       final o = parseOffers(shopById('aliexpress')!, [
-        {'title': 'Folding reading glasses', 'price': '￡1.30', 'url': 'https://www.aliexpress.com/item/1005.html?x=1'},
+        {
+          'title': 'Folding reading glasses',
+          'price': '￡1.30',
+          'url': 'https://www.aliexpress.com/item/1005.html?x=1',
+        },
       ]).single;
       expect((o.price, o.currency), (130, 'GBP'));
     });
@@ -163,7 +184,10 @@ void main() {
 
     test('different sizes, capacities and strengths never merge', () {
       expect(
-        match(const Listing(title: 'Phone 128GB blue', brand: 'X'), const Listing(title: 'Phone 256GB blue', brand: 'X')),
+        match(
+          const Listing(title: 'Phone 128GB blue', brand: 'X'),
+          const Listing(title: 'Phone 256GB blue', brand: 'X'),
+        ),
         Verdict.different,
       );
       expect(
@@ -188,10 +212,16 @@ void main() {
         Verdict.likely,
       );
       expect(
-        match(const Listing(title: 'Brass desk lamp with USB'), const Listing(title: 'Brass desk lamp, USB port')),
+        match(
+          const Listing(title: 'Brass desk lamp with USB'),
+          const Listing(title: 'Brass desk lamp, USB port'),
+        ),
         Verdict.likely,
       );
-      expect(match(const Listing(title: 'Brass desk lamp'), const Listing(title: 'Oak bookshelf')), Verdict.different);
+      expect(
+        match(const Listing(title: 'Brass desk lamp'), const Listing(title: 'Oak bookshelf')),
+        Verdict.different,
+      );
     });
 
     test('a picture keeps its hash when resized; another picture does not', () {
@@ -219,19 +249,26 @@ void main() {
   group('best deal', () {
     final now = DateTime.utc(2026, 11, 9, 12);
     final fresh = now.subtract(const Duration(hours: 2)).toIso8601String();
-    Deal deal(String shop, int price, {double? rating, int? reviews, bool inStock = true, int? shipping, String? seen}) =>
-        Deal(
-          shop: shopOf(shop),
-          url: 'https://$shop/p',
-          title: 'Lamp',
-          price: price,
-          currency: 'GBP',
-          seen: seen ?? fresh,
-          rating: rating,
-          reviews: reviews,
-          inStock: inStock,
-          shipping: shipping,
-        );
+    Deal deal(
+      String shop,
+      int price, {
+      double? rating,
+      int? reviews,
+      bool inStock = true,
+      int? shipping,
+      String? seen,
+    }) => Deal(
+      shop: shopOf(shop),
+      url: 'https://$shop/p',
+      title: 'Lamp',
+      price: price,
+      currency: 'GBP',
+      seen: seen ?? fresh,
+      rating: rating,
+      reviews: reviews,
+      inStock: inStock,
+      shipping: shipping,
+    );
 
     test('the cheapest delivered, in stock, from a well-rated seller', () {
       final (all, best) = compareDeals(
@@ -261,7 +298,10 @@ void main() {
         fx: null,
         now: now,
       );
-      expect(best!.reason, 'The only one in stock from a well-rated seller; rated 2.0 by 3; its price is over a day old.');
+      expect(
+        best!.reason,
+        'The only one in stock from a well-rated seller; rated 2.0 by 3; its price is over a day old.',
+      );
     });
 
     test('no total without an exchange rate, and no best without one', () {
@@ -288,16 +328,24 @@ void main() {
       final v = await memoryVault();
       final f = LocalSearch(v.store);
       await saved(v, reading(title: 'Brass desk lamp', price: 4599));
-      await saved(v, reading(url: 'https://www.amazon.co.uk/dp/B000000002', title: 'Black linen shirt', price: 2500));
+      await saved(
+        v,
+        reading(url: 'https://www.amazon.co.uk/dp/B000000002', title: 'Black linen shirt', price: 2500),
+      );
       await f.keepOffers([offer('Brass floor lamp', 9900)], 'lamp');
 
-      expect((await f.search(readQuery('lamp'))).map((h) => h.title), containsAll(['Brass desk lamp', 'Brass floor lamp']));
+      expect(
+        (await f.search(readQuery('lamp'))).map((h) => h.title),
+        containsAll(['Brass desk lamp', 'Brass floor lamp']),
+      );
       expect((await f.search(readQuery('lam'))).map((h) => h.title), hasLength(2), reason: 'prefix');
-      expect((await f.search(readQuery('ass des'))).map((h) => h.title), ['Brass desk lamp'], reason: 'substring');
+      expect((await f.search(readQuery('ass des'))).map((h) => h.title), [
+        'Brass desk lamp',
+      ], reason: 'substring');
       expect((await f.search(readQuery('lamp under £50'))).map((h) => h.title), ['Brass desk lamp']);
       expect((await f.search(readQuery('black shirt'))).map((h) => h.title), ['Black linen shirt']);
       expect(await f.search(readQuery('white shirt')), isEmpty);
-      expect(await f.search(readQuery('lamp', ), offers: false), hasLength(1));
+      expect(await f.search(readQuery('lamp'), offers: false), hasLength(1));
     });
 
     test('smarter search finds by meaning, fused with the words', () async {
@@ -305,10 +353,19 @@ void main() {
       final e = _ConceptEmbedder();
       final f = LocalSearch(v.store, embedder: e);
       await saved(v, reading(title: 'Reading glasses +2.0', price: 999));
-      await saved(v, reading(url: 'https://www.amazon.co.uk/dp/B000000002', title: 'Lesebrille Herren', price: 1299));
-      await saved(v, reading(url: 'https://www.amazon.co.uk/dp/B000000003', title: 'Brass desk lamp', price: 4599));
+      await saved(
+        v,
+        reading(url: 'https://www.amazon.co.uk/dp/B000000002', title: 'Lesebrille Herren', price: 1299),
+      );
+      await saved(
+        v,
+        reading(url: 'https://www.amazon.co.uk/dp/B000000003', title: 'Brass desk lamp', price: 4599),
+      );
 
-      expect((await f.search(readQuery('specs'))).map((h) => h.title), unorderedEquals(['Reading glasses +2.0', 'Lesebrille Herren']));
+      expect(
+        (await f.search(readQuery('specs'))).map((h) => h.title),
+        unorderedEquals(['Reading glasses +2.0', 'Lesebrille Herren']),
+      );
       final both = (await f.search(readQuery('glasses'))).map((h) => h.title).toList();
       expect(both.first, 'Reading glasses +2.0', reason: 'in both rankings, so first');
       expect(both, contains('Lesebrille Herren'));
@@ -350,10 +407,13 @@ void main() {
     });
 
     test('rank fusion and the nearness cut', () {
-      expect(fuseRankings([
-        ['a', 'b', 'c'],
-        ['c', 'a'],
-      ]), ['a', 'c', 'b']);
+      expect(
+        fuseRankings([
+          ['a', 'b', 'c'],
+          ['c', 'a'],
+        ]),
+        ['a', 'c', 'b'],
+      );
       expect(nearest({'jeans': 0.75, 'shoes': 0.37, 'mug': 0.05}), ['jeans']);
       expect(nearest({'glasses': 0.62, 'brille': 0.42, 'mug': 0.29}), ['glasses', 'brille']);
       expect(nearest({'shoes': 0.24}), isEmpty);
@@ -372,7 +432,9 @@ void main() {
 
       final bad = ModelFile('t.json', body.length, '0' * 64);
       await expectLater(downloadModel(dir, client: client, files: [bad]), throwsFormatException);
-      expect(dir.listSync().map((f) => f.uri.pathSegments.last), ['m.onnx'], reason: 'no part file left behind');
+      expect(dir.listSync().map((f) => f.uri.pathSegments.last), [
+        'm.onnx',
+      ], reason: 'no part file left behind');
     });
 
     test('the pinned files', () {
@@ -388,8 +450,22 @@ void main() {
       final states = <String>[];
       final done = searchShops(s, readQuery('lamp'), [
         ...shops,
-        Shop(id: 'a.co.uk', name: 'A', domains: const ['a.co.uk'], home: 'https://a.co.uk/', currency: 'GBP', search: 'https://a.co.uk/s?q={q}'),
-        Shop(id: 'b.co.uk', name: 'B', domains: const ['b.co.uk'], home: 'https://b.co.uk/', currency: 'GBP', search: 'https://b.co.uk/s?q={q}'),
+        Shop(
+          id: 'a.co.uk',
+          name: 'A',
+          domains: const ['a.co.uk'],
+          home: 'https://a.co.uk/',
+          currency: 'GBP',
+          search: 'https://a.co.uk/s?q={q}',
+        ),
+        Shop(
+          id: 'b.co.uk',
+          name: 'B',
+          domains: const ['b.co.uk'],
+          home: 'https://b.co.uk/',
+          currency: 'GBP',
+          search: 'https://b.co.uk/s?q={q}',
+        ),
       ]).listen((r) => states.add('${r.shop.id}:${r.state.name}'));
       await done.asFuture<void>();
       expect(s.most, 3);
@@ -400,7 +476,11 @@ void main() {
     });
 
     test('a named shop is the only one searched', () async {
-      final states = await searchShops(_FakeSearcher(), readQuery('lamp on temu'), shops).map((r) => r.shop.id).toSet();
+      final states = await searchShops(
+        _FakeSearcher(),
+        readQuery('lamp on temu'),
+        shops,
+      ).map((r) => r.shop.id).toSet();
       expect(states, {'temu'});
     });
   });

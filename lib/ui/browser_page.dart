@@ -45,9 +45,8 @@ Future<List<Offer>?> openSearchInApp(BuildContext context, Shop shop, String wor
     await openLink(context, '$url');
     return null;
   }
-  return Navigator.of(context).push<List<Offer>>(
-    MaterialPageRoute(builder: (_) => BrowserPage(url: url, gathers: true)),
-  );
+  return Navigator.of(context)
+      .push<List<Offer>>(MaterialPageRoute(builder: (_) => BrowserPage(url: url, gathers: true)));
 }
 
 /// A shop's own website inside Chanda. The user signs in, chooses and
@@ -106,7 +105,10 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
     final r = await _read();
     if (r == null || !mounted) return;
     if (r.title.isEmpty && r.price == null && !r.check) {
-      return showMessage(context, 'This does not look like a product page. Open the product itself, then Save.');
+      return showMessage(
+        context,
+        'This does not look like a product page. Open the product itself, then Save.',
+      );
     }
     await showSaveSheet(context, r);
   }
@@ -120,7 +122,10 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
       final offers = parseOffers(_shop, '${await web.evaluateJavascript(source: offerScript)}');
       if (!mounted) return;
       if (offers.isEmpty) {
-        return showMessage(context, 'No products with prices found here yet. Let the results load, then try again.');
+        return showMessage(
+          context,
+          'No products with prices found here yet. Let the results load, then try again.',
+        );
       }
       Navigator.pop(context, offers);
     } on Object catch (e) {
@@ -330,9 +335,16 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(item.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: text.labelLarge),
                           Text(
-                            item.price == null ? 'No price kept' : 'Kept at ${showPrice(item.price!, item.currency)}',
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.labelLarge,
+                          ),
+                          Text(
+                            item.price == null
+                                ? 'No price kept'
+                                : 'Kept at ${showPrice(item.price!, item.currency)}',
                             style: text.bodySmall,
                           ),
                         ],
@@ -366,7 +378,11 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                FilledButton.icon(icon: const Icon(Icons.check), label: const Text('Bought it'), onPressed: _bought),
+                FilledButton.icon(
+                  icon: const Icon(Icons.check),
+                  label: const Text('Bought it'),
+                  onPressed: _bought,
+                ),
               ],
             ],
           ),
@@ -396,7 +412,11 @@ class _PopupPageState extends State<_PopupPage> {
     appBar: AppBar(
       backgroundColor: NithyaPalette.of(context).panel,
       title: Text(_host, style: Theme.of(context).textTheme.titleMedium),
-      leading: IconButton(tooltip: 'Close', icon: const Icon(Icons.close), onPressed: () => Navigator.pop(context)),
+      leading: IconButton(
+        tooltip: 'Close',
+        icon: const Icon(Icons.close),
+        onPressed: () => Navigator.pop(context),
+      ),
     ),
     body: InAppWebView(
       windowId: widget.action.windowId,

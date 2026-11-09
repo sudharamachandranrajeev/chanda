@@ -12,7 +12,9 @@ bool get canReadScreen => Platform.isAndroid;
 /// The lines of text in [png], read on the device by ML Kit. Nothing is
 /// sent anywhere. The picture is deleted straight after.
 Future<(List<ScreenLine>, double)> readScreen(Uint8List png) async {
-  final file = File('${(await getTemporaryDirectory()).path}/chanda_screen_${DateTime.now().microsecondsSinceEpoch}.png');
+  final file = File(
+    '${(await getTemporaryDirectory()).path}/chanda_screen_${DateTime.now().microsecondsSinceEpoch}.png',
+  );
   await file.writeAsBytes(png, flush: true);
   final recognizer = TextRecognizer();
   try {

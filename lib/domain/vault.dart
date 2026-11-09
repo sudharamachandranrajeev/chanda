@@ -53,7 +53,8 @@ class Vault {
     return id;
   }
 
-  Future<void> renameList(VaultList l, String name) => store.save(db.chandaLists, l.copyWith(name: name.trim()), l.id);
+  Future<void> renameList(VaultList l, String name) =>
+      store.save(db.chandaLists, l.copyWith(name: name.trim()), l.id);
 
   /// Deletes a list and every item in it.
   Future<void> removeList(String id) async {
@@ -84,7 +85,9 @@ class Vault {
   /// updates rather than duplicates.
   Future<VaultItem?> findSaved(String shop, String url, String productKey) async {
     final all = await (db.select(db.chandaItems)..where((t) => t.deleted.not() & t.shop.equals(shop))).get();
-    return all.where((i) => (productKey.isNotEmpty && i.productKey == productKey) || i.url == url).firstOrNull;
+    return all
+        .where((i) => (productKey.isNotEmpty && i.productKey == productKey) || i.url == url)
+        .firstOrNull;
   }
 
   /// Saves what Chanda read on a product page into [listId], keeping the
@@ -215,7 +218,8 @@ class Vault {
   Future<List<AlertEvent>> recordCheck(VaultItem i, Reading r, List<Alert> alerts) async {
     final now = DateTime.now().toUtc();
     final last = (await history(i.id)).lastOrNull;
-    final changed = last == null || last.price != r.price || last.inStock != r.inStock || last.currency != r.currency;
+    final changed =
+        last == null || last.price != r.price || last.inStock != r.inStock || last.currency != r.currency;
     final old = last == null ? null : DateTime.tryParse(last.seen);
     final daily = old == null || now.difference(old) >= const Duration(hours: 20);
     await updateItem(
@@ -245,7 +249,11 @@ class Vault {
   /// Notes a check that could not read a price: [status] needs-you, gone or
   /// failed. A failure counts towards the back-off ([checkEvery]).
   Future<void> recordTrouble(VaultItem i, String status) => updateItem(
-    i.copyWith(checked: Value(nowIso()), status: status, failures: status == 'failed' ? i.failures + 1 : i.failures),
+    i.copyWith(
+      checked: Value(nowIso()),
+      status: status,
+      failures: status == 'failed' ? i.failures + 1 : i.failures,
+    ),
   );
 
   // ---- alerts ----
@@ -280,8 +288,9 @@ class Vault {
 
   // ---- prefs ----
 
-  Future<String?> pref(String key) async =>
-      (await (db.select(db.prefs)..where((t) => t.id.equals(key) & t.deleted.not())).getSingleOrNull())?.value;
+  Future<String?> pref(String key) async => (await (db.select(
+    db.prefs,
+  )..where((t) => t.id.equals(key) & t.deleted.not())).getSingleOrNull())?.value;
 
   Future<void> setPref(String key, String value) =>
       store.save(db.prefs, PrefsCompanion.insert(id: key, value: value), key);

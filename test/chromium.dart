@@ -31,5 +31,9 @@ Future<String> dumpOut(String chromium, Directory dir, File page, {Uri? url}) as
   await p.exitCode.timeout(const Duration(seconds: 45), onTimeout: () => (p..kill()).pid);
   final out = RegExp(r'<pre id="out">(.*?)</pre>', dotAll: true).firstMatch(await stdout)?[1];
   expect(out, isNotNull, reason: await stderr);
-  return out!.replaceAll('&amp;', '&').replaceAll('&quot;', '"').replaceAll('&lt;', '<').replaceAll('&gt;', '>');
+  return out!
+      .replaceAll('&amp;', '&')
+      .replaceAll('&quot;', '"')
+      .replaceAll('&lt;', '<')
+      .replaceAll('&gt;', '>');
 }

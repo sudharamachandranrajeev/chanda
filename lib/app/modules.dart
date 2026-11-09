@@ -24,6 +24,12 @@ final shoppingModule = AppModule(
 final modules = <AppModule>[shoppingModule];
 
 /// Settings is app-wide, so it comes after every module's screens.
-final settingsDestination = _d('settings', 'Settings', Icons.settings_outlined, Icons.settings, const SettingsPage());
+final settingsDestination = _d(
+  'settings',
+  'Settings',
+  Icons.settings_outlined,
+  Icons.settings,
+  const SettingsPage(),
+);
 
 List<Destination> get allDestinations => [for (final m in modules) ...m.destinations, settingsDestination];

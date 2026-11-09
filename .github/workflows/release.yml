@@ -1,0 +1,356 @@
+# Builds Chanda for Android, Windows and Linux and checks each one starts. A v*
+# tag publishes a GitHub release (a pre-release for v0.* and tags with a
+# suffix such as -beta.1); running it by hand only builds and tests.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FLUTTER_VERSION: 3.47.7
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      name: ${{ steps.v.outputs.name }}
+      build: ${{ steps.v.outputs.build }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: v
+        run: |
+          if [[ $GITHUB_REF == refs/tags/v* ]]; then
+            version=${GITHUB_REF#refs/tags/v}
+          else
+            version=$(sed -n 's/^version: *\([^+]*\).*/\1/p' pubspec.yaml)
+          fi
+          # Platform version fields take numbers only: 0.1.0-beta.1 builds as 0.1.0.
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=${version%%-*}" >> "$GITHUB_OUTPUT"
+          echo "build=$GITHUB_RUN_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Chanda $version (build $GITHUB_RUN_NUMBER)"
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev >/dev/null
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - run: flutter analyze
+      - run: flutter test
+
+  android:
+    needs: [version, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Signing key
+        env:
+          KEYSTORE_BASE64: ${{ secrets.CHANDA_KEYSTORE_BASE64 }}
+        run: |
+          if [[ -n $KEYSTORE_BASE64 ]]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/chanda.jks"
+            echo "CHANDA_KEYSTORE=$RUNNER_TEMP/chanda.jks" >> "$GITHUB_ENV"
+          else
+            echo "::warning::No CHANDA_KEYSTORE_BASE64 secret: the APK is signed with a debug key"
+          fi
+      - name: Build the APK
+        env:
+          CHANDA_KEYSTORE_PASSWORD: ${{ secrets.CHANDA_KEYSTORE_PASSWORD }}
+          CHANDA_KEY_ALIAS: ${{ secrets.CHANDA_KEY_ALIAS }}
+          CHANDA_KEY_PASSWORD: ${{ secrets.CHANDA_KEY_PASSWORD }}
+        run: |
+          # One APK per processor type: the on-device models make a universal
+          # APK about three times the size.
+          flutter build apk --release --split-per-abi \
+            --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+          mkdir -p dist
+          for abi in arm64-v8a armeabi-v7a x86_64; do
+            cp build/app/outputs/flutter-apk/app-$abi-release.apk dist/Chanda-${{ needs.version.outputs.version }}-android-$abi.apk
+          done
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android
+          path: dist/*
+
+  windows:
+    needs: [version, test]
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Build
+        run: |
+          flutter build windows --release \
+            --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+      - name: Bundle the Visual C++ runtime
+        run: |
+          # So the app runs on a fresh Windows without the VC++ redistributable.
+          release=build/windows/x64/runner/Release
+          for dll in msvcp140.dll msvcp140_1.dll msvcp140_2.dll vcruntime140.dll vcruntime140_1.dll; do
+            if [[ -f /c/Windows/System32/$dll ]]; then cp "/c/Windows/System32/$dll" "$release/"; fi
+          done
+          ls "$release"
+      - name: Portable zip
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Compress-Archive -Path build\windows\x64\runner\Release\* `
+            -DestinationPath dist\Chanda-${{ needs.version.outputs.version }}-windows-x64-portable.zip
+      - name: Installer
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+            $env:PATH += ";${env:ProgramFiles(x86)}\Inno Setup 6"
+          }
+          iscc /Qp /DAppVersion=${{ needs.version.outputs.version }} windows\installer\chanda.iss
+          Copy-Item build\installer\*.exe dist\
+      - name: Install, start and uninstall
+        shell: pwsh
+        working-directory: dist
+        run: |
+          $setup = (Get-Item Chanda-*-setup.exe).FullName
+          $log = Join-Path $env:RUNNER_TEMP 'setup.log'
+          $p = Start-Process $setup -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/CURRENTUSER', "/LOG=$log" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { Get-Content $log; throw "setup exited with $($p.ExitCode)" }
+          $dir = Join-Path $env:LOCALAPPDATA 'Programs\Chanda'
+          Get-ChildItem $dir | Format-Table Name, Length
+          $app = Start-Process (Join-Path $dir 'chanda.exe') -PassThru
+          Start-Sleep -Seconds 20
+          if ($app.HasExited) { throw "Chanda exited with $($app.ExitCode) within 20 s" }
+          # The encrypted database exists once the key store and SQLite3MultipleCiphers worked.
+          $db = Get-ChildItem $env:APPDATA -Recurse -Filter chanda.sqlite -ErrorAction SilentlyContinue | Select-Object -First 1
+          if (-not $db) { throw "Chanda started but created no database" }
+          Write-Host "Database: $($db.FullName) ($($db.Length) bytes)"
+          Stop-Process -Id $app.Id -Force
+          Start-Sleep -Seconds 2
+          # Read after stopping: the running app keeps the file open.
+          $head = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($db.FullName)[0..15])
+          if ($head -like 'SQLite format 3*') { throw "The database is not encrypted" }
+          $uninstaller = Join-Path $dir 'unins000.exe'
+          $u = Start-Process $uninstaller -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART' -Wait -PassThru
+          if ($u.ExitCode -ne 0) { throw "uninstall exited with $($u.ExitCode)" }
+          if (-not (Test-Path $db.FullName)) { throw "Uninstalling deleted the user's data" }
+          Write-Host "Installed, started, uninstalled; data kept."
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: dist/*
+
+  linux:
+    needs: [version, test]
+    # The oldest supported runner, so the build runs on older glibc too.
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq clang cmake ninja-build pkg-config libgtk-3-dev libsecret-1-dev liblzma-dev >/dev/null
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Leave the WPE web view out
+        # Ubuntu has shipped no WPE WebKit since 22.04, so the portable tarball
+        # opens shops in the system browser; source builds on a system with
+        # WPE WebKit get the in-app browser.
+        run: flutter pub add 'chanda_no_linux_webview:{"path":"packages/no_linux_webview"}'
+      - name: Build
+        run: |
+          flutter build linux --release \
+            --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+      - name: Tarball
+        run: |
+          version=${{ needs.version.outputs.version }}
+          dir="chanda-$version-linux-x64"
+          mkdir -p dist "$dir"
+          cp -r build/linux/x64/release/bundle/. "$dir/"
+          cp branding/chanda-512.png "$dir/chanda.png"
+          cp scripts/install-linux.sh "$dir/install.sh"
+          cat > "$dir/README.txt" <<'EOF'
+          Chanda for Linux (x86-64). Needs GTK 3, libsecret and a running keyring
+          (GNOME Keyring or KWallet), which hold the database key.
+
+            ./install.sh              adds Chanda to your app menu (no root needed)
+            ./install.sh --uninstall  removes it; your data stays
+            ./chanda               runs it from this folder without installing
+
+          Your data: ~/.local/share/dev.brahma.chanda (encrypted).
+          EOF
+          sed -i 's/^          //' "$dir/README.txt"
+          tar czf "dist/Chanda-$version-linux-x64.tar.gz" "$dir"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: dist/*
+
+  android-smoke:
+    name: Android app starts (emulator)
+    needs: android
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: dist
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          script: bash .github/android-smoke.sh smoke
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: smoke-android
+          path: smoke
+          if-no-files-found: ignore
+
+  linux-smoke:
+    name: Linux app starts on ${{ matrix.image }}
+    needs: linux
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      # Fedora's and Arch's gnome-keyring-daemon claims CAP_IPC_LOCK (to keep
+      # secrets out of swap) and aborts without it; Docker leaves it out.
+      options: --cap-add=IPC_LOCK
+    strategy:
+      fail-fast: false
+      matrix:
+        image: ["ubuntu:24.04", "fedora:latest", "archlinux:latest"]
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: dist
+      - name: GTK, libsecret, a keyring and Xvfb
+        run: |
+          if command -v apt-get >/dev/null; then
+            apt-get update -qq
+            DEBIAN_FRONTEND=noninteractive apt-get install -y -qq libgtk-3-0t64 libsecret-1-0 gnome-keyring dbus \
+              libgl1-mesa-dri libegl1 libgles2 xvfb xauth >/dev/null
+          elif command -v dnf >/dev/null; then
+            dnf install -y -q gtk3 libsecret gnome-keyring dbus-daemon dbus-tools mesa-dri-drivers mesa-libEGL libglvnd-gles \
+              xorg-x11-server-Xvfb xorg-x11-xauth util-linux
+          else
+            pacman -Syu --noconfirm --needed gtk3 libsecret gnome-keyring dbus mesa xorg-server-xvfb xorg-xauth >/dev/null
+          fi
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar xzf dist/*.tar.gz
+          app=$(ls -d "$PWD"/chanda-*-linux-x64)
+          mkdir -p home run
+          chmod 700 run
+          # Runs the app for 20 s in its own D-Bus session with an unlocked
+          # keyring: it should still be up, and have created an encrypted database.
+          set +e
+          env HOME="$PWD/home" XDG_RUNTIME_DIR="$PWD/run" dbus-run-session -- bash -c '
+            echo -n smoke | gnome-keyring-daemon --unlock --components=secrets >/dev/null
+            timeout 20 xvfb-run -a "$0/chanda"
+          ' "$app" > app.log 2>&1
+          code=$?
+          set -e
+          cat app.log
+          if [[ $code != 124 ]]; then echo "::error::Chanda exited with $code"; exit 1; fi
+          if grep -qE 'Unhandled Exception|Chanda startup failed|error while loading shared libraries|symbol lookup error|undefined symbol|cannot open shared object' app.log; then
+            echo "::error::Chanda failed to start"; exit 1
+          fi
+          db=home/.local/share/dev.brahma.chanda/chanda.sqlite
+          [[ -s $db ]] || { echo "::error::no database at $db"; ls -laR home/.local/share || true; exit 1; }
+          if head -c 15 "$db" | grep -q 'SQLite format 3'; then echo "::error::the database is not encrypted"; exit 1; fi
+          echo "Chanda ran for 20 s and created an encrypted database"
+          # The install script, end to end.
+          HOME="$PWD/home" "$app/install.sh"
+          test -x home/.local/lib/chanda/chanda
+          grep -q 'StartupWMClass=dev.brahma.chanda' home/.local/share/applications/dev.brahma.chanda.desktop
+          HOME="$PWD/home" "$app/install.sh" --uninstall
+          test ! -e home/.local/lib/chanda
+          test -s "$db"
+
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [version, android, android-smoke, windows, linux, linux-smoke]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: android
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: dist
+      - uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: dist
+      - name: Checksums
+        run: |
+          cd dist
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+      - name: Release notes
+        run: |
+          version=${{ needs.version.outputs.version }}
+          # The CHANGELOG section for this version.
+          awk -v v="$version" '$0 ~ "^## " {p = index($0, v) > 0; next} p' CHANGELOG.md > notes.md
+          [[ -s notes.md ]] || echo "Chanda $version" > notes.md
+          cat notes.md
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag=${GITHUB_REF#refs/tags/}
+          flags=()
+          [[ $tag == *-* || $tag == v0.* ]] && flags+=(--prerelease)
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* --title "Chanda ${tag#v}" --notes-file notes.md "${flags[@]}"
+          fi

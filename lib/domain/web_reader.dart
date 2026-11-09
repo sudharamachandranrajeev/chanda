@@ -46,7 +46,9 @@ class WebPageReader implements PageReader {
         if (req.isForMainFrame != false && !loaded.isCompleted) loaded.completeError(err.description);
       },
       onReceivedHttpError: (_, req, res) {
-        if (req.isForMainFrame != false && (res.statusCode == 404 || res.statusCode == 410) && !loaded.isCompleted) {
+        if (req.isForMainFrame != false &&
+            (res.statusCode == 404 || res.statusCode == 410) &&
+            !loaded.isCompleted) {
           loaded.completeError(const PageGone());
         }
       },

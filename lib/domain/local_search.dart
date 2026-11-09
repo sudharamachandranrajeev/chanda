@@ -64,7 +64,11 @@ class LocalSearch {
       title,
       extra,
     ]);
-    await db.customStatement('INSERT INTO chanda_grams (ref, kind, title) VALUES (?, ?, ?)', [ref, kind, title]);
+    await db.customStatement('INSERT INTO chanda_grams (ref, kind, title) VALUES (?, ?, ?)', [
+      ref,
+      kind,
+      title,
+    ]);
   }
 
   /// Vault items and cached offers for [q], best first (bm25: title words
@@ -77,19 +81,28 @@ class LocalSearch {
     final refs = <(String, String)>[];
     if (words.isNotEmpty) {
       final match = words.map((w) => '"${w.replaceAll('"', '')}"*').join(' AND ');
-      refs.addAll(await _refs('SELECT ref, kind FROM chanda_words WHERE chanda_words MATCH ? '
-          'ORDER BY bm25(chanda_words, 0, 0, 4.0, 1.0)', [match]));
+      refs.addAll(
+        await _refs(
+          'SELECT ref, kind FROM chanda_words WHERE chanda_words MATCH ? '
+          'ORDER BY bm25(chanda_words, 0, 0, 4.0, 1.0)',
+          [match],
+        ),
+      );
       final long = words.where((w) => w.length >= 3).toList();
       if (refs.isEmpty && long.isNotEmpty) {
-        refs.addAll(await _refs('SELECT ref, kind FROM chanda_grams WHERE chanda_grams MATCH ? ORDER BY rank', [
-          long.map((w) => '"${w.replaceAll('"', '')}"').join(' AND '),
-        ]));
+        refs.addAll(
+          await _refs('SELECT ref, kind FROM chanda_grams WHERE chanda_grams MATCH ? ORDER BY rank', [
+            long.map((w) => '"${w.replaceAll('"', '')}"').join(' AND '),
+          ]),
+        );
       }
       if (refs.isEmpty) {
-        refs.addAll(await _refs(
-          'SELECT ref, kind FROM chanda_words WHERE ${[for (final _ in words) 'title LIKE ?'].join(' AND ')}',
-          [for (final w in words) '%$w%'],
-        ));
+        refs.addAll(
+          await _refs(
+            'SELECT ref, kind FROM chanda_words WHERE ${[for (final _ in words) 'title LIKE ?'].join(' AND ')}',
+            [for (final w in words) '%$w%'],
+          ),
+        );
       }
       if (embedder case final e?) {
         final near = await _nearest(e, q.words);
@@ -102,12 +115,20 @@ class LocalSearch {
       refs.addAll(await _refs('SELECT ref, kind FROM chanda_words', const []));
     }
 
-    final itemIds = [for (final (r, k) in refs) if (k == 'item') r];
-    final offerIds = [for (final (r, k) in refs) if (k == 'offer' && offers) r];
+    final itemIds = [
+      for (final (r, k) in refs)
+        if (k == 'item') r,
+    ];
+    final offerIds = [
+      for (final (r, k) in refs)
+        if (k == 'offer' && offers) r,
+    ];
     final items = {
       for (final i in await (db.select(db.chandaItems)..where((t) => t.id.isIn(itemIds))).get()) i.id: i,
     };
-    final cached = {for (final o in await (db.select(db.chandaOffers)..where((t) => t.id.isIn(offerIds))).get()) o.id: o};
+    final cached = {
+      for (final o in await (db.select(db.chandaOffers)..where((t) => t.id.isIn(offerIds))).get()) o.id: o,
+    };
     final shopsWanted = q.of('shop').toSet();
     bool inBudget(int? price, String currency) =>
         currency != q.currency ||
@@ -142,10 +163,13 @@ class LocalSearch {
     );
     await db.customStatement('DELETE FROM chanda_vectors WHERE ref NOT IN (SELECT ref FROM chanda_words)');
     final stale = [
-      for (final row in await db.customSelect(
-        'SELECT w.ref AS ref, w.kind AS kind, w.title AS title FROM chanda_words w '
-        'LEFT JOIN chanda_vectors v ON v.ref = w.ref WHERE v.text IS NULL OR v.text != w.title',
-      ).get())
+      for (final row
+          in await db
+              .customSelect(
+                'SELECT w.ref AS ref, w.kind AS kind, w.title AS title FROM chanda_words w '
+                'LEFT JOIN chanda_vectors v ON v.ref = w.ref WHERE v.text IS NULL OR v.text != w.title',
+              )
+              .get())
         (row.read<String>('ref'), row.read<String>('kind'), row.read<String>('title')),
     ];
     for (var at = 0; at < stale.length; at += 32) {
@@ -153,19 +177,20 @@ class LocalSearch {
       final vecs = await e.embed([for (final (_, _, t) in part) t]);
       await db.batch((b) {
         for (var i = 0; i < part.length; i++) {
-          b.customStatement('INSERT OR REPLACE INTO chanda_vectors (ref, kind, text, vec) VALUES (?, ?, ?, ?)', [
-            part[i].$1,
-            part[i].$2,
-            part[i].$3,
-            vectorBytes(vecs[i]),
-          ]);
+          b.customStatement(
+            'INSERT OR REPLACE INTO chanda_vectors (ref, kind, text, vec) VALUES (?, ?, ?, ?)',
+            [part[i].$1, part[i].$2, part[i].$3, vectorBytes(vecs[i])],
+          );
         }
       });
     }
     final want = (await e.embed([text])).single;
     final scores = {
       for (final row in await db.customSelect('SELECT ref, kind, vec FROM chanda_vectors').get())
-        (row.read<String>('ref'), row.read<String>('kind')): cosine(want, vectorOf(row.read<Uint8List>('vec'))),
+        (row.read<String>('ref'), row.read<String>('kind')): cosine(
+          want,
+          vectorOf(row.read<Uint8List>('vec')),
+        ),
     };
     return nearest(scores);
   }
@@ -219,8 +244,9 @@ class LocalSearch {
     await (db.delete(db.chandaOffers)..where((t) => t.seen.isSmallerThanValue(old))).go();
   }
 
-  Future<void> setHash(String offerId, String dhash) =>
-      (db.update(db.chandaOffers)..where((t) => t.id.equals(offerId))).write(ChandaOffersCompanion(dhash: Value(dhash)));
+  Future<void> setHash(String offerId, String dhash) => (db.update(
+    db.chandaOffers,
+  )..where((t) => t.id.equals(offerId))).write(ChandaOffersCompanion(dhash: Value(dhash)));
 
   /// Cached offers that could be [i] at other shops: those whose title
   /// shares at least half of its words, that the user has not ruled out.
@@ -238,15 +264,17 @@ class LocalSearch {
   // ---- "same product?" answers ----
 
   Future<Map<String, String>> matchesFor(String itemId) async => {
-    for (final m in await (db.select(db.chandaMatches)..where((t) => t.itemId.equals(itemId) & t.deleted.not())).get())
+    for (final m in await (db.select(
+      db.chandaMatches,
+    )..where((t) => t.itemId.equals(itemId) & t.deleted.not())).get())
       m.url: m.verdict,
   };
 
   /// Remembers the user's answer, on every device, so it is asked once.
   Future<void> answer(String itemId, String url, {required bool same}) async {
-    final old = await (db.select(db.chandaMatches)
-          ..where((t) => t.itemId.equals(itemId) & t.url.equals(url) & t.deleted.not()))
-        .getSingleOrNull();
+    final old = await (db.select(
+      db.chandaMatches,
+    )..where((t) => t.itemId.equals(itemId) & t.url.equals(url) & t.deleted.not())).getSingleOrNull();
     final id = old?.id ?? newId();
     await store.save(
       db.chandaMatches,

@@ -50,7 +50,9 @@ class Shop {
     if (t == null || w.isEmpty) return null;
     final hyphens = w.toLowerCase().replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), '-');
     return Uri.parse(
-      t.replaceAll('{q-}', Uri.encodeComponent(hyphens.replaceAll(RegExp(r'^-|-$'), ''))).replaceAll('{q}', Uri.encodeComponent(w)),
+      t
+          .replaceAll('{q-}', Uri.encodeComponent(hyphens.replaceAll(RegExp(r'^-|-$'), '')))
+          .replaceAll('{q}', Uri.encodeComponent(w)),
     );
   }
 

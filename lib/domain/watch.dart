@@ -18,7 +18,13 @@ class Alert {
 /// What a fresh reading [r] means for [item], given its last confirmed price
 /// [before] and stock. A price at or under the target beats a plain drop;
 /// small drops under [dropPercent] are left quiet.
-List<Alert> alertsFor(VaultItem item, Reading r, {int? before, bool beforeStock = true, double dropPercent = 5}) {
+List<Alert> alertsFor(
+  VaultItem item,
+  Reading r, {
+  int? before,
+  bool beforeStock = true,
+  double dropPercent = 5,
+}) {
   final out = <Alert>[];
   final price = r.price;
   if (price == null || r.currency != item.currency) return out;
@@ -29,14 +35,18 @@ List<Alert> alertsFor(VaultItem item, Reading r, {int? before, bool beforeStock 
   final target = item.target;
   if (target != null && price <= target && (before == null || before > target)) {
     out.add(Alert('target', before: before, after: price, currency: r.currency));
-  } else if (item.alertDrop && before != null && price < before && (before - price) * 100 >= dropPercent * before) {
+  } else if (item.alertDrop &&
+      before != null &&
+      price < before &&
+      (before - price) * 100 >= dropPercent * before) {
     out.add(Alert('drop', before: before, after: price, currency: r.currency));
   }
   return out;
 }
 
 /// Whether two readings agree on what an alert depends on.
-bool sameReading(Reading a, Reading b) => a.price == b.price && a.currency == b.currency && a.inStock == b.inStock;
+bool sameReading(Reading a, Reading b) =>
+    a.price == b.price && a.currency == b.currency && a.inStock == b.inStock;
 
 /// How often an item is checked: once a day, or four times when the user
 /// watches it closely. After failures the wait doubles, up to four days.

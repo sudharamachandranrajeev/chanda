@@ -41,9 +41,9 @@ void main() {
         final offers = parseOffers(shop, await dumpOut(chromium!, tmp, replay));
         final ranked = rankOffers(readQuery('reading glasses'), offers);
         // ignore: avoid_print
-        print('$name: ${offers.length} offers, ${ranked.length} match\n${[
-          for (final o in ranked.take(6)) '  ${o.price} ${o.currency} was ${o.was} ★${o.rating} (${o.reviews}) ${o.title.length > 60 ? o.title.substring(0, 60) : o.title}\n    ${o.url}',
-        ].join('\n')}');
+        print(
+          '$name: ${offers.length} offers, ${ranked.length} match\n${[for (final o in ranked.take(6)) '  ${o.price} ${o.currency} was ${o.was} ★${o.rating} (${o.reviews}) ${o.title.length > 60 ? o.title.substring(0, 60) : o.title}\n    ${o.url}'].join('\n')}',
+        );
         expect(ranked.length, greaterThanOrEqualTo(8));
         expect(ranked.every((o) => o.currency == 'GBP'), isTrue);
         expect(ranked.every((o) => Uri.parse(o.url).host.endsWith(shop.domains.first)), isTrue);

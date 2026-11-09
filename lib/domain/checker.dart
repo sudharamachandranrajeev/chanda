@@ -96,7 +96,13 @@ class Checker {
       return status == 'needs-you' ? CheckResult.needsYou : CheckResult.failed;
     }
     var reading = first;
-    var alerts = alertsFor(item, first, before: item.price, beforeStock: item.inStock, dropPercent: dropPercent);
+    var alerts = alertsFor(
+      item,
+      first,
+      before: item.price,
+      beforeStock: item.inStock,
+      dropPercent: dropPercent,
+    );
     if (alerts.isNotEmpty) {
       await Future<void>.delayed(confirmAfter);
       Reading? second;

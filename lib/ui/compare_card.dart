@@ -51,7 +51,9 @@ class _CompareCardState extends ConsumerState<CompareCard> {
     try {
       await for (final r in searchShops(ref.read(searcherProvider), q, shops.where((s) => s.id != i.shop))) {
         if (r.state == SearchState.done) await local.keepOffers(r.offers, q.raw);
-        if (r.state == SearchState.inBrowser || r.state == SearchState.check || r.state == SearchState.failed) {
+        if (r.state == SearchState.inBrowser ||
+            r.state == SearchState.check ||
+            r.state == SearchState.failed) {
           _walled.add(r.shop);
         }
       }
@@ -111,7 +113,8 @@ class _CompareCardState extends ConsumerState<CompareCard> {
   Widget build(BuildContext context) {
     final p = NithyaPalette.of(context);
     final text = Theme.of(context).textTheme;
-    final (cands, answers) = ref.watch(candidatesProvider(i.id)).value ?? (const <ShopOffer>[], const <String, String>{});
+    final (cands, answers) =
+        ref.watch(candidatesProvider(i.id)).value ?? (const <ShopOffer>[], const <String, String>{});
     final home = ref.watch(homeCurrencyProvider).value ?? 'GBP';
     final fx = ref.watch(fxProvider).value;
     final mine = listingOf(i, dhash: _itemHash);
@@ -175,7 +178,11 @@ class _CompareCardState extends ConsumerState<CompareCard> {
               padding: EdgeInsets.all(12),
               child: SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
             )
-          : TextButton.icon(icon: const Icon(Icons.travel_explore), label: const Text('Find'), onPressed: _find),
+          : TextButton.icon(
+              icon: const Icon(Icons.travel_explore),
+              label: const Text('Find'),
+              onPressed: _find,
+            ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -212,10 +219,7 @@ class _CompareCardState extends ConsumerState<CompareCard> {
               contentPadding: EdgeInsets.zero,
               dense: true,
               leading: Icon(c.deal.saved ? Icons.favorite : Icons.storefront_outlined, size: 20),
-              title: Text(
-                '${c.deal.shop.name}${c.deal.saved ? ' (saved)' : ''}',
-                style: text.bodyMedium,
-              ),
+              title: Text('${c.deal.shop.name}${c.deal.saved ? ' (saved)' : ''}', style: text.bodyMedium),
               subtitle: Text(
                 [
                   showPrice(c.deal.price, c.deal.currency),
@@ -228,7 +232,9 @@ class _CompareCardState extends ConsumerState<CompareCard> {
                 ),
               ),
               trailing: Text(
-                c.landed == null ? 'no rate' : '${c.landed!.estimate ? '≈ ' : ''}${showPrice(c.landed!.total, home)}',
+                c.landed == null
+                    ? 'no rate'
+                    : '${c.landed!.estimate ? '≈ ' : ''}${showPrice(c.landed!.total, home)}',
                 style: text.titleSmall,
               ),
               onTap: c.deal.saved ? null : () => openInApp(context, Uri.parse(c.deal.url)),
@@ -303,4 +309,3 @@ class _CompareCardState extends ConsumerState<CompareCard> {
     );
   }
 }
-

@@ -35,13 +35,23 @@ class AiReadError implements Exception {
 const _schema = {
   'type': 'object',
   'properties': {
-    'title': {'type': 'string', 'description': 'The product name as the page shows it, without the shop name.'},
+    'title': {
+      'type': 'string',
+      'description': 'The product name as the page shows it, without the shop name.',
+    },
     'price': {
       'type': 'string',
-      'description': 'The current price as written on the page, with its currency sign. Empty if there is none.',
+      'description':
+          'The current price as written on the page, with its currency sign. Empty if there is none.',
     },
-    'currency': {'type': 'string', 'description': 'ISO 4217 code of the price, such as GBP. Empty if unknown.'},
-    'in_stock': {'type': 'boolean', 'description': 'False only if the page says the product cannot be bought now.'},
+    'currency': {
+      'type': 'string',
+      'description': 'ISO 4217 code of the price, such as GBP. Empty if unknown.',
+    },
+    'in_stock': {
+      'type': 'boolean',
+      'description': 'False only if the page says the product cannot be bought now.',
+    },
   },
   'required': ['title', 'price', 'currency', 'in_stock'],
   'additionalProperties': false,
@@ -64,10 +74,7 @@ Map<String, Object?> aiRequest(Uri url, String text) => {
   },
   'system': _system,
   'messages': [
-    {
-      'role': 'user',
-      'content': 'Page address: $url\n\nPage text:\n$text',
-    },
+    {'role': 'user', 'content': 'Page address: $url\n\nPage text:\n$text'},
   ],
 };
 
@@ -103,8 +110,12 @@ Future<Reading> readWithAi(Reading r, String key, {http.Client? client}) async {
 /// Reads the service's answer into [r]. Split out so it can be tested
 /// without a network.
 Reading applyAiResponse(Reading r, int status, String body) {
-  if (status == 401 || status == 403) throw const AiReadError('The AI service refused the key. Check it in Settings.');
-  if (status == 429) throw const AiReadError('The AI service is busy or your key is over its limit. Try again later.');
+  if (status == 401 || status == 403) {
+    throw const AiReadError('The AI service refused the key. Check it in Settings.');
+  }
+  if (status == 429) {
+    throw const AiReadError('The AI service is busy or your key is over its limit. Try again later.');
+  }
   if (status == 400) throw AiReadError('The AI service could not take this page: ${_message(body)}');
   if (status != 200) throw AiReadError('The AI service had a problem ($status). Try again later.');
   final Map j;

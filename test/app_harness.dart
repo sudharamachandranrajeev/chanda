@@ -89,7 +89,10 @@ class AppHarness {
     final rail = find.descendant(of: find.byType(NavigationRail), matching: find.text(page));
     if (rail.evaluate().isNotEmpty) return tap(rail);
     await tap(
-      find.descendant(of: find.byWidgetPredicate((w) => '${w.runtimeType}' == '_Dock'), matching: find.byTooltip(page)),
+      find.descendant(
+        of: find.byWidgetPredicate((w) => '${w.runtimeType}' == '_Dock'),
+        matching: find.byTooltip(page),
+      ),
     );
   }
 

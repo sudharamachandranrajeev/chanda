@@ -296,7 +296,10 @@ final embedderProvider = FutureProvider<Embedder?>((ref) async {
 
 /// Offers found before that could be the item at other shops, with the
 /// user's answers so far.
-final candidatesProvider = FutureProvider.family<(List<ShopOffer>, Map<String, String>), String>((ref, id) async {
+final candidatesProvider = FutureProvider.family<(List<ShopOffer>, Map<String, String>), String>((
+  ref,
+  id,
+) async {
   ref.watch(revisionProvider);
   final item = await ref.watch(itemProvider(id).future);
   if (item == null) return (const <ShopOffer>[], const <String, String>{});
@@ -317,12 +320,17 @@ final aiKeyProvider = FutureProvider<String>(
 /// The HTTP client for AI reading; tests swap in a fake service.
 final aiClientProvider = Provider<http.Client?>((_) => null);
 
-final readerProvider = Provider<PageReader>((_) => hasWebView ? const WebPageReader() : const HtmlPageReader());
+final readerProvider = Provider<PageReader>(
+  (_) => hasWebView ? const WebPageReader() : const HtmlPageReader(),
+);
 
 final notifierProvider = FutureProvider<AlertNotifier>((ref) async {
   ref.watch(revisionProvider);
   final s = ref.watch(sessionProvider);
-  return AlertNotifier(ntfy: await s.vault.pref(ntfyPref), local: await s.db.localSetting(notifySetting) != 'off');
+  return AlertNotifier(
+    ntfy: await s.vault.pref(ntfyPref),
+    local: await s.db.localSetting(notifySetting) != 'off',
+  );
 });
 
 /// Checks the vault while the app is open, every quarter hour (each item
