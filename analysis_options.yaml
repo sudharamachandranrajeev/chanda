@@ -1,0 +1,13 @@
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  exclude:
+    - build/**
+    - android/**
+    - windows/**
+    - linux/**
+    # A copy of a third-party plugin (see its README), kept as upstream wrote it.
+    - packages/flutter_inappwebview_linux/**
+
+formatter:
+  page_width: 110

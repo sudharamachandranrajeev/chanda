@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2b6cff"/>
+      <stop offset="1" stop-color="#0b1b4d"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#cfe0ff"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="28"/>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <path d="M512 780 C300 640 230 530 230 428 C230 340 296 280 376 280 C438 280 488 314 512 366 C536 314 586 280 648 280 C728 280 794 340 794 428 C794 530 724 640 512 780 Z" fill="#7fb0ff" opacity=".55" filter="url(#glow)"/>
+  <path d="M512 760 C310 630 244 528 244 432 C244 350 304 294 378 294 C438 294 488 326 512 378 C536 326 586 294 646 294 C720 294 780 350 780 432 C780 528 714 630 512 760 Z" fill="url(#heart)"/>
+  <path d="M600 470 l-48 -48 h-72 v72 l48 48 c8 8 20 8 28 0 l44 -44 c8 -8 8 -20 0 -28 z" fill="#2b6cff"/>
+  <circle cx="500" cy="450" r="14" fill="#ffffff"/>
+</svg>

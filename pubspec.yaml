@@ -1,0 +1,58 @@
+name: chanda
+description: "Chanda - shopping assistant: one private vault for everything you want to buy, from any shop in the world. Prices tracked and re-checked before every alert; no affiliate links, no data sale. Linux, Windows, Android. Part of Brahma."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.13.5
+
+dependencies:
+  # Shared core of the Brahma apps.
+  brahma_core:
+    git:
+      url: https://github.com/sudharamachandranrajeev/brahma.git
+      path: core
+  drift: ^2.35.2
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^3.4.3
+  intl: ^0.20.3
+  url_launcher: ^6.3.2
+  # The in-app browser: shop pages, sign-ins and checkout (Android, Windows,
+  # and Linux through WPE WebKit). 6.2 beta: 6.1's Android plugin fails under
+  # Android Gradle Plugin 9 (proguard-android.txt).
+  flutter_inappwebview: 6.2.0-beta.3
+  # Reads saved product pages without a web view (background price checks).
+  html: ^0.15.6
+  http: ^1.6.0
+  path_provider: ^2.1.5
+  # Price alerts on the device itself (Android, Linux, Windows).
+  flutter_local_notifications: ^23.0.0
+  # Background price checks on Android.
+  workmanager: ^0.10.10
+  # Design tokens, themes and parts from the Nithya Studio kit (Apache-2.0).
+  nithya:
+    path: packages/nithya/flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  drift_dev: ^2.35.1
+  build_runner: ^2.16.2
+
+dependency_overrides:
+  # The web view's Linux plugin with libwpe made optional: WPE WebKit 2.52+
+  # (Arch, Fedora) no longer ships it. See packages/flutter_inappwebview_linux.
+  flutter_inappwebview_linux:
+    path: packages/flutter_inappwebview_linux
+
+flutter:
+  uses-material-design: true
+
+# Bundle SQLite3MultipleCiphers instead of plain SQLite so the local database
+# is encrypted at rest on every platform (see doc/hook.md in package:sqlite3).
+hooks:
+  user_defines:
+    sqlite3:
+      source: sqlite3mc
