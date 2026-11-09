@@ -22,6 +22,12 @@ void main() {
       reads('1 234,5 €', 123450, 'EUR');
     });
 
+    test('reads fullwidth signs and digits', () {
+      reads('￡1.37', 137, 'GBP');
+      reads('￥１，２８０', 1280, 'JPY', hint: 'JPY');
+      reads('＄12.99', 1299, 'USD', hint: 'USD');
+    });
+
     test('joins a price drawn in parts', () {
       reads('£8 . 42', 842, 'GBP');
       reads('12 ,99 €', 1299, 'EUR');

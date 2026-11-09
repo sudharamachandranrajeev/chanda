@@ -159,7 +159,7 @@ List<PriceSeen> _pricesAfter(String text, String h1) {
   if (from < 0) from = 0;
   final window = text.substring(from, (from + 3000).clamp(0, text.length));
   final out = <PriceSeen>[];
-  final re = RegExp(r'(?:[£€$¥₹₩₺₽₫₱฿₪]|US\s?\$|[A-Z]{2}\$|R\$)\s?\d[\d.,]*|\d[\d.,]*\s?(?:€|zł|Kč)');
+  final re = RegExp(r'(?:[£€$¥₹₩₺₽₫₱฿₪￡￥＄]|US\s?\$|[A-Z]{2}\$|R\$)\s?\d[\d.,]*|\d[\d.,]*\s?(?:€|zł|Kč)');
   for (final (i, m) in re.allMatches(window).take(12).indexed) {
     final before = window.substring((m.start - 16).clamp(0, window.length), m.start).toLowerCase();
     out.add(

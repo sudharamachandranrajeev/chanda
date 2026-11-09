@@ -74,7 +74,7 @@ String? currencyIn(String text, {String? hint}) {
 /// when [text] holds no number. Without a currency mark it takes [hint].
 ReadPrice? parsePrice(String text, {String? hint}) {
   // Prices drawn in parts ("£8 . 42", "12 ,99 €") read as one number.
-  final t = text
+  final t = _halfWidth(text)
       .replaceAll(RegExp(r'\s+'), ' ')
       .replaceAllMapped(RegExp(r'(\d) ?([.,]) ?(\d)'), (m) => '${m[1]}${m[2]}${m[3]}')
       .trim();
@@ -86,6 +86,20 @@ ReadPrice? parsePrice(String text, {String? hint}) {
   if (value == null) return null;
   return (minor: value, currency: code);
 }
+
+/// [text] with fullwidth signs, digits and separators made plain: some
+/// shops write "￡1.37" or "￥１，２８０".
+String _halfWidth(String text) => text.replaceAllMapped(RegExp('[\uFF01-\uFF5E\uFFE0-\uFFE6]'), (m) {
+  final c = m[0]!.codeUnitAt(0);
+  return switch (c) {
+    0xFFE1 => '£',
+    0xFFE5 => '¥',
+    0xFFE6 => '₩',
+    0xFFE0 => '¢',
+    0xFFE3 || 0xFFE2 || 0xFFE4 => m[0]!,
+    _ => String.fromCharCode(c - 0xFEE0),
+  };
+});
 
 /// Turns "1.234,56", "1,234.56", "1 234,5", "12.99" or "1,280" into minor
 /// units with [scale] decimals. The last separator is the decimal point when

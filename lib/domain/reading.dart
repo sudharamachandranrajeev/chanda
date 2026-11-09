@@ -583,7 +583,7 @@ String _sellerIn(String text) =>
 int? _shippingIn(String text, String currency) {
   if (RegExp(r'free (?:uk )?(?:delivery|shipping)', caseSensitive: false).hasMatch(text)) return 0;
   final m = RegExp(
-    r'(?:delivery|shipping|postage)\s*(?:fee|cost|charge)?\s*:?\s*((?:[£€$¥₹]|[A-Z]{3}\s?)\s?\d[\d.,]*)',
+    r'(?:delivery|shipping|postage)\s*(?:fee|cost|charge)?\s*:?\s*((?:[£€$¥₹￡￥＄]|[A-Z]{3}\s?)\s?\d[\d.,]*)',
     caseSensitive: false,
   ).firstMatch(text);
   if (m == null) return null;
@@ -669,7 +669,7 @@ const evidenceScript = r'''
 
   // Prices as drawn: big, near the title or the buy button, not in a
   // carousel of other products, not struck through.
-  const priceRe = /^(?:(?:[£€$¥￥₹₩₺₽₫₱฿₪]|US\s?\$|[A-Z]{2}\$|R\$|[A-Z]{3}\s?)\s?\d[\d.,\s  ]*|\d[\d.,\s  ]*\s?(?:€|zł|Kč|kr|Ft|lei|円|元|[A-Z]{3}))$/;
+  const priceRe = /^(?:(?:[£€$¥￥￡＄₹₩₺₽₫₱฿₪]|US\s?\$|[A-Z]{2}\$|R\$|[A-Z]{3}\s?)\s?\d[\d.,\s  ]*|\d[\d.,\s  ]*\s?(?:€|zł|Kč|kr|Ft|lei|円|元|[A-Z]{3}))$/;
   const awayRe = /carousel|recommend|sponsor|similar|also[-_ ]?(bought|viewed|like)|related|bundle|frequently|compare|swiper|slider|upsell|cross-?sell|recently/i;
   const buyRe = /add to (cart|basket|bag|trolley)|buy now|add to bag/i;
   const top = (h1 ? h1.getBoundingClientRect().top + scrollY : 0);
