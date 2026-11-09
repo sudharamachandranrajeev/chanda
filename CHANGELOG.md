@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.1
+
+- Linux: the download now starts. It was missing a library that the built-in text recognition and
+  picture search need.
+
 ## 0.3.0
 
 Search with a photo, suggestions that learn your taste, and shops like the ones you use.

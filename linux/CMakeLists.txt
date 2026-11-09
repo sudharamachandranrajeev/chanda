@@ -74,6 +74,21 @@ set_target_properties(${BINARY_NAME}
 # them to the application.
 include(flutter/generated_plugins.cmake)
 
+# The ONNX Runtime plugin finds libonnxruntime.so.1 through the build folder
+# it was linked in. Look next to the plugin instead, where the bundle keeps it,
+# so the app runs wherever it is unpacked.
+if(TARGET flutter_onnxruntime_plugin)
+  set_target_properties(flutter_onnxruntime_plugin PROPERTIES
+    BUILD_WITH_INSTALL_RPATH TRUE
+    INSTALL_RPATH "$ORIGIN")
+  # Linking the app still has to find it where the plugin unpacked it.
+  file(GLOB onnxruntime_lib_dirs
+    "${CMAKE_BINARY_DIR}/plugins/flutter_onnxruntime/onnxruntime/onnxruntime-linux-*/lib")
+  foreach(dir ${onnxruntime_lib_dirs})
+    target_link_options(${BINARY_NAME} PRIVATE "-Wl,-rpath-link,${dir}")
+  endforeach()
+endif()
+
 
 # === Installation ===
 # By default, "installing" just makes a relocatable bundle in the build
@@ -104,6 +119,18 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
   install(FILES "${bundled_library}"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
+  # A bundled library given as a symlink (ONNX Runtime's libonnxruntime.so,
+  # pointing at libonnxruntime.so.1) installs only the link. Install the file
+  # it points to as well, under its own name, so the link resolves.
+  if(IS_SYMLINK "${bundled_library}")
+    file(REAL_PATH "${bundled_library}" bundled_target)
+    file(READ_SYMLINK "${bundled_library}" bundled_link)
+    get_filename_component(bundled_name "${bundled_link}" NAME)
+    install(FILES "${bundled_target}"
+      DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+      RENAME "${bundled_name}"
+      COMPONENT Runtime)
+  endif()
 endforeach(bundled_library)
 
 # Copy the native assets provided by the build.dart from all packages.
