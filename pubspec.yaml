@@ -26,6 +26,9 @@ dependencies:
   html: ^0.15.6
   http: ^1.6.0
   path_provider: ^2.1.5
+  # Picture fingerprints (difference hash) to spot the same product at
+  # another shop.
+  image: ^4.12.0
   # Price alerts on the device itself (Android, Linux, Windows).
   flutter_local_notifications: ^23.0.0
   # Background price checks on Android.
@@ -33,6 +36,14 @@ dependencies:
   # Design tokens, themes and parts from the Nithya Studio kit (Apache-2.0).
   nithya:
     path: packages/nithya/flutter
+  # "Smarter search" (optional download): a sentence-embedding model run on
+  # the device, its tokenizer, and SHA-256 checks of the downloaded files.
+  flutter_onnxruntime: 1.9.0
+  dart_sentencepiece_tokenizer: 1.4.1
+  crypto: ^3.0.8
+  # Reads a price off the screen when a page gives none as data (Android,
+  # on the device).
+  google_mlkit_text_recognition: 1.0.1
 
 dev_dependencies:
   flutter_test:
@@ -40,6 +51,8 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   drift_dev: ^2.35.1
   build_runner: ^2.16.2
+  integration_test:
+    sdk: flutter
 
 dependency_overrides:
   # The web view's Linux plugin with libwpe made optional: WPE WebKit 2.52+

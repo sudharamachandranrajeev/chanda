@@ -12,7 +12,10 @@ import '../app/providers.dart';
 import '../db/database.dart';
 import '../domain/links.dart';
 import '../domain/money.dart';
+import '../domain/offers.dart';
 import '../domain/reading.dart';
+import '../domain/screen_ocr.dart';
+import '../domain/screen_text.dart';
 import '../domain/shops.dart';
 import '../domain/web_reader.dart';
 import 'common.dart';
@@ -31,13 +34,33 @@ Future<void> openInApp(BuildContext context, Uri url, {VaultItem? item}) async {
   );
 }
 
+/// Opens [shop]'s search for [words] inside Chanda, for a shop that wants
+/// the user present. The user gets past any check, then presses Add these
+/// results; the offers on the page come back. Null when they just close it
+/// (or the build has no web view and the search opened in the browser).
+Future<List<Offer>?> openSearchInApp(BuildContext context, Shop shop, String words) async {
+  final url = shop.searchFor(words);
+  if (url == null) return null;
+  if (!hasWebView) {
+    await openLink(context, '$url');
+    return null;
+  }
+  return Navigator.of(context).push<List<Offer>>(
+    MaterialPageRoute(builder: (_) => BrowserPage(url: url, gathers: true)),
+  );
+}
+
 /// A shop's own website inside Chanda. The user signs in, chooses and
 /// pays on the shop's own pages; Chanda keeps the cookies (in the web
 /// view's store, as any browser does), and reads a page only when asked
 /// to save or update a product. Sign-in and payment pages are never read.
 class BrowserPage extends ConsumerStatefulWidget {
-  const BrowserPage({super.key, required this.url, this.saveOnLoad = false, this.item});
+  const BrowserPage({super.key, required this.url, this.saveOnLoad = false, this.item, this.gathers = false});
   final Uri url;
+
+  /// Opened for a search: the bar offers Add these results, which reads
+  /// the products listed on the page and returns them.
+  final bool gathers;
 
   /// Reads the product as soon as the page has drawn and offers to save it.
   final bool saveOnLoad;
@@ -64,7 +87,13 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
     setState(() => _reading = true);
     try {
       final e = await settle(web, tries: 8);
-      return readProduct(e, hint: shopFor(_url).currency);
+      final r = readProduct(e, hint: shopFor(_url).currency);
+      if (r.price != null || r.check || !canReadScreen) return r;
+      // No price as data: read it off what the user sees.
+      final png = await web.takeScreenshot();
+      if (png == null || _private) return r;
+      final (lines, height) = await readScreen(png);
+      return withScreenText(r, lines, screenHeight: height);
     } on Object catch (e) {
       if (mounted) showError(context, e);
       return null;
@@ -80,6 +109,25 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
       return showMessage(context, 'This does not look like a product page. Open the product itself, then Save.');
     }
     await showSaveSheet(context, r);
+  }
+
+  /// Reads the products listed on the page and hands them back.
+  Future<void> _gather() async {
+    final web = _web;
+    if (web == null || _private) return;
+    setState(() => _reading = true);
+    try {
+      final offers = parseOffers(_shop, '${await web.evaluateJavascript(source: offerScript)}');
+      if (!mounted) return;
+      if (offers.isEmpty) {
+        return showMessage(context, 'No products with prices found here yet. Let the results load, then try again.');
+      }
+      Navigator.pop(context, offers);
+    } on Object catch (e) {
+      if (mounted) showError(context, e);
+    } finally {
+      if (mounted) setState(() => _reading = false);
+    }
   }
 
   /// Updates the item's price from the page the user is looking at.
@@ -271,7 +319,11 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
               Expanded(
                 child: item == null
                     ? Text(
-                        _private ? 'Paying or signing in: Chanda stays out.' : 'Found something at ${_shop.name}?',
+                        _private
+                            ? 'Paying or signing in: Chanda stays out.'
+                            : widget.gathers
+                            ? 'Results at ${_shop.name}'
+                            : 'Found something at ${_shop.name}?',
                         style: text.bodyMedium,
                       )
                     : Column(
@@ -286,7 +338,19 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
                         ],
                       ),
               ),
-              if (item == null)
+              if (item == null && widget.gathers) ...[
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.favorite_border),
+                  label: const Text('Save'),
+                  onPressed: _private || _reading ? null : _save,
+                ),
+                const SizedBox(width: 8),
+                FilledButton.icon(
+                  icon: busy ?? const Icon(Icons.playlist_add),
+                  label: const Text('Add these results'),
+                  onPressed: _private || _reading ? null : _gather,
+                ),
+              ] else if (item == null)
                 FilledButton.icon(
                   icon: busy ?? const Icon(Icons.favorite_border),
                   label: const Text('Save'),

@@ -11,6 +11,7 @@ class Shop {
     this.fromAbroad = false,
     this.userPresent = false,
     this.productKey,
+    this.search,
   });
 
   final String id;
@@ -36,7 +37,26 @@ class Shop {
   /// Finds the shop's own product id in a product page's URL.
   final RegExp? productKey;
 
+  /// The shop's search page, with `{q}` for the words (URL-encoded) or
+  /// `{q-}` for the words joined by hyphens. Null when unknown.
+  final String? search;
+
   bool get known => !id.contains('.');
+
+  /// The search page for [words], or null when the shop has none listed.
+  Uri? searchFor(String words) {
+    final t = search;
+    final w = words.trim();
+    if (t == null || w.isEmpty) return null;
+    final hyphens = w.toLowerCase().replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), '-');
+    return Uri.parse(
+      t.replaceAll('{q-}', Uri.encodeComponent(hyphens.replaceAll(RegExp(r'^-|-$'), ''))).replaceAll('{q}', Uri.encodeComponent(w)),
+    );
+  }
+
+  /// Searched in the hidden web view. Shops that want a person present are
+  /// searched in the visible browser instead, with the user there.
+  bool get searchHidden => search != null && !userPresent;
 
   String keyOf(Uri url) => productKey?.firstMatch(url.path)?.group(1) ?? '';
 }
@@ -51,6 +71,7 @@ final shops = <Shop>[
     home: 'https://www.amazon.co.uk/',
     currency: 'GBP',
     productKey: RegExp(r'/(?:dp|gp/product|gp/aw/d)/([A-Z0-9]{10})'),
+    search: 'https://www.amazon.co.uk/s?k={q}',
   ),
   Shop(
     id: 'shein',
@@ -61,6 +82,7 @@ final shops = <Shop>[
     fromAbroad: true,
     userPresent: true,
     productKey: RegExp(r'-p-(\d+)'),
+    search: 'https://www.shein.co.uk/pdsearch/{q}/',
   ),
   Shop(
     id: 'temu',
@@ -71,6 +93,7 @@ final shops = <Shop>[
     fromAbroad: true,
     userPresent: true,
     productKey: RegExp(r'-g-(\d+)\.html'),
+    search: 'https://www.temu.com/uk/search_result.html?search_key={q}',
   ),
   Shop(
     id: 'aliexpress',
@@ -80,6 +103,7 @@ final shops = <Shop>[
     currency: 'GBP',
     fromAbroad: true,
     productKey: RegExp(r'/item/(\d+)\.html'),
+    search: 'https://www.aliexpress.com/w/wholesale-{q-}.html',
   ),
   Shop(
     id: 'hacoo',
@@ -89,6 +113,7 @@ final shops = <Shop>[
     currency: 'GBP',
     fromAbroad: true,
     userPresent: true,
+    search: 'https://www.hacoo.com/search?keyword={q}',
   ),
 ];
 

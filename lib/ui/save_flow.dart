@@ -7,6 +7,7 @@ import 'package:nithya/nithya.dart';
 
 import '../app/providers.dart';
 import '../db/database.dart';
+import '../domain/ai_reader.dart';
 import '../domain/html_evidence.dart';
 import '../domain/images.dart';
 import '../domain/links.dart';
@@ -82,7 +83,8 @@ class SaveSheet extends ConsumerStatefulWidget {
 }
 
 class _SaveSheetState extends ConsumerState<SaveSheet> {
-  Reading get r => widget.reading;
+  late Reading r = widget.reading;
+  var _reading = false;
   late final _title = TextEditingController(text: r.title);
   late final _price = TextEditingController(text: r.price == null ? '' : _decimal(r.price!, r.currency));
   final _target = TextEditingController();
@@ -143,6 +145,26 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
     }
   }
 
+  /// Asks the AI to read the page and puts what it found in the fields.
+  Future<void> _readWithAi(String key) async {
+    setState(() {
+      _reading = true;
+      _error = null;
+    });
+    try {
+      final read = await readWithAi(r, key, client: ref.read(aiClientProvider));
+      setState(() {
+        r = read;
+        _title.text = read.title;
+        _price.text = read.price == null ? '' : _decimal(read.price!, read.currency);
+      });
+    } on Object catch (e) {
+      setState(() => _error = describeError(e));
+    } finally {
+      if (mounted) setState(() => _reading = false);
+    }
+  }
+
   String _tagText() => _tags.text.split(',').map((t) => t.trim()).where((t) => t.isNotEmpty).join(',');
 
   @override
@@ -151,6 +173,7 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
     final text = Theme.of(context).textTheme;
     final lists = ref.watch(listsProvider).value ?? const <VaultList>[];
     final shop = shopFor(Uri.parse(r.url));
+    final aiKey = ref.watch(aiKeyProvider).value ?? '';
     return Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
       child: SafeArea(
@@ -218,6 +241,20 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
                         'Finish the shop\'s check on its page, then press Save again. You can also type the price '
                         'you see below.',
                         style: text.bodyMedium,
+                      ),
+                    ),
+                  if (aiKey.isNotEmpty && r.layer != 'ai' && r.confidence != 'high' && r.text.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: OutlinedButton.icon(
+                          icon: _reading
+                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              : const Icon(Icons.auto_awesome_outlined),
+                          label: const Text('Read with AI'),
+                          onPressed: _reading ? null : () => _readWithAi(aiKey),
+                        ),
                       ),
                     ),
                   Field(_title, 'Name'),

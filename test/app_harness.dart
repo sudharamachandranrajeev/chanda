@@ -2,12 +2,17 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:chanda/app/app.dart';
 import 'package:chanda/app/providers.dart';
 import 'package:chanda/app/session.dart';
+import 'package:chanda/domain/offers.dart';
+import 'package:chanda/domain/query.dart';
 import 'package:chanda/domain/reading.dart';
+import 'package:chanda/domain/shop_search.dart';
+import 'package:chanda/domain/shops.dart';
 import 'package:chanda/domain/vault.dart';
 import 'package:chanda/domain/web_reader.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
 
 import 'support.dart';
 
@@ -33,10 +38,21 @@ class AppHarness {
     });
   }
 
-  Future<void> run({Map<String, Evidence> pages = const {}}) async {
+  /// [offers]: what each shop's search lists, by shop id (others list
+  /// nothing).
+  Future<void> run({
+    Map<String, Evidence> pages = const {},
+    Map<String, List<Offer>> offers = const {},
+    http.Client? ai,
+  }) async {
     await tester.pumpWidget(
       ProviderScope(
-        overrides: [...chandaOverrides(session), readerProvider.overrideWithValue(TablePageReader(pages))],
+        overrides: [
+          ...chandaOverrides(session),
+          readerProvider.overrideWithValue(TablePageReader(pages)),
+          searcherProvider.overrideWithValue(TableSearcher(offers)),
+          if (ai != null) aiClientProvider.overrideWithValue(ai),
+        ],
         retry: (_, _) => null,
         child: const ChandaApp(),
       ),
@@ -95,6 +111,18 @@ class TablePageReader implements PageReader {
 
   @override
   Future<Evidence> read(Uri url) async => pages['$url'] ?? (throw StateError('No page for $url'));
+}
+
+/// Shop searches from a table instead of the web.
+class TableSearcher implements ShopSearcher {
+  const TableSearcher(this.offers);
+  final Map<String, List<Offer>> offers;
+
+  @override
+  bool get available => true;
+
+  @override
+  Future<List<Offer>> search(Shop shop, Query q) async => offers[shop.id] ?? const [];
 }
 
 /// A small vault: two lists, a dropped price and a target reached.

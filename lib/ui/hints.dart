@@ -3,6 +3,7 @@
 const chandaHints = <String, String>{
   'nav.vault': 'Everything you want to buy, from any shop, with its price kept up to date.',
   'nav.alerts': 'Price drops, your target prices and things back in stock.',
+  'nav.search': 'Search your vault and the shops at once, and compare what you find.',
   'nav.shops': 'Open a shop inside Chanda, sign in, and save what you find.',
   'nav.settings': 'Money, alerts, background checks, look, sync and security.',
   'page.vault':
@@ -14,6 +15,13 @@ const chandaHints = <String, String>{
   'page.shops':
       'Shops open inside Chanda. Sign in on the shop\'s own page: Chanda keeps the shop\'s cookies on this '
       'device like a browser does and never sees your password. Payment and sign-in pages are never read.',
+  'page.search':
+      'Type what you want: "black linen shirt size M under £30". Budget, size, colour, material and shop become '
+      'chips you can tap off. Chanda searches your vault and the shops that allow it; the others open in the '
+      'browser, where you press Add these results.',
+  'action.compare':
+      'Offers found at other shops for this item. Chanda marks the same product only when the barcode or '
+      'brand and model number agree, never across sizes or colours. Anything less certain asks you once.',
   'action.save':
       'Chanda reads the product\'s name, price, pictures and details from the page you are looking at. '
       'Check the price before saving: you can correct it.',

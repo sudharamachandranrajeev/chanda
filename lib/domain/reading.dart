@@ -151,6 +151,7 @@ class Reading {
     this.confidence = 'low',
     this.warnings = const [],
     this.check = false,
+    this.text = '',
   });
 
   final String url;
@@ -184,7 +185,48 @@ class Reading {
   /// The page was a bot check: only the user can get past it.
   final bool check;
 
+  /// The page's main text, kept only while the save sheet is open so the
+  /// user can ask an AI to read it. Never saved.
+  final String text;
+
   bool get usable => price != null && title.isNotEmpty && !check;
+
+  /// This reading with the main facts read another way (the screen, or AI).
+  /// [price] null keeps the old price; [clearWas] drops a "was" price that
+  /// belonged to it.
+  Reading withFacts({
+    String? title,
+    int? price,
+    String? currency,
+    bool clearWas = false,
+    bool? inStock,
+    required String layer,
+    required String warning,
+  }) => Reading(
+    url: url,
+    title: title ?? this.title,
+    brand: brand,
+    description: description,
+    images: images,
+    price: price ?? this.price,
+    currency: price != null ? currency ?? this.currency : this.currency,
+    was: clearWas ? null : was,
+    shipping: shipping,
+    inStock: inStock ?? this.inStock,
+    seller: seller,
+    gtin: gtin,
+    mpn: mpn,
+    sku: sku,
+    rating: rating,
+    reviews: reviews,
+    warranty: warranty,
+    variant: variant,
+    layer: layer,
+    confidence: 'low',
+    warnings: [warning],
+    check: check && price == null,
+    text: text,
+  );
 }
 
 /// Reads [e] into a product. [hint] is the shop's currency, used when the
@@ -304,6 +346,7 @@ Reading readProduct(Evidence e, {required String hint}) {
     confidence: confidence,
     warnings: warnings,
     check: e.check && price == null,
+    text: e.text,
   );
 }
 

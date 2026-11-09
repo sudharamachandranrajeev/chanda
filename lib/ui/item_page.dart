@@ -16,6 +16,7 @@ import '../domain/vault.dart';
 import '../domain/watch.dart';
 import 'browser_page.dart';
 import 'common.dart';
+import 'compare_card.dart';
 import 'item_bits.dart';
 import 'look.dart';
 
@@ -331,6 +332,7 @@ class _BodyState extends ConsumerState<_Body> {
                             children: [
                               FadeIn(child: head),
                               const SizedBox(height: 24),
+                              FadeIn(child: CompareCard(i)),
                               for (final (n, c) in cards.skip(2).indexed)
                                 FadeIn(
                                   delay: Duration(milliseconds: 60 * n),
@@ -350,6 +352,7 @@ class _BodyState extends ConsumerState<_Body> {
                         const SizedBox(height: 20),
                         FadeIn(child: head),
                         const SizedBox(height: 20),
+                        FadeIn(child: CompareCard(i)),
                         for (final (n, c) in cards.indexed)
                           FadeIn(
                             delay: Duration(milliseconds: 50 * n),

@@ -6,12 +6,18 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 
 import '../db/database.dart';
+import '../domain/ai_reader.dart';
 import '../domain/checker.dart';
+import '../domain/embeddings.dart';
 import '../domain/images.dart';
+import '../domain/local_search.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
+import '../domain/shop_search.dart';
 import '../domain/shops.dart';
 import '../domain/vault.dart';
 import '../domain/web_reader.dart';
@@ -207,10 +213,110 @@ Landed? landedFor(WidgetRef ref, VaultItem i) {
   );
 }
 
+// ---- search ----
+
+/// Reads shop search pages; tests swap in a fake.
+final searcherProvider = Provider<ShopSearcher>((_) => const WebShopSearcher());
+
+/// Search over the vault and found offers, and the "same product?" answers.
+final localSearchProvider = Provider<LocalSearch>(
+  (ref) => LocalSearch(ref.watch(sessionProvider).store, embedder: ref.watch(embedderProvider).value),
+);
+
+/// Where the "Smarter search" model is kept: one folder per pinned revision.
+Future<Directory> modelDir() async =>
+    Directory('${(await getApplicationSupportDirectory()).path}/models/minilm-faf4aa4');
+
+/// "Smarter search": downloaded or not, on or off, and a download's progress.
+class SmartSearch {
+  const SmartSearch({this.present = false, this.on = false, this.done, this.error});
+  final bool present;
+  final bool on;
+
+  /// Bytes downloaded so far while a download runs.
+  final int? done;
+  final String? error;
+
+  bool get downloading => done != null;
+}
+
+class SmartSearchState extends AsyncNotifier<SmartSearch> {
+  @override
+  Future<SmartSearch> build() async {
+    try {
+      final present = modelPresent(await modelDir());
+      final on = await ref.read(sessionProvider).db.localSetting(smartSearchSetting) == 'on';
+      return SmartSearch(present: present, on: on && present);
+    } on Object catch (e) {
+      debugPrint('Chanda: smarter search unavailable: $e');
+      return const SmartSearch();
+    }
+  }
+
+  Future<void> download() async {
+    if (state.value?.downloading ?? false) return;
+    state = const AsyncData(SmartSearch(done: 0));
+    try {
+      await downloadModel(await modelDir(), progress: (n) => state = AsyncData(SmartSearch(done: n)));
+      await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, 'on');
+      state = const AsyncData(SmartSearch(present: true, on: true));
+    } on Object catch (e) {
+      state = AsyncData(SmartSearch(error: describeError(e)));
+    }
+  }
+
+  Future<void> setOn(bool on) async {
+    await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, on ? 'on' : 'off');
+    state = AsyncData(SmartSearch(present: state.value?.present ?? false, on: on));
+  }
+
+  Future<void> remove() async {
+    await ref.read(sessionProvider).db.setLocalSetting(smartSearchSetting, 'off');
+    final dir = await modelDir();
+    if (dir.existsSync()) await dir.delete(recursive: true);
+    state = const AsyncData(SmartSearch());
+  }
+}
+
+final smartSearchProvider = AsyncNotifierProvider<SmartSearchState, SmartSearch>(SmartSearchState.new);
+
+/// The meaning model, loaded while smarter search is on.
+final embedderProvider = FutureProvider<Embedder?>((ref) async {
+  final s = await ref.watch(smartSearchProvider.selectAsync((s) => s.on));
+  if (!s) return null;
+  try {
+    final e = await OnnxEmbedder.load(await modelDir());
+    ref.onDispose(e.close);
+    return e;
+  } on Object catch (e) {
+    debugPrint('Chanda: could not load the search model: $e');
+    return null;
+  }
+});
+
+/// Offers found before that could be the item at other shops, with the
+/// user's answers so far.
+final candidatesProvider = FutureProvider.family<(List<ShopOffer>, Map<String, String>), String>((ref, id) async {
+  ref.watch(revisionProvider);
+  final item = await ref.watch(itemProvider(id).future);
+  if (item == null) return (const <ShopOffer>[], const <String, String>{});
+  final s = ref.watch(localSearchProvider);
+  return (await s.candidatesFor(item), await s.matchesFor(id));
+});
+
 // ---- checks while the app is open ----
 
 /// Reads product pages: a hidden web view (with the in-app browser's
 /// cookies) where there is one, else plain HTML. Tests swap in a fake.
+/// The user's own API key for optional AI reading; empty when not set.
+/// Invalidate after changing it.
+final aiKeyProvider = FutureProvider<String>(
+  (ref) async => await ref.watch(sessionProvider).db.localSetting(aiKeySetting) ?? '',
+);
+
+/// The HTTP client for AI reading; tests swap in a fake service.
+final aiClientProvider = Provider<http.Client?>((_) => null);
+
 final readerProvider = Provider<PageReader>((_) => hasWebView ? const WebPageReader() : const HtmlPageReader());
 
 final notifierProvider = FutureProvider<AlertNotifier>((ref) async {

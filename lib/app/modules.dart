@@ -2,6 +2,7 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:flutter/material.dart';
 
 import '../ui/alerts_page.dart';
+import '../ui/search_page.dart';
 import '../ui/shops_page.dart';
 import '../ui/vault_page.dart';
 import 'settings_page.dart';
@@ -14,6 +15,7 @@ final shoppingModule = AppModule(
   name: 'Shopping',
   destinations: [
     _d('vault', 'Vault', Icons.favorite_border, Icons.favorite, const VaultPage()),
+    _d('search', 'Search', Icons.search, Icons.manage_search, const SearchPage()),
     _d('alerts', 'Alerts', Icons.notifications_none, Icons.notifications, const AlertsPage()),
     _d('shops', 'Shops', Icons.storefront_outlined, Icons.storefront, const ShopsPage()),
   ],

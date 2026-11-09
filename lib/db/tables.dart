@@ -109,6 +109,46 @@ class ChandaAlerts extends Table with SyncedRow {
   BoolColumn get seen => boolean().withDefault(const Constant(false))();
 }
 
+/// Offers found on shops' search pages. A local cache: never synced, and
+/// rebuilt by searching again.
+@DataClassName('ShopOffer')
+class ChandaOffers extends Table {
+  /// shop + cleaned link.
+  TextColumn get id => text()();
+  TextColumn get shop => text()();
+  TextColumn get url => text()();
+  TextColumn get title => text()();
+  TextColumn get image => text().withDefault(const Constant(''))();
+  IntColumn get price => integer().nullable()();
+  TextColumn get currency => text()();
+  IntColumn get was => integer().nullable()();
+  RealColumn get rating => real().nullable()();
+  IntColumn get reviews => integer().nullable()();
+  BoolColumn get inStock => boolean().withDefault(const Constant(true))();
+
+  /// The search that last found it.
+  TextColumn get query => text().withDefault(const Constant(''))();
+  TextColumn get seen => text()();
+
+  /// 64-bit difference hash of the picture, as 16 hex digits ('' until
+  /// worked out).
+  TextColumn get dhash => text().withDefault(const Constant(''))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// The user's answers to "Is this the same product?": an offer's link and
+/// a vault item, same or not. Synced, so no device asks twice.
+@DataClassName('ProductMatch')
+class ChandaMatches extends Table with SyncedRow {
+  TextColumn get itemId => text()();
+  TextColumn get url => text()();
+
+  /// same | different
+  TextColumn get verdict => text()();
+}
+
 class Prefs extends Table with SyncedRow, PrefColumns {}
 
 @DataClassName('OutboxItem')

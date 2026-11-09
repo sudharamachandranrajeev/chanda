@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nithya/nithya.dart';
 
+import '../domain/ai_reader.dart';
+import '../domain/embeddings.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
 import '../domain/vault.dart';
@@ -23,6 +25,8 @@ class SettingsPage extends StatelessWidget {
       _MoneyCard(),
       _AlertsCard(),
       _BackgroundCard(),
+      _SmartSearchCard(),
+      _AiCard(),
       AppLockCard(),
       HintsCard(),
       SyncCard(),
@@ -31,6 +35,8 @@ class SettingsPage extends StatelessWidget {
             'Chanda loads a shop\'s pages only to show them to you, read a product you save, and check saved '
             'prices. Background checks say they come from Chanda. It fetches exchange rates from the European '
             'Central Bank\'s reference feed (frankfurter.dev) and talks to your sync server only if you sign in. '
+            'Smarter search downloads its model from Hugging Face once, if you ask for it. '
+            'If you add your own AI key, a product page\'s text goes to Anthropic only when you press Read with AI. '
             'Shop logins stay in the shop\'s own pages: Chanda never sees or stores your passwords or card '
             'details, never reads payment pages and never checks out for you.',
       ),
@@ -464,6 +470,122 @@ class _BackgroundCardState extends ConsumerState<_BackgroundCard> {
               value: _on ?? false,
               onChanged: _on == null || _busy ? null : _set,
             ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Optional AI reading with the user's own key.
+class _AiCard extends ConsumerWidget {
+  const _AiCard();
+
+  Future<void> _edit(BuildContext context, WidgetRef ref) async {
+    final c = TextEditingController();
+    await showFormDialog(
+      context,
+      title: 'AI reading',
+      fields: (_) => [
+        const Text(
+          'Paste an API key from your Anthropic account. It stays on this device, in the encrypted vault, and '
+          'is never synced. Each reading is charged to your account, usually well under a penny. Leave empty '
+          'to remove the key.',
+        ),
+        const SizedBox(height: 12),
+        Field(c, 'API key', hint: 'sk-ant-…', autofocus: true),
+      ],
+      onSave: () async {
+        final key = c.text.trim();
+        if (key.isNotEmpty && !looksLikeKey(key)) return 'That does not look like an Anthropic API key.';
+        await ref.read(sessionProvider).db.setLocalSetting(aiKeySetting, key);
+        ref.invalidate(aiKeyProvider);
+        return null;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final key = ref.watch(aiKeyProvider).value ?? '';
+    return SectionCard(
+      title: 'AI reading',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.auto_awesome_outlined, color: NithyaAccent.primary),
+            title: Text(key.isEmpty ? 'Off' : 'On, with your key ending ${key.substring(key.length - 4)}'),
+            subtitle: const Text(
+              'When Chanda is unsure of a product\'s name or price, Read with AI sends the page\'s text to Claude '
+              'and fills in what it finds for you to check. Sign-in and payment pages are never sent.',
+            ),
+            trailing: TextButton(
+              onPressed: () => _edit(context, ref),
+              child: Text(key.isEmpty ? 'Add key' : 'Change'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The optional meaning model for search.
+class _SmartSearchCard extends ConsumerWidget {
+  const _SmartSearchCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final s = ref.watch(smartSearchProvider).value ?? const SmartSearch();
+    final notifier = ref.read(smartSearchProvider.notifier);
+    final mb = (modelBytes / 1e6).round();
+    return SectionCard(
+      title: 'Smarter search',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            'Search finds words by default. Smarter search also finds things by meaning: "specs" finds reading '
+            'glasses, and a search in one language finds titles in another. It needs a $mb MB download, once, '
+            'and then runs on this device: nothing you search for is sent anywhere.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const SizedBox(height: 12),
+          if (s.downloading) ...[
+            LinearProgressIndicator(value: s.done! / modelBytes),
+            const SizedBox(height: 6),
+            Text('Downloading… ${(s.done! / 1e6).round()} of $mb MB'),
+          ] else if (s.present) ...[
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: const Text('Search by meaning'),
+              value: s.on,
+              onChanged: notifier.setOn,
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                icon: const Icon(Icons.delete_outline),
+                label: Text('Remove the download ($mb MB)'),
+                onPressed: notifier.remove,
+              ),
+            ),
+          ] else ...[
+            if (s.error != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(s.error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: FilledButton.tonalIcon(
+                icon: const Icon(Icons.download_outlined),
+                label: Text('Download ($mb MB)'),
+                onPressed: notifier.download,
+              ),
+            ),
+          ],
         ],
       ),
     );
