@@ -6,9 +6,12 @@ import 'dart:typed_data';
 import 'package:flutter_onnxruntime/flutter_onnxruntime.dart';
 import 'package:image/image.dart' as img;
 
+import 'body_mask.dart';
 import 'embeddings.dart' show ModelFile;
 import 'face_fit.dart';
+import 'garment_fit.dart';
 import 'glasses_fit.dart';
+import 'pose_fit.dart';
 
 // "Try-on": one optional download of small models that run on the device.
 // Nothing is sent anywhere after the download.
@@ -17,9 +20,10 @@ import 'glasses_fit.dart';
 //     range) and Face Mesh V2 with irises (Apache-2.0, Google), as ONNX in
 //     fernandotonon/QtMeshEditor-models.
 //   pose_detector.onnx, pose_landmarks.onnx: MediaPipe BlazePose full
-//     (Apache-2.0), same repository. For clothes (not used yet).
+//     (Apache-2.0), same repository. Finds the body's joints for clothes.
 //   selfie_multiclass_256.onnx: MediaPipe multiclass selfie segmenter 256
-//     (Apache-2.0), senty-au/selfie_multiclass_256x256-ONNX. For clothes.
+//     (Apache-2.0), senty-au/selfie_multiclass_256x256-ONNX. Tells hair,
+//     face, skin and clothes apart, for clothes.
 //   u2netp.onnx: U²-Netp (Apache-2.0), BritishWerewolf/U-2-Netp. Cuts the
 //     product out of its picture.
 //
@@ -121,22 +125,50 @@ abstract class FrameCutting {
   Future<(Cutout?, CutoutProblem?)> cut(Uint8List picture);
 }
 
-/// The loaded try-on models.
+/// Finds the people on a photo and their joints.
+abstract class BodyFinding {
+  Future<List<BodyReading>> find(Rgb photo);
+}
+
+/// Says which part of [body] (or the background) each pixel of a photo is,
+/// as the segmentation model gives it (arms not yet split off).
+abstract class BodySegmenting {
+  Future<Uint8List> parts(Rgb photo, BodyReading body);
+}
+
+/// Cuts a garment out of its product picture; also gives the picture as
+/// decoded, so it can be checked for a person wearing it.
+abstract class GarmentCutting {
+  Future<(Cutout?, GarmentProblem?, Rgb?)> cut(Uint8List picture);
+}
+
+/// The loaded try-on models. Clothes need [bodies], [segmenter] and
+/// [garments]; glasses only [faces] and [frames].
 class TryOnModels {
-  TryOnModels(this.faces, this.frames, {this.onClose});
+  TryOnModels(this.faces, this.frames, {this.bodies, this.segmenter, this.garments, this.onClose});
   final FaceFinding faces;
   final FrameCutting frames;
+  final BodyFinding? bodies;
+  final BodySegmenting? segmenter;
+  final GarmentCutting? garments;
   final Future<void> Function()? onClose;
 
   static Future<TryOnModels> load(Directory dir) async {
     final f = await FaceFinder.load(dir);
     final c = await FrameCutter.load(dir);
+    final b = await BodyFinder.load(dir);
+    final s = await Segmenter.load(dir);
     return TryOnModels(
       f,
       c,
+      bodies: b,
+      segmenter: s,
+      garments: GarmentCutter(c),
       onClose: () async {
         await f.close();
         await c.close();
+        await b.close();
+        await s.close();
       },
     );
   }
@@ -238,5 +270,149 @@ class FrameCutter implements FrameCutting {
     if (plain != null && plain.$1 != null) return plain;
     final alpha = await modelAlpha(p);
     return Isolate.run(() => cutOut(p.rgb, p.w, p.h, clearLenses(p.rgb, p.w, p.h, alpha)));
+  }
+}
+
+/// Finds bodies and their joints with the two body models.
+class BodyFinder implements BodyFinding {
+  BodyFinder._(this._detector, this._landmarks);
+  final OrtSession _detector;
+  final OrtSession _landmarks;
+
+  /// At most this many bodies get their joints; more than one already
+  /// means the photo cannot be used.
+  static const maxBodies = 3;
+
+  static Future<BodyFinder> load(Directory dir) async {
+    final ort = OnnxRuntime();
+    return BodyFinder._(
+      await ort.createSession('${dir.path}/pose_detector.onnx'),
+      await ort.createSession('${dir.path}/pose_landmarks.onnx'),
+    );
+  }
+
+  Future<void> close() async {
+    await _detector.close();
+    await _landmarks.close();
+  }
+
+  /// Every body on [photo] the landmark model is sure is one.
+  @override
+  Future<List<BodyReading>> find(Rgb photo) async {
+    final input = await Isolate.run(() => poseDetectorInput(photo.rgb, photo.w, photo.h));
+    final [reg, cls] = await _run(
+      _detector,
+      input,
+      const [1, poseDetectorSide, poseDetectorSide, 3],
+      const ['Identity', 'Identity_1'],
+    );
+    final boxes = mergeFaces(decodeBodies(reg, cls));
+    final view = letterbox(photo.w, photo.h, size: poseDetectorSide);
+    final out = <BodyReading>[];
+    for (final b in boxes.take(maxBodies)) {
+      final onPhoto = boxOnPhoto(b, view, poseDetectorSide);
+      final region = bodyRegion(onPhoto.keypoints[0], onPhoto.keypoints[1]);
+      final crop = await Isolate.run(() => poseLandmarkInput(photo.rgb, photo.w, photo.h, region));
+      final [raw, flag, heat] = await _run(
+        _landmarks,
+        crop,
+        const [1, poseLandmarkSide, poseLandmarkSide, 3],
+        const ['Identity', 'Identity_1', 'Identity_3'],
+      );
+      // The flag is already a probability.
+      if (flag.first < 0.5) continue;
+      final points = await Isolate.run(() => bodyOnPhoto(refineFromHeatmap(raw, heat), region));
+      out.add(BodyReading(points, region: region));
+    }
+    return out;
+  }
+}
+
+/// Tells the parts of a body photo apart with the segmentation model, on
+/// squares covering the body.
+class Segmenter implements BodySegmenting {
+  Segmenter._(this._model);
+  final OrtSession _model;
+
+  static Future<Segmenter> load(Directory dir) async =>
+      Segmenter._(await OnnxRuntime().createSession('${dir.path}/selfie_multiclass_256.onnx'));
+
+  Future<void> close() => _model.close();
+
+  @override
+  Future<Uint8List> parts(Rgb photo, BodyReading body) async {
+    final (l, t, r, b) = bodyBox(body);
+    final squares = segmentSquares(l, t, r, b);
+    final shares = [for (final q in squares) await this.shares(photo, q)];
+    return Isolate.run(() => partsOnPhoto(shares, squares, photo.w, photo.h));
+  }
+
+  /// The model's class shares (256×256×6) for the square [q] of [photo].
+  Future<Float32List> shares(Rgb photo, FaceRegion q) async {
+    final x = await Isolate.run(
+      () => unitInput(photo.rgb, photo.w, photo.h, q.crop(segmenterSide), segmenterSide),
+    );
+    final [logits] = await _run(
+      _model,
+      x,
+      const [1, segmenterSide, segmenterSide, 3],
+      [_model.outputNames.first],
+    );
+    return Isolate.run(() => softmaxClasses(logits));
+  }
+}
+
+/// A product picture decoded, at most [side] pixels on its long side, with
+/// its own transparency when it has some.
+({Rgb rgb, Uint8List? alpha})? decodePicture(Uint8List bytes, {int side = garmentSide}) {
+  final d = img.decodeImage(bytes);
+  if (d == null) return null;
+  var up = img.bakeOrientation(d);
+  if (max(up.width, up.height) > side) {
+    up = img.copyResize(
+      up,
+      width: up.width >= up.height ? side : null,
+      height: up.height > up.width ? side : null,
+      interpolation: img.Interpolation.average,
+    );
+  }
+  final rgb = up.convert(numChannels: 3, format: img.Format.uint8);
+  Uint8List? alpha;
+  if (up.hasAlpha) {
+    final a = up.convert(numChannels: 4, format: img.Format.uint8).getBytes(order: img.ChannelOrder.rgba);
+    alpha = Uint8List(up.width * up.height);
+    var clear = 0;
+    for (var i = 0; i < alpha.length; i++) {
+      alpha[i] = a[i * 4 + 3];
+      if (alpha[i] < 128) clear++;
+    }
+    if (clear < alpha.length * 0.02) alpha = null;
+  }
+  return (rgb: (rgb: rgb.getBytes(order: img.ChannelOrder.rgb), w: up.width, h: up.height), alpha: alpha);
+}
+
+/// The longest side a garment's picture is worked at, in pixels.
+const garmentSide = 1024;
+
+/// Cuts a garment out of its product picture: by its own transparency, by
+/// filling a plain background, else with the cut-out model.
+class GarmentCutter implements GarmentCutting {
+  GarmentCutter(this._frames);
+  final FrameCutter _frames;
+
+  @override
+  Future<(Cutout?, GarmentProblem?, Rgb?)> cut(Uint8List picture) async {
+    final p = await Isolate.run(() => decodePicture(picture));
+    if (p == null) return (null, GarmentProblem.empty, null);
+    final rgb = p.rgb;
+    final quick = await Isolate.run(() {
+      if (p.alpha case final a?) return cutGarment(rgb.rgb, rgb.w, rgb.h, a);
+      if (!plainBackground(rgb.rgb, rgb.w, rgb.h)) return null;
+      return cutGarment(rgb.rgb, rgb.w, rgb.h, floodAlpha(rgb.rgb, rgb.w, rgb.h));
+    });
+    if (quick != null && (quick.$1 != null || p.alpha != null)) return (quick.$1, quick.$2, rgb);
+    final alpha = await _frames.modelAlpha(rgb);
+    final (c, problem) = await Isolate.run(() => cutGarment(rgb.rgb, rgb.w, rgb.h, alpha));
+    return (c, problem, rgb);
   }
 }

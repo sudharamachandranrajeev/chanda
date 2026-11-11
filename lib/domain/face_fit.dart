@@ -29,8 +29,9 @@ abstract final class Mesh {
 /// A point on the photo, in pixels.
 typedef Px = Point<double>;
 
-/// A face box from the detector, with its six key points (right eye, left
-/// eye, nose tip, mouth, right ear, left ear) and its score (0-1).
+/// A box from a detector, with its key points and its score (0-1). For a
+/// face: six key points (right eye, left eye, nose tip, mouth, right ear,
+/// left ear); for a body: four (see lib/domain/pose_fit.dart).
 class FaceBox {
   const FaceBox(this.score, this.left, this.top, this.right, this.bottom, this.keypoints);
   final double score, left, top, right, bottom;
@@ -69,17 +70,33 @@ final List<Px> faceAnchors = () {
 /// The faces in the detector's raw output: [regressors] (896×16) and
 /// [logits] (896), kept when their score reaches [minScore]. Coordinates
 /// are 0-1 across the detector's input.
-List<FaceBox> decodeFaces(List<double> regressors, List<double> logits, {double minScore = 0.5}) {
+List<FaceBox> decodeFaces(List<double> regressors, List<double> logits, {double minScore = 0.5}) =>
+    decodeDetections(regressors, logits, faceAnchors, size: 128, keypoints: 6, minScore: minScore);
+
+/// The boxes in a MediaPipe-style detector's raw output: per anchor in
+/// [anchors], a box (centre x, y, width, height) and [keypoints] points in
+/// [regressors] (input pixels, relative to the anchor), and a score logit in
+/// [logits]. Kept when the score reaches [minScore]; 0-1 across the [size]
+/// square input.
+List<FaceBox> decodeDetections(
+  List<double> regressors,
+  List<double> logits,
+  List<Px> anchors, {
+  required int size,
+  required int keypoints,
+  double minScore = 0.5,
+}) {
+  final stride = 4 + 2 * keypoints;
   final out = <FaceBox>[];
-  for (var i = 0; i < faceAnchors.length; i++) {
+  for (var i = 0; i < anchors.length; i++) {
     final score = 1 / (1 + exp(-logits[i].clamp(-100.0, 100.0)));
     if (score < minScore) continue;
-    final a = faceAnchors[i];
-    double r(int k) => regressors[i * 16 + k] / 128;
+    final a = anchors[i];
+    double r(int k) => regressors[i * stride + k] / size;
     final cx = r(0) + a.x, cy = r(1) + a.y, w = r(2), h = r(3);
     out.add(
       FaceBox(score, cx - w / 2, cy - h / 2, cx + w / 2, cy + h / 2, [
-        for (var k = 0; k < 6; k++) Point(r(4 + 2 * k) + a.x, r(5 + 2 * k) + a.y),
+        for (var k = 0; k < keypoints; k++) Point(r(4 + 2 * k) + a.x, r(5 + 2 * k) + a.y),
       ]),
     );
   }
@@ -112,6 +129,11 @@ List<FaceBox> mergeFaces(List<FaceBox> boxes, {double threshold = 0.3}) {
   }
   return out;
 }
+
+/// [rgb] ([w]×[h]) as a [size]×[size] input through [m], 0…1, channels
+/// last: the input of the body and segmentation models.
+Float32List unitInput(Uint8List rgb, int w, int h, Affine m, int size) =>
+    sampleInput(rgb, w, h, m, size, scale: 1 / 255, offset: 0);
 
 /// Maps a model's square input onto the photo: the input pixel (u, v)
 /// (continuous, 0…size) is the photo point (a·u + b·v + c, d·u + e·v + f),
