@@ -9,7 +9,7 @@ import 'chromium.dart';
 /// Chromium, as the in-app browser runs it over a shop's page.
 void main() {
   test(
-    'the evidence script reads drawn prices and picks the product picture',
+    'the evidence script reads drawn prices, picks the product picture and keeps size charts',
     () async {
       final tmp = await Directory.systemTemp.createTemp('chanda_evidence');
       addTearDown(() => tmp.delete(recursive: true));
@@ -32,6 +32,9 @@ void main() {
     <p>In stock. Free delivery.</p>
   </div>
 </div>
+<div style="display:none"><table><tr><th>Size</th><th>Chest (cm)</th><th>Waist (cm)</th></tr>
+<tr><td>S</td><td>86-90</td><td>70-74</td></tr><tr><td>M</td><td>94-98</td><td>78-82</td></tr></table></div>
+<table><tr><td>Delivery</td><td>2 days</td></tr></table>
 <pre id="out"></pre>
 <script>addEventListener('load', () => { document.getElementById('out').textContent = $evidenceScript; });</script>
 </body>''');
@@ -58,6 +61,14 @@ void main() {
       expect(e.images.where((i) => i.endsWith('icon.svg') || i.endsWith('banner.svg')), isEmpty);
       final r = readProduct(e, hint: 'GBP');
       expect((r.price, r.was, r.currency), (4599, 5999, 'GBP'));
+      // The hidden size chart is kept; the delivery table is not.
+      expect(e.tables, [
+        [
+          ['Size', 'Chest (cm)', 'Waist (cm)'],
+          ['S', '86-90', '70-74'],
+          ['M', '94-98', '78-82'],
+        ],
+      ]);
     },
     timeout: const Timeout(Duration(seconds: 90)),
     skip: chromium == null ? 'Chromium is not installed' : null,

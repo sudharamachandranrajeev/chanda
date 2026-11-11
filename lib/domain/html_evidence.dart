@@ -28,6 +28,7 @@ Evidence htmlEvidence(String body, String url) {
       if (s.text.contains('price')) s.text,
     for (final s in doc.querySelectorAll('script:not([src])')) ..._assigned(s.text),
   ];
+  final tables = sizeTables(doc);
   for (final bad in doc.querySelectorAll('script, style, noscript, template')) {
     bad.remove();
   }
@@ -44,6 +45,7 @@ Evidence htmlEvidence(String body, String url) {
     embedded: embedded,
     prices: _pricesAfter(text, h1),
     text: text.length > 8000 ? text.substring(0, 8000) : text,
+    tables: tables,
     check:
         RegExp(
           r'security checks?|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|'
@@ -53,6 +55,35 @@ Evidence htmlEvidence(String body, String url) {
           '${doc.querySelector('title')?.text ?? ''} ${text.length > 2000 ? text.substring(0, 2000) : text}',
         ),
   );
+}
+
+/// Tables in [doc] that look like size charts (they name sizes and a body
+/// measurement), as rows of cell texts; the same as the web view's script
+/// collects.
+List<List<List<String>>> sizeTables(Document doc) {
+  String clip(String s, int n) {
+    final t = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return t.length > n ? t.substring(0, n) : t;
+  }
+
+  final out = <List<List<String>>>[];
+  for (final t in doc.querySelectorAll('table')) {
+    final all = clip(t.text, 4000);
+    if (!RegExp('size', caseSensitive: false).hasMatch(all) ||
+        !RegExp('chest|bust|waist|hip', caseSensitive: false).hasMatch(all)) {
+      continue;
+    }
+    final rows = [
+      for (final r in t.querySelectorAll('tr').take(40))
+        [
+          for (final c in r.children.where((c) => c.localName == 'td' || c.localName == 'th').take(16))
+            clip(c.text, 40),
+        ],
+    ];
+    if (rows.length > 1) out.add(rows);
+    if (out.length >= 6) break;
+  }
+  return out;
 }
 
 /// Loads [url] the plain way, as Chanda (no pretending to be a browser),

@@ -34,6 +34,7 @@ class Evidence {
     this.images = const [],
     this.variant = const {},
     this.text = '',
+    this.tables = const [],
     this.check = false,
     this.drawn = false,
   });
@@ -64,6 +65,11 @@ class Evidence {
 
   /// The page's main text, cut short.
   final String text;
+
+  /// Tables that look like size charts (they name sizes and a body
+  /// measurement), as rows of cell texts; hidden ones too, since shops keep
+  /// their size chart in a pop-up.
+  final List<List<List<String>>> tables;
 
   /// The page is a bot check or "access denied" page.
   final bool check;
@@ -100,6 +106,15 @@ class Evidence {
       images: list(j['images']),
       variant: strings(j['variant']),
       text: '${j['text'] ?? ''}',
+      tables: [
+        if (j['tables'] is List)
+          for (final t in j['tables'] as List)
+            if (t is List)
+              [
+                for (final r in t)
+                  if (r is List) [for (final c in r) '$c'],
+              ],
+      ],
       check: j['check'] == true,
       drawn: j['drawn'] == true,
     );
@@ -813,6 +828,16 @@ const evidenceScript = r'''
     const c = g.querySelector('[aria-checked="true"], [aria-selected="true"]');
     const label = clip(g.getAttribute('aria-label'), 30);
     if (c && /colou?r|size|style|length|fit/i.test(label)) out.variant[label] = clip(c.innerText || c.getAttribute('aria-label') || c.getAttribute('title'), 40);
+  }
+  // Size charts: tables naming sizes and a body measurement, hidden ones
+  // too (shops keep them in a pop-up).
+  out.tables = [];
+  for (const t of document.querySelectorAll('table')) {
+    const all = clip(t.textContent, 4000);
+    if (!/size/i.test(all) || !/chest|bust|waist|hip/i.test(all)) continue;
+    const rows = [...t.rows].slice(0, 40).map((r) => [...r.cells].slice(0, 16).map((c) => clip(c.textContent, 40)));
+    if (rows.length > 1) out.tables.push(rows);
+    if (out.tables.length >= 6) break;
   }
   const main = document.querySelector('main, #dp, [role="main"]') || document.body;
   out.text = main ? main.innerText.slice(0, 8000) : '';
