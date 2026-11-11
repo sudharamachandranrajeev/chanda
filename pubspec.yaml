@@ -10,7 +10,7 @@ dependencies:
   # Shared core of the Brahma apps.
   brahma_core:
     git:
-      url: https://github.com/sudharamachandranrajeev/brahma.git
+      url: https://github.com/sudharamachandranrajeev/brahma-life-suite.git
       path: core
   drift: ^2.35.2
   flutter:

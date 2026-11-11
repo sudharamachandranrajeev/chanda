@@ -2,7 +2,7 @@
 
 - Kit: Studio (`studio`), runtime Flutter
 - Themes: lagoon, daylight, dusk, ember, graphite, ink (default: lagoon)
-- Source: github.com/sudharamachandranrajeev/nithya at `aa2a7df`, 2026-11-09
+- Source: github.com/sudharamachandranrajeev/nithya-design-framework at `aa2a7df`, 2026-11-09
 - Licence: Apache-2.0 (see LICENSE)
 
 This folder is a copy. Change it freely; to take later Nithya changes, pick again into a

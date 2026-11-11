@@ -8,7 +8,7 @@ const chandaIdentity = AppIdentity(
   id: 'chanda',
   name: 'Chanda',
   androidPackage: 'dev.brahma.chanda',
-  releases: 'sudharamachandranrajeev/chanda',
+  releases: 'sudharamachandranrajeev/chanda-shopping-assistant',
 );
 
 /// Everything a running app needs: keys, the encrypted database and the

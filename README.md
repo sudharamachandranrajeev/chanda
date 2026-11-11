@@ -59,7 +59,7 @@ those only while it is open.
 ## 🚀 Get started
 
 Chanda is an alpha: it works, but expect rough edges. Downloads are on the
-[Releases page](https://github.com/sudharamachandranrajeev/chanda/releases).
+[Releases page](https://github.com/sudharamachandranrajeev/chanda-shopping-assistant/releases).
 
 **Android**
 
@@ -95,7 +95,7 @@ Chanda is an alpha: it works, but expect rough edges. Downloads are on the
 
    ```bash
    cd "$(mktemp -d)"
-   url=$(curl -s https://api.github.com/repos/sudharamachandranrajeev/chanda/releases \
+   url=$(curl -s https://api.github.com/repos/sudharamachandranrajeev/chanda-shopping-assistant/releases \
      | grep -o 'https://[^"]*linux-x64\.tar\.gz' | head -n 1)
    curl -LO "$url"
    curl -LO "${url%/*}/SHA256SUMS.txt"
