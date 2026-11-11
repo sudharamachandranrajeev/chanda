@@ -78,7 +78,10 @@ Future<Uint8List?> fetchImage(String? url, {http.Client? client}) async {
 }
 
 /// An item's first picture: the kept copy, else downloaded.
-Future<Uint8List?> firstPicture(String itemId, String? url) async {
-  final kept = await keptImage(itemId, 0);
+Future<Uint8List?> firstPicture(String itemId, String? url) => itemPicture(itemId, 0, url);
+
+/// An item's picture [index] (at [url]): the kept copy, else downloaded.
+Future<Uint8List?> itemPicture(String itemId, int index, String? url) async {
+  final kept = await keptImage(itemId, index);
   return kept != null ? kept.readAsBytes() : fetchImage(url);
 }

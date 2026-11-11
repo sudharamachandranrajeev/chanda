@@ -9,6 +9,7 @@ import 'package:nithya/nithya.dart';
 import '../app/providers.dart';
 import '../db/database.dart';
 import '../domain/checker.dart';
+import '../domain/frame_size.dart';
 import '../domain/images.dart';
 import '../domain/money.dart';
 import '../domain/shops.dart';
@@ -17,6 +18,7 @@ import '../domain/watch.dart';
 import 'browser_page.dart';
 import 'common.dart';
 import 'compare_card.dart';
+import 'glasses_page.dart';
 import 'item_bits.dart';
 import 'look.dart';
 
@@ -232,6 +234,17 @@ class _BodyState extends ConsumerState<_Body> {
                 onPressed: _checking ? null : _checkNow,
               ),
             ),
+            if (isGlasses(
+              title: i.title,
+              tags: i.tags,
+              list: ref.watch(listsProvider).value?.where((l) => l.id == i.listId).firstOrNull?.name ?? '',
+            ))
+              OutlinedButton.icon(
+                icon: const Icon(Icons.face_retouching_natural_outlined),
+                label: const Text('Try on'),
+                onPressed: () =>
+                    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => GlassesPage(i))),
+              ),
           ],
         ),
         if (i.status == 'needs-you' || i.status == 'failed' || i.price == null)

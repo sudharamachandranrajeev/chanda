@@ -14,6 +14,7 @@ import '../domain/taste_store.dart';
 import '../domain/vault.dart';
 import '../ui/common.dart';
 import '../ui/look.dart';
+import '../ui/person_page.dart';
 import 'background.dart';
 import 'providers.dart';
 
@@ -25,6 +26,11 @@ String _smartAbout(int mb) =>
 String _picturesAbout(int mb) =>
     'Search with a photo, find saved things and offers that look alike, and let looks count in your '
     'suggestions. It needs a $mb MB download, once, and then runs on this device: your photos are not sent '
+    'anywhere.';
+
+String tryOnAbout(int mb) =>
+    'See glasses from your vault on a photo of your face, at their real size. It needs a $mb MB download, '
+    'once, and then runs on this device: your photos and sizes stay on it and are never synced or sent '
     'anywhere.';
 
 class SettingsPage extends StatelessWidget {
@@ -39,17 +45,24 @@ class SettingsPage extends StatelessWidget {
       _MoneyCard(),
       _AlertsCard(),
       _BackgroundCard(),
-      _ModelCard(
+      ModelCard(
         provider: smartSearchProvider,
         title: 'Smarter search',
         switchLabel: 'Search by meaning',
         about: _smartAbout,
       ),
-      _ModelCard(
+      ModelCard(
         provider: picturesProvider,
         title: 'Picture search',
         switchLabel: 'Use pictures',
         about: _picturesAbout,
+      ),
+      ModelCard(
+        provider: tryOnProvider,
+        title: 'Try-on',
+        switchLabel: 'Try things on',
+        about: tryOnAbout,
+        extra: _PersonTile(),
       ),
       _TasteCard(),
       _AiCard(),
@@ -61,8 +74,8 @@ class SettingsPage extends StatelessWidget {
             'Chanda loads a shop\'s pages only to show them to you, read a product you save, and check saved '
             'prices. Background checks say they come from Chanda. It fetches exchange rates from the European '
             'Central Bank\'s reference feed (frankfurter.dev) and talks to your sync server only if you sign in. '
-            'Smarter search and picture search download their models from Hugging Face once, if you ask for '
-            'them. With picture search on, Chanda fetches the pictures of things you saved or found to compare '
+            'Smarter search, picture search and try-on download their models from Hugging Face once, if you '
+            'ask for them. With picture search on, Chanda fetches the pictures of things you saved or found to compare '
             'their looks, saying it is Chanda. '
             'When you check a shop, Chanda reads its home page and asks the registry for its web address, '
             'found through IANA\'s public list, when the address was first registered. '
@@ -562,17 +575,22 @@ class _AiCard extends ConsumerWidget {
 }
 
 /// An optional downloaded model: what it does, its download and its switch.
-class _ModelCard extends ConsumerWidget {
-  const _ModelCard({
+class ModelCard extends ConsumerWidget {
+  const ModelCard({
+    super.key,
     required this.provider,
     required this.title,
     required this.about,
     required this.switchLabel,
+    this.extra,
   });
   final AsyncNotifierProvider<DownloadedModel, ModelState> provider;
   final String title;
   final String Function(int mb) about;
   final String switchLabel;
+
+  /// Shown under the download, whether or not it is there.
+  final Widget? extra;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -621,8 +639,27 @@ class _ModelCard extends ConsumerWidget {
               ),
             ),
           ],
+          ?extra,
         ],
       ),
+    );
+  }
+}
+
+/// The person kept for try-on: their photos and sizes.
+class _PersonTile extends ConsumerWidget {
+  const _PersonTile();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final p = ref.watch(personProvider).value;
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: const Icon(Icons.face_outlined),
+      title: const Text('Your photos and sizes'),
+      subtitle: Text(p == null ? 'None kept' : 'Kept on this device only'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PersonPage())),
     );
   }
 }

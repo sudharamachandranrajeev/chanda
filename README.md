@@ -41,6 +41,9 @@ Chanda checks those only while it is open.
   each with the reason. Turn it off, export it, or forget it at any time.
 - 🏬 **Shops like yours** – shops that sell what you save at the prices you pay, with the facts they publish
   about themselves, and a button to add them to your search.
+- 👓 **Try glasses on** – see glasses from your vault on a photo of your face, at their real size, sized from
+  your eyes or the pupil distance you type. It says how sure it is, and says so plainly when it cannot fit
+  them. It never changes your photo. It runs on your device, with an optional download.
 - 🧠 **Smarter search, if you want it** – an optional download that finds things by meaning ("specs" finds
   reading glasses). It runs on your device.
 - 🧾 **What you will really pay** – the delivered total in pounds, with UK VAT and import duty for
@@ -143,6 +146,9 @@ flowchart LR
   device. To compare looks, Chanda fetches the pictures of things you saved or found, saying it is Chanda.
 - When you check a shop, Chanda reads its home page and asks the registry for its web address when it was
   first registered.
+- Try-on downloads its models once, from Hugging Face, only if you ask. Your face and body photos, sizes and
+  pupil distance are kept only after you agree, only on this device, and are never synced or sent anywhere.
+  *Delete my photos and sizes* in Settings removes them from the database file too.
 - Your ratings sync with your vault. Settings can export them to a file, or forget them all.
 - Delete an item and its saved pictures go with it.
 

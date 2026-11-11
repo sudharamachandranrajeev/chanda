@@ -112,6 +112,10 @@ final unseenAlertsProvider = Provider<int>(
 /// The kept copy of an item's picture, if there is one.
 final keptImageProvider = FutureProvider.family<File?, (String, int)>((ref, k) => keptImage(k.$1, k.$2));
 
+/// Loads the bytes of an item's picture (item id, index, web address);
+/// tests swap in their own.
+final itemPictureProvider = Provider<Future<Uint8List?> Function(String, int, String?)>((_) => itemPicture);
+
 /// What the vault shows: one list (null = all), the order, a tag and
 /// the words typed in its search box.
 class VaultView {

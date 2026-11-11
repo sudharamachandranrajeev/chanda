@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:chanda/domain/embeddings.dart';
@@ -7,6 +8,7 @@ import 'package:chanda/domain/face_fit.dart';
 import 'package:chanda/domain/glasses_fit.dart';
 import 'package:chanda/domain/tryon.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 import 'package:integration_test/integration_test.dart';
 
 // Runs the real try-on models on this device. Needs the models downloaded
@@ -98,6 +100,39 @@ void main() {
       expect(cut != null || problem == CutoutProblem.notFront, isTrue, reason: '$problem');
     }
     await cutter.close();
+  });
+
+  testWidgets('the whole fit: a drawn frame on the reference face, at its size', (_) async {
+    if (face.isEmpty) return;
+    final models = await TryOnModels.load(Directory(dir));
+    final f = (await models.faces.find(decodeRgb(await File(face).readAsBytes())!)).single;
+    // A front view of a frame on white, as a shop shows it.
+    final frame = img.Image(width: 640, height: 240)..clear(img.ColorRgb8(255, 255, 255));
+    for (final cx in [170, 470]) {
+      img.drawCircle(frame, x: cx, y: 120, radius: 110, color: img.ColorRgb8(20, 20, 20), antialias: true);
+      img.drawCircle(frame, x: cx, y: 120, radius: 100, color: img.ColorRgb8(20, 20, 20), antialias: true);
+    }
+    img.fillRect(frame, x1: 280, y1: 100, x2: 360, y2: 110, color: img.ColorRgb8(20, 20, 20));
+    final (cut, problem) = await models.frames.cut(img.encodePng(frame));
+    expect(problem, isNull);
+    // Rims from x 60 to 580 and y 10 to 230.
+    expect((cut!.width, cut.height), (521, 221));
+    final scale = faceScale(right: f.rightPupil, left: f.leftPupil, irisPx: f.irisWidth, yaw: f.yaw);
+    final place = placeGlasses(
+      right: f.rightPupil,
+      left: f.leftPupil,
+      pxPerMm: scale.pxPerMm,
+      frameMm: 136,
+      aspect: cut.aspect,
+      yaw: f.yaw,
+      bridgeOffset: f.bridgeOffset,
+    );
+    // 136 mm at the iris scale, a little narrower for the turned head, and
+    // over the eyes.
+    expect(place.width, closeTo(136 * f.irisWidth / irisMm * cos(f.yaw), 0.01));
+    final mid = Point((f.rightPupil.x + f.leftPupil.x) / 2, (f.rightPupil.y + f.leftPupil.y) / 2);
+    expect(place.centre.distanceTo(mid), lessThan(place.width * 0.15));
+    await models.close();
   });
 }
 
