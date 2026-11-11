@@ -12,7 +12,6 @@ import '../app/providers.dart';
 import '../db/database.dart';
 import '../domain/links.dart';
 import '../domain/money.dart';
-import '../domain/offers.dart';
 import '../domain/reading.dart';
 import '../domain/screen_ocr.dart';
 import '../domain/screen_text.dart';
@@ -34,19 +33,33 @@ Future<void> openInApp(BuildContext context, Uri url, {VaultItem? item}) async {
   );
 }
 
-/// Opens [shop]'s search for [words] inside Chanda, for a shop that wants
-/// the user present. The user gets past any check, then presses Add these
-/// results; the offers on the page come back. Null when they just close it
-/// (or the build has no web view and the search opened in the browser).
-Future<List<Offer>?> openSearchInApp(BuildContext context, Shop shop, String words) async {
-  final url = shop.searchFor(words);
-  if (url == null) return null;
-  if (!hasWebView) {
-    await openLink(context, '$url');
-    return null;
+/// Where a shop's page may go next: web pages load in place; Google
+/// sign-in (refused inside apps) and other apps' links go to the system.
+Future<NavigationActionPolicy> routeNavigation(BuildContext context, NavigationAction action) async {
+  final url = action.request.url;
+  if (url == null) return NavigationActionPolicy.ALLOW;
+  final uri = Uri.parse('$url');
+  if (isGoogleSignIn(uri)) {
+    // Google refuses sign-in inside apps' web views.
+    await launchUrl(uri, mode: LaunchMode.externalApplication).catchError((_) => false);
+    if (context.mounted) {
+      showMessage(
+        context,
+        'Google sign-in opened in your browser. Here, sign in to the shop with your email and password instead.',
+      );
+    }
+    return NavigationActionPolicy.CANCEL;
   }
-  return Navigator.of(context)
-      .push<List<Offer>>(MaterialPageRoute(builder: (_) => BrowserPage(url: url, gathers: true)));
+  if (uri.scheme != 'http' &&
+      uri.scheme != 'https' &&
+      uri.scheme != 'about' &&
+      uri.scheme != 'blob' &&
+      uri.scheme != 'data') {
+    // Shop apps, mail and phone links go to the system.
+    await launchUrl(uri, mode: LaunchMode.externalApplication).catchError((_) => false);
+    return NavigationActionPolicy.CANCEL;
+  }
+  return NavigationActionPolicy.ALLOW;
 }
 
 /// A shop's own website inside Chanda. The user signs in, chooses and
@@ -54,12 +67,8 @@ Future<List<Offer>?> openSearchInApp(BuildContext context, Shop shop, String wor
 /// view's store, as any browser does), and reads a page only when asked
 /// to save or update a product. Sign-in and payment pages are never read.
 class BrowserPage extends ConsumerStatefulWidget {
-  const BrowserPage({super.key, required this.url, this.saveOnLoad = false, this.item, this.gathers = false});
+  const BrowserPage({super.key, required this.url, this.saveOnLoad = false, this.item});
   final Uri url;
-
-  /// Opened for a search: the bar offers Add these results, which reads
-  /// the products listed on the page and returns them.
-  final bool gathers;
 
   /// Reads the product as soon as the page has drawn and offers to save it.
   final bool saveOnLoad;
@@ -113,28 +122,6 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
     await showSaveSheet(context, r);
   }
 
-  /// Reads the products listed on the page and hands them back.
-  Future<void> _gather() async {
-    final web = _web;
-    if (web == null || _private) return;
-    setState(() => _reading = true);
-    try {
-      final offers = parseOffers(_shop, '${await web.evaluateJavascript(source: offerScript)}');
-      if (!mounted) return;
-      if (offers.isEmpty) {
-        return showMessage(
-          context,
-          'No products with prices found here yet. Let the results load, then try again.',
-        );
-      }
-      Navigator.pop(context, offers);
-    } on Object catch (e) {
-      if (mounted) showError(context, e);
-    } finally {
-      if (mounted) setState(() => _reading = false);
-    }
-  }
-
   /// Updates the item's price from the page the user is looking at.
   Future<void> _update() async {
     final item = widget.item!;
@@ -159,32 +146,7 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
     }
   }
 
-  Future<NavigationActionPolicy> _route(NavigationAction action) async {
-    final url = action.request.url;
-    if (url == null) return NavigationActionPolicy.ALLOW;
-    final uri = Uri.parse('$url');
-    if (isGoogleSignIn(uri)) {
-      // Google refuses sign-in inside apps' web views.
-      await launchUrl(uri, mode: LaunchMode.externalApplication).catchError((_) => false);
-      if (mounted) {
-        showMessage(
-          context,
-          'Google sign-in opened in your browser. Here, sign in to the shop with your email and password instead.',
-        );
-      }
-      return NavigationActionPolicy.CANCEL;
-    }
-    if (uri.scheme != 'http' &&
-        uri.scheme != 'https' &&
-        uri.scheme != 'about' &&
-        uri.scheme != 'blob' &&
-        uri.scheme != 'data') {
-      // Shop apps, mail and phone links go to the system.
-      await launchUrl(uri, mode: LaunchMode.externalApplication).catchError((_) => false);
-      return NavigationActionPolicy.CANCEL;
-    }
-    return NavigationActionPolicy.ALLOW;
-  }
+  Future<NavigationActionPolicy> _route(NavigationAction action) => routeNavigation(context, action);
 
   Future<bool> _popup(CreateWindowAction action) async {
     // Sign-in windows, a shop's "open in new tab": shown over the page.
@@ -326,8 +288,6 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
                     ? Text(
                         _private
                             ? 'Paying or signing in: Chanda stays out.'
-                            : widget.gathers
-                            ? 'Results at ${_shop.name}'
                             : 'Found something at ${_shop.name}?',
                         style: text.bodyMedium,
                       )
@@ -350,19 +310,7 @@ class _BrowserPageState extends ConsumerState<BrowserPage> {
                         ],
                       ),
               ),
-              if (item == null && widget.gathers) ...[
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.favorite_border),
-                  label: const Text('Save'),
-                  onPressed: _private || _reading ? null : _save,
-                ),
-                const SizedBox(width: 8),
-                FilledButton.icon(
-                  icon: busy ?? const Icon(Icons.playlist_add),
-                  label: const Text('Add these results'),
-                  onPressed: _private || _reading ? null : _gather,
-                ),
-              ] else if (item == null)
+              if (item == null)
                 FilledButton.icon(
                   icon: busy ?? const Icon(Icons.favorite_border),
                   label: const Text('Save'),

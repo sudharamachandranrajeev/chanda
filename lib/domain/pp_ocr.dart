@@ -214,7 +214,15 @@ class PpOcr {
       final classes = _chars.length + 2;
       final (text, conf) = ctcDecode(scores, scores.length ~/ classes, classes, _chars);
       if (text.isNotEmpty && conf >= 0.5) {
-        lines.add(ScreenLine(text, top: boxes[i].top, height: boxes[i].height));
+        lines.add(
+          ScreenLine(
+            text,
+            top: boxes[i].top,
+            height: boxes[i].height,
+            left: boxes[i].left,
+            width: boxes[i].right - boxes[i].left,
+          ),
+        );
       }
     }
     return (lines, prep.h.toDouble());

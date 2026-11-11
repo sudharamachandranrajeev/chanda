@@ -6,12 +6,19 @@ import 'reading.dart';
 // read the text off a screenshot of what the user is looking at. Android
 // only for now (ML Kit, on the device); desktop OCR comes in Phase 3.
 
-/// A line of text read off the screen, with its place and height in pixels.
+/// A line of text read off the screen, with its place and size in pixels.
+/// [left] and [width] are 0 where the reader did not give them.
 class ScreenLine {
-  const ScreenLine(this.text, {required this.top, required this.height});
+  const ScreenLine(this.text, {required this.top, required this.height, this.left = 0, this.width = 0});
   final String text;
   final double top;
   final double height;
+  final double left;
+  final double width;
+
+  double get centreX => left + width / 2;
+  double get centreY => top + height / 2;
+  double get bottom => top + height;
 }
 
 final _notPrice = RegExp(

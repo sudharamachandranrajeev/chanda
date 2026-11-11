@@ -2,6 +2,7 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:chanda/app/app.dart';
 import 'package:chanda/app/providers.dart';
 import 'package:chanda/app/session.dart';
+import 'package:chanda/domain/attributes.dart';
 import 'package:chanda/domain/offers.dart';
 import 'package:chanda/domain/query.dart';
 import 'package:chanda/domain/reading.dart';
@@ -9,6 +10,7 @@ import 'package:chanda/domain/shop_search.dart';
 import 'package:chanda/domain/shops.dart';
 import 'package:chanda/domain/vault.dart';
 import 'package:chanda/domain/web_reader.dart';
+import 'package:chanda/ui/shop_panels.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
@@ -29,6 +31,7 @@ class AppHarness {
   /// Opens the database; [seed] runs before the app starts.
   Future<void> open({Future<void> Function(Vault v)? seed}) async {
     await tester.runAsync(() async {
+      await loadLexicon();
       final store = await Store.open(memoryDatabase());
       session = AppSession(KeyVault(MemorySecretStore(), chandaIdentity), store, Vault(store));
       // A fresh install asks about sync and offers the tour first; tests of
@@ -53,6 +56,7 @@ class AppHarness {
           ...chandaOverrides(session),
           readerProvider.overrideWithValue(TablePageReader(pages)),
           searcherProvider.overrideWithValue(TableSearcher(offers)),
+          panelBuilderProvider.overrideWithValue((context, r) => FakePanel(r)),
           if (ai != null) aiClientProvider.overrideWithValue(ai),
           ...extra,
         ],
@@ -133,7 +137,14 @@ class TableSearcher implements ShopSearcher {
   final Map<String, List<Offer>> offers;
 
   @override
-  bool get available => true;
+  Future<void> prepare(Iterable<Shop> shops) async {}
+
+  @override
+  SearchWay? wayFor(Shop shop) => shop.search == null
+      ? null
+      : shop.userPresent
+      ? SearchWay.needsYou
+      : SearchWay.hidden;
 
   @override
   Future<List<Offer>> search(Shop shop, Query q) async => offers[shop.id] ?? const [];
@@ -158,4 +169,37 @@ Future<void> seedVault(Vault v) async {
     reading(url: 'https://www.shein.co.uk/Skirt-p-123.html', title: 'Pleated midi skirt', price: 1650),
     listId: wish,
   );
+}
+
+/// A shop's live panel without a web view: a button that reads the
+/// products the shop is told to list, as a panel does when the user has
+/// passed the check.
+class FakePanel extends StatelessWidget {
+  const FakePanel(this.request, {super.key});
+  final PanelRequest request;
+
+  static var made = <String>[];
+
+  @override
+  Widget build(BuildContext context) {
+    made.add('${request.shop.id} ${request.url}');
+    return Column(
+      children: [
+        Text('Live page of ${request.shop.name}'),
+        FilledButton(
+          onPressed: () => request.onOffers([
+            Offer(
+              shop: request.shop.id,
+              url: '${request.shop.home}Brass-desk-lamp-p-555.html',
+              title: 'Brass desk lamp from the panel',
+              price: 1999,
+              currency: 'GBP',
+              source: OfferSource.screen,
+            ),
+          ]),
+          child: Text('Pass ${request.shop.name}'),
+        ),
+      ],
+    );
+  }
 }

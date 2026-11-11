@@ -7,6 +7,7 @@ import 'package:nithya/nithya.dart';
 
 import '../app/providers.dart';
 import '../db/database.dart';
+import '../domain/attributes.dart';
 import '../domain/local_search.dart';
 import '../domain/money.dart';
 import '../domain/offers.dart';
@@ -20,12 +21,15 @@ import 'browser_page.dart';
 import 'item_page.dart';
 import 'look.dart';
 import 'photo_search.dart';
+import 'shop_panels.dart';
 import 'vault_page.dart' show ItemCard;
 
-/// One search over the vault and the shops. The words are read into chips
-/// (budget, size, colour, material, shop) the user can tap off; the shops
-/// that allow it are read in the background, three at a time, and the
-/// others open in the browser for the user to add their results.
+/// One search over the vault and the shops, all inside Chanda. The words
+/// are read into chips (budget, size, colour, material, shop, and what the
+/// product should be like) the user can tap off. Shops with a product
+/// search are asked directly, shops whose pages load by themselves are read
+/// in the background, and shops that need a person show up as live panels
+/// below, read as the user uses them. Results stream into one grid.
 class SearchPage extends ConsumerStatefulWidget {
   const SearchPage({super.key, this.initial});
 
@@ -42,6 +46,17 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   var _vault = const <VaultItem>[];
   final _results = <String, ShopResult>{};
 
+  /// Shops shown as live panels: those that need the user, in the order
+  /// they turned up.
+  final _panelShops = <String, Shop>{};
+
+  /// Offers the user's panels read, by shop.
+  final _fromPanels = <String, Map<String, Offer>>{};
+
+  /// How close each offer's title is to the search in meaning (Smarter
+  /// search on).
+  var _meaning = const <String, double>{};
+
   /// Offers found before for these words, shown until the shops answer.
   var _before = const <Offer>[];
   StreamSubscription<ShopResult>? _sub;
@@ -53,6 +68,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(loadLexicon());
     if (widget.initial case final w?) {
       _box.text = w;
       WidgetsBinding.instance.addPostFrameCallback((_) => _submit(w));
@@ -68,6 +84,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
 
   Future<void> _submit(String text) async {
     final home = await ref.read(homeCurrencyProvider.future);
+    await loadLexicon();
     final q = readQuery(text, currency: home);
     if (q.isEmpty) return;
     await _search(q);
@@ -78,6 +95,9 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     setState(() {
       _q = q;
       _results.clear();
+      _panelShops.clear();
+      _fromPanels.clear();
+      _meaning = const {};
     });
     final local = ref.read(localSearchProvider);
     final hits = await local.search(q);
@@ -94,20 +114,44 @@ class _SearchPageState extends ConsumerState<SearchPage> {
     if (!mounted || _q != q) return;
     _sub = searchShops(ref.read(searcherProvider), q, shops).listen((r) async {
       if (r.state == SearchState.done) await local.keepOffers(r.offers, q.raw);
-      if (mounted && _q == q) setState(() => _results[r.shop.id] = r);
+      if (!mounted || _q != q) return;
+      setState(() {
+        _results[r.shop.id] = r;
+        if (r.needsYou || r.state == SearchState.failed) _panelShops.putIfAbsent(r.shop.id, () => r.shop);
+      });
+      if (r.state == SearchState.done) unawaited(_updateMeaning(q));
     });
   }
 
-  /// Opens a shop's search in the browser; what the user adds joins the
-  /// results.
-  Future<void> _open(Shop shop) async {
+  /// What a shop's panel read: shown at once with the rest, and kept (unless
+  /// it was read off the screen). The user got past the shop's check, so the
+  /// shop is tried hidden next time (see [ShopPasses]).
+  Future<void> _fromPanel(Shop shop, List<Offer> offers) async {
     final q = _q;
-    if (q == null) return;
-    final offers = await openSearchInApp(context, shop, q.words);
-    if (offers == null || !mounted) return;
+    if (q == null || !mounted) return;
+    final mine = _fromPanels.putIfAbsent(shop.id, () => {});
+    for (final o in offers) {
+      mine[o.id] = o;
+    }
+    ref.read(shopPassesProvider).passed(shop.id);
+    setState(() => _results[shop.id] = ShopResult(shop, SearchState.done, offers: mine.values.toList()));
     await ref.read(localSearchProvider).keepOffers(offers, q.raw);
-    if (mounted && _q == q) {
-      setState(() => _results[shop.id] = ShopResult(shop, SearchState.done, offers: offers));
+    unawaited(_updateMeaning(q));
+  }
+
+  /// With Smarter search on, scores every offer found by meaning.
+  Future<void> _updateMeaning(Query q) async {
+    final local = ref.read(localSearchProvider);
+    if (local.embedder == null) return;
+    final all = {
+      for (final r in _results.values)
+        for (final o in r.offers) o.id: o,
+    };
+    try {
+      final m = await local.meaningOf(q, all.values);
+      if (mounted && _q == q) setState(() => _meaning = m);
+    } on Object {
+      // Without the meaning score, words and attributes still rank.
     }
   }
 
@@ -148,7 +192,11 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       for (final r in _results.values)
         for (final o in r.offers) o.id: o,
     };
-    final offers = q == null ? const <Offer>[] : _ordered(rankOffers(q, found.values));
+    final ranked = q == null
+        ? const <RankedOffer>[]
+        : rankScored(q, found.values, meaning: _meaning.isEmpty ? null : _meaning);
+    final why = {for (final r in ranked) r.offer.id: r.why};
+    final offers = _ordered([for (final r in ranked) r.offer]);
     final tasteOn = ref.watch(tasteOnProvider).value ?? false;
     return PageScaffold(
       title: 'Search',
@@ -176,7 +224,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
         if (q != null && q.vague) _Vague(currency: q.currency, onAdd: _add),
         if (q != null) ...[
           const SizedBox(height: 16),
-          _ShopStates(results: _results, onOpen: _open),
+          _ShopStates(results: _results),
           if (_vault.isNotEmpty) ...[
             const SizedBox(height: 16),
             ResultHeading('In your vault', '${_vault.length}'),
@@ -216,12 +264,20 @@ class _SearchPageState extends ConsumerState<SearchPage> {
               child: Text(
                 _results.values.any((r) => r.state == SearchState.searching || r.state == SearchState.waiting)
                     ? 'Searching…'
-                    : 'Nothing found yet. Open a shop above to search it yourself.',
+                    : _panelShops.isNotEmpty
+                    ? 'Nothing found yet. The shops below need you: pass their check there and the results join here.'
+                    : 'Nothing found. Try fewer words, or take a chip off.',
                 style: TextStyle(color: muted(context)),
               ),
             )
           else
-            ResultGrid(children: [for (final o in offers) SizedBox(height: 300, child: OfferCard(o))]),
+            ResultGrid(
+              children: [for (final o in offers) SizedBox(height: 330, child: OfferCard(o, why: why[o.id]))],
+            ),
+          if (_panelShops.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            ShopPanels(shops: _panelShops.values.toList(), query: q, results: _results, onOffers: _fromPanel),
+          ],
         ],
       ],
     );
@@ -315,6 +371,7 @@ IconData _facetIcon(String kind) => switch (kind) {
   'size' => Icons.straighten,
   'colour' => Icons.palette_outlined,
   'material' => Icons.texture,
+  'attribute' => Icons.tune,
   _ => Icons.storefront_outlined,
 };
 
@@ -392,11 +449,11 @@ class _Vague extends StatelessWidget {
   }
 }
 
-/// Each shop's search: going, done (how many), or waiting for the user.
+/// Each shop's search: going, done (how many), or failed. Shops that need
+/// the user have their panel below instead.
 class _ShopStates extends StatelessWidget {
-  const _ShopStates({required this.results, required this.onOpen});
+  const _ShopStates({required this.results});
   final Map<String, ShopResult> results;
-  final ValueChanged<Shop> onOpen;
 
   @override
   Widget build(BuildContext context) => Wrap(
@@ -409,28 +466,20 @@ class _ShopStates extends StatelessWidget {
             avatar: const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
             label: Text(r.shop.name),
           ),
-          SearchState.done => ActionChip(
+          SearchState.done => Chip(
             avatar: const Icon(Icons.check, size: 16, color: drop),
             label: Text('${r.shop.name} · ${r.offers.length}'),
-            tooltip: 'Open the search at ${r.shop.name}',
-            onPressed: () => onOpen(r.shop),
           ),
-          SearchState.check => ActionChip(
-            avatar: const Icon(Icons.verified_user_outlined, size: 16),
-            label: Text('${r.shop.name}: open to pass its check'),
-            onPressed: () => onOpen(r.shop),
+          SearchState.check || SearchState.needsYou => Chip(
+            avatar: const Icon(Icons.person_outline, size: 16),
+            label: Text('${r.shop.name}: needs you'),
           ),
-          SearchState.inBrowser => ActionChip(
-            avatar: const Icon(Icons.open_in_new, size: 16),
-            label: Text('Search ${r.shop.name}'),
-            tooltip: '${r.shop.name} shows results only to a visitor in person',
-            onPressed: () => onOpen(r.shop),
-          ),
-          SearchState.failed => ActionChip(
-            avatar: const Icon(Icons.error_outline, size: 16),
-            label: Text('${r.shop.name}: try in browser'),
-            tooltip: r.error,
-            onPressed: () => onOpen(r.shop),
+          SearchState.failed => Tooltip(
+            message: r.error,
+            child: Chip(
+              avatar: const Icon(Icons.error_outline, size: 16),
+              label: Text('${r.shop.name}: not this time'),
+            ),
           ),
         },
     ],
@@ -477,8 +526,11 @@ class ResultGrid extends StatelessWidget {
 /// A product a shop listed: picture, shop, name, price, rating, and Save
 /// (which opens the product and reads it, as saving from a shop does).
 class OfferCard extends StatelessWidget {
-  const OfferCard(this.offer, {super.key, this.footer});
+  const OfferCard(this.offer, {super.key, this.footer, this.why});
   final Offer offer;
+
+  /// What matched the search (attributes, then words): "why this matched".
+  final List<String>? why;
 
   /// Under the price, in place of the rating (the compare view's buttons).
   final Widget? footer;
@@ -555,9 +607,23 @@ class OfferCard extends StatelessWidget {
                           if (o.rating != null) '★ ${o.rating!.toStringAsFixed(1)}',
                           if (o.reviews != null) '(${o.reviews})',
                           if (!o.inStock) 'Out of stock',
+                          if (o.source == OfferSource.screen) 'Read from screen: check the price',
                         ].join(' '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: text.bodySmall?.copyWith(color: p.muted),
                       ),
+                  if (why != null && why!.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: Text(
+                        'Matches: ${why!.join(', ')}',
+                        key: const ValueKey('why'),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.bodySmall?.copyWith(color: NithyaAccent.primary),
+                      ),
+                    ),
                 ],
               ),
             ),

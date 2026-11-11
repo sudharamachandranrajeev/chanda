@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
+import 'dart:math';
 
 import 'package:chanda/domain/compare.dart';
 import 'package:chanda/domain/embeddings.dart';
@@ -12,6 +12,7 @@ import 'package:chanda/domain/query.dart';
 import 'package:chanda/domain/shop_search.dart';
 import 'package:chanda/domain/shops.dart';
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -445,34 +446,73 @@ void main() {
   });
 
   group('searching shops', () {
-    test('three at a time; walled shops go to the browser; checks are reported', () async {
+    test(
+      'pages two at a time, apps\' search apart; walled shops need the user; checks are reported',
+      () async {
+        final s = _FakeSearcher();
+        final states = <String>[];
+        final done = searchShops(s, readQuery('lamp'), [
+          ...shops,
+          Shop(
+            id: 'a.co.uk',
+            name: 'A',
+            domains: const ['a.co.uk'],
+            home: 'https://a.co.uk/',
+            currency: 'GBP',
+            search: 'https://a.co.uk/s?q={q}',
+          ),
+          Shop(
+            id: 'b.co.uk',
+            name: 'B',
+            domains: const ['b.co.uk'],
+            home: 'https://b.co.uk/',
+            currency: 'GBP',
+            search: 'https://b.co.uk/s?q={q}',
+          ),
+        ], hidden: 2).listen((r) => states.add('${r.shop.id}:${r.state.name}'));
+        await done.asFuture<void>();
+        expect(s.most, {SearchWay.hidden: 2, SearchWay.api: 1});
+        for (final walled in ['shein', 'temu']) {
+          expect(states, contains('$walled:needsYou'));
+        }
+        expect(states.where((e) => e.startsWith('hacoo')), isEmpty, reason: 'Hacoo has no web search');
+        expect(states, containsAll(['amazon-uk:done', 'aliexpress:check', 'a.co.uk:done', 'b.co.uk:failed']));
+      },
+    );
+
+    test('two hidden pages at once on a computer, one on a phone', () {
+      addTearDown(() => debugDefaultTargetPlatformOverride = null);
+      debugDefaultTargetPlatformOverride = TargetPlatform.linux;
+      expect(hiddenAtOnce, 2);
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      expect(hiddenAtOnce, 1);
+    });
+
+    test('one page at a time when asked (a phone)', () async {
       final s = _FakeSearcher();
-      final states = <String>[];
-      final done = searchShops(s, readQuery('lamp'), [
-        ...shops,
-        Shop(
-          id: 'a.co.uk',
-          name: 'A',
-          domains: const ['a.co.uk'],
-          home: 'https://a.co.uk/',
-          currency: 'GBP',
-          search: 'https://a.co.uk/s?q={q}',
-        ),
-        Shop(
-          id: 'b.co.uk',
-          name: 'B',
-          domains: const ['b.co.uk'],
-          home: 'https://b.co.uk/',
-          currency: 'GBP',
-          search: 'https://b.co.uk/s?q={q}',
-        ),
-      ]).listen((r) => states.add('${r.shop.id}:${r.state.name}'));
-      await done.asFuture<void>();
-      expect(s.most, 3);
-      for (final walled in ['shein', 'temu', 'hacoo']) {
-        expect(states, contains('$walled:inBrowser'));
-      }
-      expect(states, containsAll(['amazon-uk:done', 'aliexpress:check', 'a.co.uk:done', 'b.co.uk:failed']));
+      await searchShops(s, readQuery('lamp'), shops, hidden: 1).drain<void>();
+      expect(s.most[SearchWay.hidden], 1);
+    });
+
+    test('a pass in a panel lets the shop be tried hidden until its first wall', () {
+      final p = ShopPasses();
+      expect(p.tryHidden('temu'), isFalse);
+      p.passed('temu');
+      expect(p.tryHidden('temu'), isTrue);
+      p.walled('temu');
+      expect(p.tryHidden('temu'), isFalse);
+      p.passed('temu');
+      expect(p.tryHidden('temu'), isFalse, reason: 'once per session');
+      p.walled('shein');
+      p.passed('shein');
+      expect(p.tryHidden('shein'), isTrue, reason: 'a wall before any pass does not count');
+    });
+
+    test('reading stops once the tile count holds', () {
+      final w = TileWatch();
+      expect([0, 0, 12, 30, 48, 48].map(w.add), [false, false, false, false, false, true]);
+      final empty = TileWatch(reads: 4);
+      expect([0, 0, 0, 0].map(empty.add), [false, false, false, true]);
     });
 
     test('a named shop is the only one searched', () async {
@@ -487,17 +527,27 @@ void main() {
 }
 
 class _FakeSearcher implements ShopSearcher {
-  int running = 0, most = 0;
+  final running = <SearchWay, int>{}, most = <SearchWay, int>{};
 
   @override
-  bool get available => true;
+  Future<void> prepare(Iterable<Shop> shops) async {}
+
+  @override
+  SearchWay? wayFor(Shop shop) => shop.search == null
+      ? null
+      : shop.userPresent
+      ? SearchWay.needsYou
+      : shop.id == 'a.co.uk'
+      ? SearchWay.api
+      : SearchWay.hidden;
 
   @override
   Future<List<Offer>> search(Shop shop, Query q) async {
-    running++;
-    if (running > most) most = running;
+    final way = wayFor(shop)!;
+    running[way] = (running[way] ?? 0) + 1;
+    most[way] = max(most[way] ?? 0, running[way]!);
     await Future<void>.delayed(const Duration(milliseconds: 20));
-    running--;
+    running[way] = running[way]! - 1;
     return switch (shop.id) {
       'aliexpress' => throw const ShopCheck('AliExpress'),
       'b.co.uk' => throw StateError('offline'),

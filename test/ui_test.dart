@@ -18,6 +18,7 @@ import 'package:chanda/ui/photo_search.dart';
 import 'package:chanda/ui/save_flow.dart';
 import 'package:chanda/ui/vault_page.dart' show ItemCard;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
@@ -167,6 +168,10 @@ void main() {
     );
     expect(find.text('AI try-on'), findsOneWidget);
     expect(find.text('Add key'), findsNWidgets(4));
+    // eBay search: off until the user adds their own keys, which stay on this device.
+    await tester.scrollUntilVisible(find.text('eBay search'), 300, scrollable: find.byType(Scrollable).first);
+    expect(find.text('Add keys'), findsOneWidget);
+    expect(find.text('No keys'), findsOneWidget);
     expect(find.text('No key'), findsNWidgets(3));
     expect(
       tester
@@ -382,13 +387,99 @@ void main() {
     expect(find.text('Brass desk lamp'), findsOneWidget);
     expect(find.text('Brass desk lamp, LED'), findsOneWidget);
     expect(find.text('Marble desk lamp'), findsNothing, reason: 'over budget');
-    expect(find.text('Search Shein'), findsOneWidget, reason: 'walled shops open in the browser');
+    expect(
+      find.text('Shops that need you'),
+      findsOneWidget,
+      reason: 'walled shops get live panels in Search',
+    );
+    expect(find.text('Shein'), findsOneWidget);
+    expect(find.text('Temu'), findsOneWidget);
+    expect(find.text('Live page of Shein'), findsOneWidget);
+    expect(find.text('Live page of Temu'), findsNothing, reason: 'one panel alive at a time');
+    expect(find.text('Add these results'), findsNothing);
+    expect(find.text('Hacoo'), findsNothing, reason: 'Hacoo has no web search');
 
     // Tapping the budget off widens it.
     await app.tap(find.byTooltip('Remove'));
     await app.settle();
     expect(find.text('Marble desk lamp'), findsOneWidget);
     expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
+  testWidgets(
+    'a panel\'s products join the results, say how they were read, and the shop is tried hidden next',
+    (tester) async {
+      final app = AppHarness(tester)..desktop();
+      await app.open();
+      await app.run(
+        offers: {
+          'amazon-uk': const [
+            Offer(
+              shop: 'amazon-uk',
+              url: 'https://www.amazon.co.uk/dp/B0LAMP0001',
+              title: 'Brass desk lamp, LED',
+              price: 2999,
+              currency: 'GBP',
+            ),
+          ],
+        },
+      );
+      await app.go('Search');
+      await tester.enterText(find.byType(TextField).first, 'brass desk lamp');
+      await app.tap(find.widgetWithText(FilledButton, 'Search'));
+      await app.settle();
+      expect(find.text('Brass desk lamp from the panel'), findsNothing);
+      final container = ProviderScope.containerOf(tester.element(find.byType(ChandaApp)));
+      expect(container.read(shopPassesProvider).tryHidden('shein'), isFalse);
+
+      await app.tapText('Pass Shein');
+      expect(find.text('Brass desk lamp from the panel'), findsOneWidget);
+      expect(find.text('Brass desk lamp, LED'), findsOneWidget);
+      expect(find.textContaining('Read from screen'), findsOneWidget);
+      expect(find.text('Shein · 1'), findsWidgets);
+      expect(container.read(shopPassesProvider).tryHidden('shein'), isTrue);
+
+      // Another tab: the first panel stays for a minute, the second shows.
+      await app.tapText('Temu');
+      expect(find.text('Live page of Temu'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await app.close();
+    },
+  );
+
+  testWidgets('a result card says why it matched', (tester) async {
+    final app = AppHarness(tester)..desktop();
+    await app.open();
+    await app.run(
+      offers: {
+        'amazon-uk': const [
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0SHOE0001',
+            title: 'Trail walking shoes, slip on',
+            price: 4999,
+            currency: 'GBP',
+          ),
+          Offer(
+            shop: 'amazon-uk',
+            url: 'https://www.amazon.co.uk/dp/B0SHOE0002',
+            title: 'Walking shoes',
+            price: 3999,
+            currency: 'GBP',
+          ),
+        ],
+      },
+    );
+    await app.go('Search');
+    await tester.enterText(find.byType(TextField).first, 'walking shoes for all terrains, easy slip in');
+    await app.tap(find.widgetWithText(FilledButton, 'Search'));
+    await app.settle();
+    expect(find.text('All-terrain'), findsOneWidget, reason: 'a chip for what was asked');
+    expect(find.text('Slip-on'), findsOneWidget);
+    expect(find.text('Trail walking shoes, slip on'), findsOneWidget);
+    expect(find.text('Walking shoes'), findsOneWidget, reason: 'the old two-thirds rule dropped these');
+    expect(find.textContaining('Matches: All-terrain, Slip-on'), findsOneWidget);
     await app.close();
   });
 

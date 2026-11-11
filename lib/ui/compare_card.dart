@@ -16,7 +16,8 @@ import '../domain/shop_search.dart';
 import '../domain/shops.dart';
 import '../domain/vault.dart' show imagesOf;
 import '../domain/watch.dart';
-import 'browser_page.dart';
+import 'browser_page.dart' show openInApp;
+import 'search_page.dart' show SearchPage;
 import 'look.dart';
 
 /// The item at other shops: find it, confirm what is the same product, and
@@ -50,7 +51,7 @@ class _CompareCardState extends ConsumerState<CompareCard> {
     try {
       await for (final r in searchShops(ref.read(searcherProvider), q, shops.where((s) => s.id != i.shop))) {
         if (r.state == SearchState.done) await local.keepOffers(r.offers, q.raw);
-        if (r.state == SearchState.inBrowser ||
+        if (r.state == SearchState.needsYou ||
             r.state == SearchState.check ||
             r.state == SearchState.failed) {
           _walled.add(r.shop);
@@ -63,13 +64,13 @@ class _CompareCardState extends ConsumerState<CompareCard> {
     }
   }
 
-  Future<void> _openWalled(Shop s) async {
-    final offers = await openSearchInApp(context, s, _words);
-    if (offers == null) return;
-    await ref.read(localSearchProvider).keepOffers(offers, _words);
+  /// The shops that need a person are searched in Search, where their live
+  /// panels are, with this item's words.
+  Future<void> _openWalled() async {
+    await Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => SearchPage(initial: _words)));
     await _hashPictures();
     ref.read(revisionProvider.notifier).bump();
-    if (mounted) setState(() => _walled.remove(s));
+    if (mounted) setState(_walled.clear);
   }
 
   /// Picture fingerprints for the item and for up to a dozen candidates
@@ -281,9 +282,10 @@ class _CompareCardState extends ConsumerState<CompareCard> {
                 children: [
                   for (final s in _walled)
                     ActionChip(
-                      avatar: const Icon(Icons.open_in_new, size: 16),
-                      label: Text('Search ${s.name}'),
-                      onPressed: () => _openWalled(s),
+                      avatar: const Icon(Icons.person_outline, size: 16),
+                      label: Text('${s.name} needs you'),
+                      tooltip: 'Search ${s.name} in Search, where you can pass its check',
+                      onPressed: _openWalled,
                     ),
                 ],
               ),

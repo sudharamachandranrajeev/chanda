@@ -17,8 +17,8 @@ const chandaHints = <String, String>{
       'device like a browser does and never sees your password. Payment and sign-in pages are never read.',
   'page.search':
       'Type what you want: "black linen shirt size M under £30". Budget, size, colour, material and shop become '
-      'chips you can tap off. Chanda searches your vault and the shops that allow it; the others open in the '
-      'browser, where you press Add these results.',
+      'chips you can tap off. Chanda searches your vault and the shops; those that need a person show their '
+      'page below, and what you see there joins the results.',
   'action.compare':
       'Offers found at other shops for this item. Chanda marks the same product only when the barcode or '
       'brand and model number agree, never across sizes or colours. Anything less certain asks you once.',
