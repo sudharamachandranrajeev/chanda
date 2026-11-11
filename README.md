@@ -76,6 +76,37 @@ Chanda is an alpha: it works, but expect rough edges. Downloads are on the
 4. This download opens shops in your normal browser. For the in-app browser, build from source on a
    system with WPE WebKit (see [For developers](#%EF%B8%8F-for-developers)).
 
+**Arch Linux or Omarchy, from the terminal**
+
+1. Install what Chanda needs (Omarchy already has most of it):
+
+   ```bash
+   sudo pacman -S --needed gtk3 libsecret gnome-keyring curl
+   ```
+
+2. Download the newest Linux release and its checksums, and check them:
+
+   ```bash
+   cd "$(mktemp -d)"
+   url=$(curl -s https://api.github.com/repos/sudharamachandranrajeev/chanda/releases \
+     | grep -o 'https://[^"]*linux-x64\.tar\.gz' | head -n 1)
+   curl -LO "$url"
+   curl -LO "${url%/*}/SHA256SUMS.txt"
+   sha256sum -c --ignore-missing SHA256SUMS.txt
+   ```
+
+3. Unpack it and add Chanda to your app menu (no root needed):
+
+   ```bash
+   tar xzf Chanda-*-linux-x64.tar.gz
+   ./chanda-*-linux-x64/install.sh
+   ```
+
+4. Open Chanda from your app menu (on Omarchy, press <kbd>Super</kbd> + <kbd>Space</kbd> and type
+   "Chanda"), or run `chanda` in a terminal. If `chanda` is not found, add `~/.local/bin` to your `PATH`.
+5. To update, repeat steps 2 and 3. To remove it, run `./chanda-*-linux-x64/install.sh --uninstall`
+   from the folder you unpacked into. Your data stays.
+
 Each release lists SHA-256 checksums in `SHA256SUMS.txt`, if you want to check your download.
 
 ## 🧭 How it works
