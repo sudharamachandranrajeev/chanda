@@ -12,6 +12,7 @@ import '../domain/local_search.dart';
 import '../domain/money.dart';
 import '../domain/offers.dart';
 import '../domain/query.dart';
+import '../domain/reranker.dart';
 import '../domain/shop_search.dart';
 import '../domain/shops.dart';
 import '../domain/similar_shops.dart';
@@ -57,6 +58,10 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   /// search on).
   var _meaning = const <String, double>{};
 
+  /// The ranking model's score for each offer it read (Sharper ranking on).
+  var _sharper = const <String, double>{};
+  var _sharpening = false;
+
   /// Offers found before for these words, shown until the shops answer.
   var _before = const <Offer>[];
   StreamSubscription<ShopResult>? _sub;
@@ -98,6 +103,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       _panelShops.clear();
       _fromPanels.clear();
       _meaning = const {};
+      _sharper = const {};
     });
     final local = ref.read(localSearchProvider);
     final hits = await local.search(q);
@@ -142,7 +148,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   /// With Smarter search on, scores every offer found by meaning.
   Future<void> _updateMeaning(Query q) async {
     final local = ref.read(localSearchProvider);
-    if (local.embedder == null) return;
+    if (local.embedder == null) return _sharpen(q);
     final all = {
       for (final r in _results.values)
         for (final o in r.offers) o.id: o,
@@ -152,6 +158,45 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       if (mounted && _q == q) setState(() => _meaning = m);
     } on Object {
       // Without the meaning score, words and attributes still rank.
+    }
+    await _sharpen(q);
+  }
+
+  /// The offers found so far, ranked by attributes, words and meaning.
+  List<RankedOffer> _ranked(Query q) {
+    final found = {
+      for (final o in _before) o.id: o,
+      for (final r in _results.values)
+        for (final o in r.offers) o.id: o,
+    };
+    return rankScored(q, found.values, meaning: _meaning.isEmpty ? null : _meaning);
+  }
+
+  /// With Sharper ranking on, scores the best matches it has not read yet.
+  /// One run at a time; a run that finds new offers at the top goes again.
+  Future<void> _sharpen(Query q) async {
+    if (_sharpening) return;
+    // Taken before the first wait, so a second call cannot start a run too.
+    _sharpening = true;
+    try {
+      final model = await ref.read(rerankerProvider.future).catchError((_) => null);
+      while (model != null && mounted && _q == q) {
+        final todo = [
+          for (final r in _ranked(q).take(rerankTop))
+            if (!_sharper.containsKey(r.offer.id)) r.offer,
+        ];
+        if (todo.isEmpty) break;
+        final scores = await model.score(rerankQuery(q.shopWords(), q.words), [
+          for (final o in todo) o.title,
+        ]);
+        if (!mounted || _q != q) break;
+        setState(() => _sharper = {..._sharper, for (var i = 0; i < todo.length; i++) todo[i].id: scores[i]});
+      }
+    } on Object catch (e) {
+      // Without the model, the usual ranking stands.
+      debugPrint('Chanda: sharper ranking failed: $e');
+    } finally {
+      _sharpening = false;
     }
   }
 
@@ -187,14 +232,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
   @override
   Widget build(BuildContext context) {
     final q = _q;
-    final found = {
-      for (final o in _before) o.id: o,
-      for (final r in _results.values)
-        for (final o in r.offers) o.id: o,
-    };
-    final ranked = q == null
-        ? const <RankedOffer>[]
-        : rankScored(q, found.values, meaning: _meaning.isEmpty ? null : _meaning);
+    final ranked = q == null ? const <RankedOffer>[] : rerank(_ranked(q), _sharper);
     final why = {for (final r in ranked) r.offer.id: r.why};
     final offers = _ordered([for (final r in ranked) r.offer]);
     final tasteOn = ref.watch(tasteOnProvider).value ?? false;

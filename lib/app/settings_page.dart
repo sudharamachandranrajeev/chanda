@@ -30,6 +30,11 @@ String _picturesAbout(int mb) =>
     'suggestions. It needs a $mb MB download, once, and then runs on this device: your photos are not sent '
     'anywhere.';
 
+String _sharperAbout(int mb) =>
+    'Reads your search and each product name together and puts the closest fits first. It reorders only the '
+    'best matches, after the usual sorting, so a search takes a moment longer. It needs a $mb MB download, '
+    'once, and then runs on this device: your searches are not sent anywhere.';
+
 String tryOnAbout(int mb) =>
     'See glasses from your vault on a photo of your face, at their real size, and clothes on a photo of your '
     'whole body, never made slimmer. It needs a $mb MB download, once, and then runs on this device: your '
@@ -52,6 +57,12 @@ class SettingsPage extends StatelessWidget {
         title: 'Smarter search',
         switchLabel: 'Search by meaning',
         about: _smartAbout,
+      ),
+      ModelCard(
+        provider: sharperRankingProvider,
+        title: 'Sharper ranking',
+        switchLabel: 'Reorder the best matches',
+        about: _sharperAbout,
       ),
       ModelCard(
         provider: picturesProvider,

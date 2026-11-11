@@ -23,6 +23,7 @@ import '../domain/notify.dart';
 import '../domain/people.dart';
 import '../domain/picture_index.dart';
 import '../domain/pictures.dart';
+import '../domain/reranker.dart';
 import '../domain/shop_api.dart';
 import '../domain/shop_search.dart';
 import '../domain/shops.dart';
@@ -375,6 +376,11 @@ final smartSearchProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
   () => DownloadedModel(smartSearchSetting, modelFiles, 'minilm-faf4aa4'),
 );
 
+/// "Sharper ranking": the model that reorders the best matches.
+final sharperRankingProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
+  () => DownloadedModel(sharperRankingSetting, rerankFiles, 'mxbai-rerank-b5c6e9d'),
+);
+
 /// "Picture search": the picture model.
 final picturesProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
   () => DownloadedModel(pictureSetting, pictureFiles, 'fashion-siglip-c56244c'),
@@ -428,6 +434,21 @@ final embedderProvider = FutureProvider<Embedder?>((ref) async {
     return e;
   } on Object catch (e) {
     debugPrint('Chanda: could not load the search model: $e');
+    return null;
+  }
+});
+
+/// The reranking model, loaded while sharper ranking is on; tests swap in
+/// fakes.
+final rerankerProvider = FutureProvider<Reranker?>((ref) async {
+  final on = await ref.watch(sharperRankingProvider.selectAsync((s) => s.on));
+  if (!on) return null;
+  try {
+    final r = await OnnxReranker.load(await ref.read(sharperRankingProvider.notifier).dir());
+    ref.onDispose(r.close);
+    return r;
+  } on Object catch (e) {
+    debugPrint('Chanda: could not load the ranking model: $e');
     return null;
   }
 });
