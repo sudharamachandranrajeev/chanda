@@ -17,6 +17,7 @@ import '../domain/images.dart';
 import '../domain/local_search.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
+import '../domain/people.dart';
 import '../domain/picture_index.dart';
 import '../domain/pictures.dart';
 import '../domain/shop_search.dart';
@@ -24,6 +25,7 @@ import '../domain/shops.dart';
 import '../domain/similar_shops.dart';
 import '../domain/taste.dart';
 import '../domain/taste_store.dart';
+import '../domain/tryon.dart';
 import '../domain/vault.dart';
 import '../domain/web_reader.dart';
 import '../ui/hints.dart';
@@ -307,6 +309,44 @@ final smartSearchProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
 final picturesProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
   () => DownloadedModel(pictureSetting, pictureFiles, 'fashion-siglip-c56244c'),
 );
+
+/// "Try-on": the face, body and cut-out models.
+final tryOnProvider = AsyncNotifierProvider<DownloadedModel, ModelState>(
+  () => DownloadedModel(tryOnSetting, tryOnFiles, 'tryon-v1'),
+);
+
+/// The try-on models, loaded while try-on is downloaded and on; tests swap
+/// in fakes.
+final tryOnModelsProvider = FutureProvider<TryOnModels?>((ref) async {
+  final on = await ref.watch(tryOnProvider.selectAsync((s) => s.on));
+  if (!on) return null;
+  try {
+    final m = await TryOnModels.load(await ref.read(tryOnProvider.notifier).dir());
+    ref.onDispose(m.close);
+    return m;
+  } on Object catch (e) {
+    debugPrint('Chanda: could not load the try-on models: $e');
+    return null;
+  }
+});
+
+// ---- people (try-on) ----
+
+/// Bumped after any change to the saved people.
+final peopleRevisionProvider = NotifierProvider<Revision, int>(Revision.new);
+
+final peopleProvider = Provider<People>((ref) => People(ref.watch(sessionProvider).db));
+
+/// The one saved person the app shows today, if any.
+final personProvider = FutureProvider<Person?>((ref) {
+  ref.watch(peopleRevisionProvider);
+  return ref.watch(peopleProvider).first();
+});
+
+final personThumbsProvider = FutureProvider.family<Map<PhotoKind, Uint8List>, String>((ref, id) {
+  ref.watch(peopleRevisionProvider);
+  return ref.watch(peopleProvider).thumbs(id);
+});
 
 /// The meaning model, loaded while smarter search is on.
 final embedderProvider = FutureProvider<Embedder?>((ref) async {
