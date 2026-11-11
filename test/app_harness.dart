@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:brahma_core/brahma_core.dart';
 import 'package:chanda/app/app.dart';
 import 'package:chanda/app/providers.dart';
@@ -16,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 
 import 'support.dart';
 
@@ -43,11 +46,13 @@ class AppHarness {
   }
 
   /// [offers]: what each shop's search lists, by shop id (others list
-  /// nothing).
+  /// nothing). [fx] answers exchange-rate requests ([fakeRates] by default:
+  /// no test reaches the network).
   Future<void> run({
     Map<String, Evidence> pages = const {},
     Map<String, List<Offer>> offers = const {},
     http.Client? ai,
+    http.Client? fx,
     List<Override> extra = const [],
   }) async {
     await tester.pumpWidget(
@@ -58,6 +63,7 @@ class AppHarness {
           searcherProvider.overrideWithValue(TableSearcher(offers)),
           panelBuilderProvider.overrideWithValue((context, r) => FakePanel(r)),
           if (ai != null) aiClientProvider.overrideWithValue(ai),
+          fxClientProvider.overrideWithValue(fx ?? fakeRates()),
           ...extra,
         ],
         retry: (_, _) => null,
@@ -203,3 +209,20 @@ class FakePanel extends StatelessWidget {
     );
   }
 }
+
+/// An exchange-rate service that answers every base with the same two rates,
+/// dated today; [asked] collects the requests.
+MockClient fakeRates({List<Uri>? asked}) => MockClient((r) async {
+  asked?.add(r.url);
+  final base = r.url.queryParameters['base'] ?? 'EUR';
+  final day = DateTime.now().toUtc().toIso8601String().substring(0, 10);
+  return http.Response(
+    jsonEncode({
+      'amount': 1.0,
+      'base': base,
+      'date': day,
+      'rates': {'EUR': 1.2, 'USD': 1.3},
+    }),
+    200,
+  );
+});

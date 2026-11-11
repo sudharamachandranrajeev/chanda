@@ -190,6 +190,9 @@ final importRulesProvider = FutureProvider<UkImportRules>((ref) async {
   );
 });
 
+/// The HTTP client for exchange rates; tests swap in a fake service.
+final fxClientProvider = Provider<http.Client?>((_) => null);
+
 /// Exchange rates into the home currency: the copy kept on this device,
 /// refreshed once a day. Without a network the kept copy stands (its date
 /// is shown wherever it is used).
@@ -203,7 +206,7 @@ final fxProvider = FutureProvider<FxRates?>((ref) async {
     return kept;
   }
   try {
-    final fresh = await FxRates.fetch(home);
+    final fresh = await FxRates.fetch(home, client: ref.watch(fxClientProvider));
     await db.setLocalSetting(fxSetting, jsonEncode(fresh.toJson()));
     return fresh;
   } on Object catch (e) {
