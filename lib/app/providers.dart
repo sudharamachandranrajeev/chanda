@@ -13,6 +13,8 @@ import '../db/database.dart';
 import '../domain/ai_reader.dart';
 import '../domain/checker.dart';
 import '../domain/cloud_tryon.dart';
+import '../domain/app_searcher.dart';
+import '../domain/ebay_api.dart';
 import '../domain/embeddings.dart';
 import '../domain/images.dart';
 import '../domain/local_search.dart';
@@ -21,6 +23,7 @@ import '../domain/notify.dart';
 import '../domain/people.dart';
 import '../domain/picture_index.dart';
 import '../domain/pictures.dart';
+import '../domain/shop_api.dart';
 import '../domain/shop_search.dart';
 import '../domain/shops.dart';
 import '../domain/similar_shops.dart';
@@ -227,8 +230,70 @@ Landed? landedFor(WidgetRef ref, VaultItem i) {
 
 // ---- search ----
 
-/// Reads shop search pages; tests swap in a fake.
-final searcherProvider = Provider<ShopSearcher>((_) => const WebShopSearcher());
+/// Shops the user got past a check for this session (see [ShopPasses]).
+final shopPassesProvider = Provider<ShopPasses>((_) => ShopPasses());
+
+/// The HTTP client for shops' own product searches and eBay; tests swap in a
+/// fake service. Null means a real client.
+final apiClientProvider = Provider<http.Client?>((_) => null);
+
+/// Which shop runs on what, kept in the vault's local settings (this device
+/// only), so a run does not ask every shop again.
+class _DbPlatformCache implements PlatformCache {
+  const _DbPlatformCache(this.db);
+  final AppDatabase db;
+  static const key = 'chanda.platforms';
+
+  @override
+  Future<Map<String, String>> load() async {
+    try {
+      final j = jsonDecode(await db.localSetting(key) ?? '{}');
+      return {
+        if (j is Map)
+          for (final e in j.entries) '${e.key}': '${e.value}',
+      };
+    } on FormatException {
+      return const {};
+    }
+  }
+
+  @override
+  Future<void> save(Map<String, String> known) => db.setLocalSetting(key, jsonEncode(known));
+}
+
+/// Shops' own product searches over plain HTTP.
+final shopApisProvider = Provider<ShopApis>((ref) {
+  final apis = ShopApis(
+    client: ref.watch(apiClientProvider),
+    cache: _DbPlatformCache(ref.watch(sessionProvider).db),
+  );
+  ref.onDispose(apis.close);
+  return apis;
+});
+
+/// The user's own eBay application keys (this device only, never synced);
+/// empty when not set. Invalidate after changing them.
+final ebayKeysProvider = FutureProvider<({String id, String secret})>((ref) async {
+  final db = ref.watch(sessionProvider).db;
+  return (
+    id: (await db.localSetting(ebayIdSetting) ?? '').trim(),
+    secret: (await db.localSetting(ebaySecretSetting) ?? '').trim(),
+  );
+});
+
+/// Searches shops every way there is (see [AppSearcher]); tests swap in a
+/// fake.
+final searcherProvider = Provider<ShopSearcher>((ref) {
+  final keys = ref.watch(ebayKeysProvider).value;
+  final client = ref.watch(apiClientProvider);
+  return AppSearcher(
+    web: WebShopSearcher(passes: ref.watch(shopPassesProvider)),
+    apis: ref.watch(shopApisProvider),
+    ebay: keys != null && keys.id.isNotEmpty && keys.secret.isNotEmpty
+        ? EbayApi(id: keys.id, secret: keys.secret, client: client ?? http.Client())
+        : null,
+  );
+});
 
 /// Search over the vault and found offers, and the "same product?" answers.
 final localSearchProvider = Provider<LocalSearch>(

@@ -8,6 +8,7 @@ import 'package:nithya/nithya.dart';
 
 import '../domain/ai_reader.dart';
 import '../domain/cloud_tryon.dart';
+import '../domain/ebay_api.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
 import '../domain/taste.dart';
@@ -68,6 +69,7 @@ class SettingsPage extends StatelessWidget {
       _TasteCard(),
       _AiCard(),
       _CloudTryOnCard(),
+      _EbayCard(),
       AppLockCard(),
       HintsCard(),
       SyncCard(),
@@ -85,6 +87,9 @@ class SettingsPage extends StatelessWidget {
             'If you add a key for AI try-on and agree to that service\'s terms, your body photo and the '
             'garment\'s picture go to that service (FASHN, fal or Gemini) only when you press Try with AI. '
             'To find a size chart, Chanda reads the product\'s page again. '
+            'When you search, Chanda also asks shops built on common shop software for their own product '
+            'search (the way their website does, saying it is Chanda, and pausing when a shop asks it to). '
+            'If you add your own eBay keys, your searches go to eBay with them, and to nobody else. '
             'Shop logins stay in the shop\'s own pages: Chanda never sees or stores your passwords or card '
             'details, never reads payment pages and never checks out for you.',
       ),
@@ -656,6 +661,73 @@ class _CloudTryOnCard extends ConsumerWidget {
               await ref.read(sessionProvider).db.setLocalSetting(geminiPaidSetting, on ? 'on' : 'off');
               ref.invalidate(cloudKeysProvider);
             },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The user's own eBay application keys, for searching eBay inside Chanda.
+class _EbayCard extends ConsumerWidget {
+  const _EbayCard();
+
+  Future<void> _edit(BuildContext context, WidgetRef ref, String id, String secret) async {
+    final idBox = TextEditingController(text: id);
+    final secretBox = TextEditingController(text: secret);
+    await showFormDialog(
+      context,
+      title: 'eBay keys',
+      fields: (_) => [
+        const Text(
+          'Make a free developer account at developer.ebay.com, create an application keyset, and paste its '
+          'App ID (Client ID) and Cert ID (Client Secret) here. They stay on this device, in the encrypted '
+          'vault, and are never synced. Chanda uses them only to search eBay UK for you, within your own '
+          'allowance and under eBay\'s API terms, and adds no affiliate or tracking codes. Leave both empty '
+          'to remove them.',
+        ),
+        const SizedBox(height: 12),
+        Field(idBox, 'App ID (Client ID)', autofocus: true),
+        const SizedBox(height: 8),
+        Field(secretBox, 'Cert ID (Client Secret)'),
+      ],
+      onSave: () async {
+        final a = idBox.text.trim(), b = secretBox.text.trim();
+        if ((a.isEmpty) != (b.isEmpty)) return 'Paste both, or leave both empty.';
+        if (a.contains(RegExp(r'\s')) || b.contains(RegExp(r'\s'))) return 'Keys have no spaces.';
+        final db = ref.read(sessionProvider).db;
+        await db.setLocalSetting(ebayIdSetting, a);
+        await db.setLocalSetting(ebaySecretSetting, b);
+        ref.invalidate(ebayKeysProvider);
+        return null;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final keys = ref.watch(ebayKeysProvider).value ?? (id: '', secret: '');
+    final on = keys.id.isNotEmpty && keys.secret.isNotEmpty;
+    return SectionCard(
+      title: 'eBay search',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            on
+                ? 'Searches also ask eBay UK, with your own keys. eBay\'s web pages do not open for a search '
+                      'without a person, so this is the way to have eBay in the results.'
+                : 'Off. With your own free eBay developer keys, searches can include eBay UK listings.',
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: Icon(Icons.key_outlined, color: NithyaAccent.primary),
+            title: const Text('Application keys'),
+            subtitle: Text(on ? 'Your App ID ending ${keys.id.substring(keys.id.length - 4)}' : 'No keys'),
+            trailing: TextButton(
+              onPressed: () => _edit(context, ref, keys.id, keys.secret),
+              child: Text(on ? 'Change' : 'Add keys'),
+            ),
           ),
         ],
       ),
