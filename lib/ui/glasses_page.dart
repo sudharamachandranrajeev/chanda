@@ -32,10 +32,6 @@ Future<Uint8List> _png(Cutout cut) => Isolate.run(
   ),
 );
 
-/// The local setting that keeps a frame's size for [itemId], once found or
-/// typed, so the shop's page is read only once.
-String frameSetting(String itemId) => 'chanda.frame.$itemId';
-
 /// Glasses from the vault drawn on the person's face photo at their real
 /// size. When anything needed for a fair fit is missing it says what, and
 /// draws nothing.

@@ -1,7 +1,9 @@
 import 'package:chanda/db/database.dart';
 import 'package:chanda/domain/checker.dart';
+import 'package:chanda/domain/frame_size.dart';
 import 'package:chanda/domain/html_evidence.dart';
 import 'package:chanda/domain/reading.dart';
+import 'package:chanda/domain/size_chart.dart';
 import 'package:chanda/domain/vault.dart';
 import 'package:chanda/domain/watch.dart';
 import 'package:chanda/domain/web_reader.dart';
@@ -156,6 +158,21 @@ void main() {
       expect((await v.lists()).map((l) => l.name), contains('Home office'));
       await v.removeList(office);
       expect(await v.items(), isEmpty);
+    });
+
+    test('removing an item forgets its frame size and size chart on this device', () async {
+      final v = await memoryVault();
+      final a = await saved(v, reading());
+      final b = await saved(v, reading(url: 'https://www.amazon.co.uk/dp/B000000002', title: 'Other lamp'));
+      for (final id in [a.id, b.id]) {
+        await v.db.setLocalSetting(frameSetting(id), '{}');
+        await v.db.setLocalSetting(sizeChartSetting(id), 'none');
+      }
+      await v.removeItem(a.id);
+      expect(await v.db.localSetting(frameSetting(a.id)), isNull);
+      expect(await v.db.localSetting(sizeChartSetting(a.id)), isNull);
+      expect(await v.db.localSetting(frameSetting(b.id)), '{}');
+      expect(await v.db.localSetting(sizeChartSetting(b.id)), 'none');
     });
 
     test('failures count towards the back-off; a good check resets them', () async {

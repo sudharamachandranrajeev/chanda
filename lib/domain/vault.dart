@@ -4,9 +4,11 @@ import 'package:brahma_core/brahma_core.dart';
 import 'package:drift/drift.dart';
 
 import '../db/database.dart';
+import 'frame_size.dart';
 import 'links.dart';
 import 'reading.dart';
 import 'shops.dart';
+import 'size_chart.dart';
 import 'watch.dart';
 
 /// Synced preference keys.
@@ -145,7 +147,14 @@ class Vault {
 
   Future<void> updateItem(VaultItem i) => store.save(db.chandaItems, i, i.id);
 
-  Future<void> removeItem(String id) => store.remove(db.chandaItems, id);
+  /// Removes an item, and what this device kept about it on the side (its
+  /// frame size and size chart).
+  Future<void> removeItem(String id) async {
+    await store.remove(db.chandaItems, id);
+    for (final key in [frameSetting(id), sizeChartSetting(id)]) {
+      await db.customStatement('DELETE FROM local_settings WHERE key = ?', [key]);
+    }
+  }
 
   Future<void> moveItem(VaultItem i, String listId) => updateItem(i.copyWith(listId: listId));
 

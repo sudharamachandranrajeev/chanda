@@ -15,6 +15,10 @@ import 'reading.dart';
 // listing's own frame width when it gives one; otherwise it is estimated as
 // two lenses plus the bridge plus about 10 mm for the hinges, and marked so.
 
+/// The local setting that keeps a frame's size for [itemId], once found or
+/// typed, so the shop's page is read only once.
+String frameSetting(String itemId) => 'chanda.frame.$itemId';
+
 /// The extra width of a frame beyond two lenses and the bridge (hinges and
 /// rims), used only when a listing gives no total width.
 const frameExtraMm = 10.0;
