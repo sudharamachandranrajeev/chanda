@@ -1,5 +1,30 @@
 # Changelog
 
+## Unreleased (0.5.0): search that stays in the app
+
+- Searches that ask for more than words now find things. "Walking shoes for all terrains, easy slip in" is
+  read as walking shoes that are *All-terrain* and *Slip-on*; both show as chips you can tap off. Shops
+  never write "for" or "easy", so results are no longer cut by how many of your words a title holds:
+  they are ranked by what matched, and each card says so (*Matches: All-terrain, Slip-on*).
+- Shops that show results only to a person (Temu, Shein, and any shop that asks for a check) appear in
+  Search as tabs marked *needs you*, each with the shop's own page live below. Pass the check or sign in
+  there, and Chanda adds the products it sees to the same results. If a page gives nothing readable,
+  Chanda can read the screen; those results say *Read from screen*, are never kept, and never start an
+  alert. Sign-in and payment pages are never read. *Add these results* is gone.
+- After you pass a shop's check, Chanda tries that shop in the background once for the rest of the
+  session, and shows its page again if it meets the check.
+- Shops built on common shop software are searched through their own product search, which needs no web
+  view, says it is Chanda and pauses when a shop asks it to.
+- Settings: optional eBay keys (your own developer keys, kept on this device, never synced) put eBay UK in
+  the results.
+- Fewer wrong reads: adverts are skipped, hidden characters and screen-reader price labels no longer
+  break prices (this is why one sports shop read as empty), and check pages are recognised by address.
+  At most two shop pages load in the background at once on a computer, one on a phone.
+- Hacoo is no longer searched on the web (its old website address is for sale); save its products from
+  the app's share link instead.
+- Attribute list from the Shopify Standard Product Taxonomy (MIT) and price test cases from price-parser
+  (BSD-3): see THIRD_PARTY_NOTICES.md.
+
 ## 0.4.0
 
 Try things on: glasses on your face at their real size, and clothes on your whole body, keeping your shape.

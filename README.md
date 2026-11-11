@@ -130,8 +130,9 @@ flowchart LR
   on your device. No AI plan or account is needed for this.
 - If you add your own Anthropic API key in Settings, a **Read with AI** button can fill in a name and price
   Chanda was unsure of. You always check them before saving.
-- Some shops only show search results to a person. For those, Chanda opens the search in its browser and
-  you press **Add these results**.
+- Some shops only show search results to a person. For those, Chanda shows the shop's own page as a tab
+  inside Search, marked *needs you*. You pass the check or sign in there; Chanda adds the products it can
+  see to the same results, and never reads sign-in or payment pages.
 - A shop that shows a "prove you are human" check is never worked around. Chanda asks you to open it instead.
 - Checks are spread out and slow, one page at a time, so no shop is hammered.
 - Your star ratings, and what you save and buy, make a small taste model on your device. It suggests and

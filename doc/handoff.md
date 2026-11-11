@@ -32,6 +32,15 @@ Notes for picking the work up in a new session, possibly on another computer.
   `integration_test/tryon_test.dart` (face, cut-out) and `integration_test/clothes_test.dart` (body
   points and segmenter against `test/fixtures/pose_reference.json`, a full clothes fit, refusals).
 
+- Phase 4b part A (0.5.0, in progress, committed locally, not released): search stays in the app.
+  Ranking by attributes (`attributes.dart`, `assets/search/attributes.json`, built by
+  `tool/attribute_lexicon.py`; `rankScored` in `offers.dart`), reader fixes (`offerScript`,
+  `parseOffers`, `isWallAddress`), live panels in Search (`lib/ui/shop_panels.dart`, `panel_script.dart`),
+  OCR fallback (`screen_tiles.dart`), shops' own product search over HTTP (`shop_api.dart`), eBay with the
+  user's keys (`ebay_api.dart`, Settings), `AppSearcher` picks the way per shop. Part B (Linux engine
+  build, AUR, reranker download, whole-system check) is not started. Live check on Linux:
+  `integration_test/search_live_test.dart`.
+
 ## Not verified yet
 
 - Windows on a real machine (CI builds and smoke-starts it).
