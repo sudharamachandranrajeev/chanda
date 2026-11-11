@@ -12,6 +12,7 @@ import 'package:path_provider/path_provider.dart';
 import '../db/database.dart';
 import '../domain/ai_reader.dart';
 import '../domain/checker.dart';
+import '../domain/cloud_tryon.dart';
 import '../domain/embeddings.dart';
 import '../domain/images.dart';
 import '../domain/local_search.dart';
@@ -507,6 +508,20 @@ final aiKeyProvider = FutureProvider<String>(
 
 /// The HTTP client for AI reading; tests swap in a fake service.
 final aiClientProvider = Provider<http.Client?>((_) => null);
+
+/// The user's own keys for AI try-on (kept on this device only, never
+/// synced) and whether their Gemini key is on a paid plan. Invalidate after
+/// changing them.
+final cloudKeysProvider = FutureProvider<({Map<CloudProvider, String> keys, bool geminiPaid})>((ref) async {
+  final db = ref.watch(sessionProvider).db;
+  return (
+    keys: {for (final p in CloudProvider.values) p: (await db.localSetting(cloudKeySetting(p)) ?? '').trim()},
+    geminiPaid: await db.localSetting(geminiPaidSetting) == 'on',
+  );
+});
+
+/// The HTTP client for AI try-on; tests swap in a fake service.
+final cloudClientProvider = Provider<http.Client?>((_) => null);
 
 final readerProvider = Provider<PageReader>(
   (_) => hasWebView ? const WebPageReader() : const HtmlPageReader(),

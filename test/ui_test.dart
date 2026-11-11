@@ -142,7 +142,7 @@ void main() {
     await app.close();
   });
 
-  testWidgets('Settings offers both models, taste and AI reading, models and AI off at first', (
+  testWidgets('Settings offers both models, taste, AI reading and AI try-on, all off at first', (
     tester,
   ) async {
     final app = AppHarness(tester)..desktop();
@@ -156,9 +156,24 @@ void main() {
     );
     expect(find.text('Download (252 MB)'), findsOneWidget);
     expect(find.text('Download (94 MB)'), findsOneWidget);
-    await tester.scrollUntilVisible(find.text('Add key'), 300, scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(find.text('AI reading'), 300, scrollable: find.byType(Scrollable).first);
     expect(find.text('Your taste'), findsOneWidget);
     expect(find.text('0 ratings so far'), findsOneWidget);
+    // AI try-on: off, a key for each service, Gemini's paid switch off.
+    await tester.scrollUntilVisible(
+      find.text('My Gemini key is on a paid plan'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
+    expect(find.text('AI try-on'), findsOneWidget);
+    expect(find.text('Add key'), findsNWidgets(4));
+    expect(find.text('No key'), findsNWidgets(3));
+    expect(
+      tester
+          .widget<SwitchListTile>(find.widgetWithText(SwitchListTile, 'My Gemini key is on a paid plan'))
+          .value,
+      isFalse,
+    );
     await app.close();
   });
 

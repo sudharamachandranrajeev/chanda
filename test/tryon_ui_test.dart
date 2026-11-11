@@ -4,17 +4,24 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:chanda/app/providers.dart';
+import 'package:chanda/domain/cloud_tryon.dart';
 import 'package:chanda/domain/face_fit.dart';
+import 'package:chanda/domain/garment_fit.dart';
 import 'package:chanda/domain/glasses_fit.dart';
 import 'package:chanda/domain/people.dart';
+import 'package:chanda/domain/pose_fit.dart';
+import 'package:chanda/domain/reading.dart';
 import 'package:chanda/domain/tryon.dart';
 import 'package:chanda/ui/vault_page.dart' show ItemCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:image/image.dart' as img;
 
 import 'app_harness.dart';
+import 'garment_fit_test.dart' show bh, bodyParts, bw, cutoutOf, drawnBody, skirt;
 
 /// Faces as the test sets them.
 class FakeFaces implements FaceFinding {
@@ -34,6 +41,31 @@ class FakeFrames implements FrameCutting {
     pictures.add(picture);
     if (problem != null) return (null, problem);
     return (Cutout(Uint8List(200 * 80 * 4)..fillRange(0, 200 * 80 * 4, 200), 200, 80), null);
+  }
+}
+
+/// The drawn person of test/garment_fit_test.dart.
+class FakeBodies implements BodyFinding, BodySegmenting {
+  @override
+  Future<List<BodyReading>> find(Rgb photo) async => [drawnBody()];
+
+  @override
+  Future<Uint8List> parts(Rgb photo, BodyReading body) async => bodyParts(body);
+}
+
+/// Product picture [n]: a small plain picture [n] + 10 pixels wide.
+Uint8List productPicture(int n) => img.encodePng(img.Image(width: n + 10, height: 10));
+
+/// Picture 0 shows the garment from the side; picture 1 is a drawn skirt.
+class FakeGarments implements GarmentCutting {
+  final pictures = <int>[];
+
+  @override
+  Future<(Cutout?, GarmentProblem?, Rgb?)> cut(Uint8List picture) async {
+    final n = img.decodePng(picture)!.width - 10;
+    pictures.add(n);
+    if (n == 0) return (null, GarmentProblem.notFront, null);
+    return (cutoutOf(280, 280, skirt()), null, null);
   }
 }
 
@@ -131,8 +163,12 @@ void main() {
     await tester.pageBack();
     await app.settle();
     await app.go('Vault');
-    await app.tap(find.descendant(of: find.byType(ItemCard), matching: find.text('Pleated midi skirt')));
+    await app.tap(find.descendant(of: find.byType(ItemCard), matching: find.text('Brass desk lamp')));
     expect(find.text('Try on'), findsNothing);
+    await tester.pageBack();
+    await app.settle();
+    await app.tap(find.descendant(of: find.byType(ItemCard), matching: find.text('Pleated midi skirt')));
+    expect(find.text('Try on'), findsOneWidget);
     await tester.pageBack();
     await app.settle();
     await _openTryOn(app, tester);
@@ -232,6 +268,129 @@ void main() {
       await tester.pageBack();
       await app.settle();
     }
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
+  testWidgets('clothes are drawn on the body photo, with a size note and an AI preview on request', (
+    tester,
+  ) async {
+    final bodies = FakeBodies(), garments = FakeGarments();
+    final app = AppHarness(tester)..desktop();
+    const skirtUrl = 'https://www.shein.co.uk/Skirt-p-123.html';
+    final grey = img.Image(width: bw, height: bh)..clear(img.ColorRgb8(128, 128, 128));
+    await app.open(
+      seed: (v) async {
+        await seedVault(v);
+        final item = (await v.items()).firstWhere((i) => i.title == 'Pleated midi skirt');
+        await v.updateItem(
+          item.copyWith(
+            images: jsonEncode(['https://shop.example/side.jpg', 'https://shop.example/flat.jpg']),
+          ),
+        );
+        final people = People(app.session.db);
+        final p = await people.add(consent: DateTime.now());
+        await people.save(p.copyWith(waist: () => 72, hip: () => 99));
+        await people.setPhoto(p.id, PhotoKind.body, preparePhoto(img.encodeJpg(grey))!);
+        await app.session.db.setLocalSetting(cloudKeySetting(CloudProvider.fashn), 'fa-test-key-0123456789');
+      },
+    );
+    // FASHN, faked: the run is done at once and sends back a plain picture.
+    final result = base64Encode(img.encodePng(grey));
+    final sent = <String>[];
+    final cloud = MockClient((r) async {
+      sent.add('${r.method} ${r.url}');
+      return r.method == 'POST'
+          ? http.Response('{"id":"run1"}', 200)
+          : http.Response(
+              jsonEncode({
+                'status': 'completed',
+                'output': ['data:image/png;base64,$result'],
+              }),
+              200,
+            );
+    });
+    await app.run(
+      pages: {
+        skirtUrl: const Evidence(
+          url: skirtUrl,
+          tables: [
+            [
+              ['Size', 'Waist (cm)', 'Hip (cm)'],
+              ['S', '66-70', '92-96'],
+              ['M', '74-78', '100-104'],
+            ],
+          ],
+        ),
+      },
+      extra: [
+        tryOnProvider.overrideWith(_Downloaded.new),
+        tryOnModelsProvider.overrideWith(
+          (_) async =>
+              TryOnModels(FakeFaces(), FakeFrames(), bodies: bodies, segmenter: bodies, garments: garments),
+        ),
+        itemPictureProvider.overrideWithValue((_, n, _) async => productPicture(n)),
+        cloudClientProvider.overrideWithValue(cloud),
+      ],
+    );
+    await app.go('Vault');
+    await app.tap(find.descendant(of: find.byType(ItemCard), matching: find.text('Pleated midi skirt')));
+    await app.tapText('Try on');
+
+    // The side view is passed over; the flat picture is drawn.
+    await app.waitFor(find.text('Fit preview, approximate'));
+    expect(find.text('Fit preview, approximate'), findsOneWidget);
+    expect(garments.pictures, [0, 1]);
+    expect(find.text('Cannot fit this photo'), findsNothing);
+
+    // The size note: between sizes at the waist, between at the hip too,
+    // and where the chart came from. Kept for next time.
+    await app.waitFor(find.text('Size note: between sizes'));
+    expect(find.text('Size note: between sizes'), findsOneWidget);
+    expect(find.text("Waist 72 cm: between the chart's S (up to 70 cm) and M (from 74 cm)."), findsOneWidget);
+    expect(find.text('From the size table on shein.co.uk.'), findsOneWidget);
+    expect(find.textContaining('your size is'), findsNothing);
+    final id = (await tester.runAsync(app.vault.items))!
+        .firstWhere((i) => i.title == 'Pleated midi skirt')
+        .id;
+    expect(
+      await tester.runAsync(() => app.session.db.localSetting('chanda.sizechart.$id')),
+      contains('waist'),
+    );
+
+    // The side view, chosen: nothing drawn, and why.
+    await app.tap(find.descendant(of: find.byType(Wrap), matching: find.byType(InkWell)).first);
+    await app.waitFor(find.text('Cannot fit this photo'));
+    expect(find.text('Cannot fit this photo'), findsOneWidget);
+    expect(find.text(garmentProblemText(GarmentProblem.notFront)), findsOneWidget);
+    expect(find.text('Fit preview, approximate'), findsNothing);
+    await app.tap(find.descendant(of: find.byType(Wrap), matching: find.byType(InkWell)).last);
+    await app.waitFor(find.text('Fit preview, approximate'));
+    expect(find.text('Fit preview, approximate'), findsOneWidget);
+
+    // AI preview: asks first, with what is sent, kept and charged.
+    final aiPicture = find.byWidgetPredicate((w) => w is Image && w.semanticLabel == 'AI preview');
+    await tester.scrollUntilVisible(
+      find.text('Try with AI (FASHN)'),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await app.tapText('Try with AI (FASHN)');
+    expect(find.text('Send your photo to FASHN?'), findsOneWidget);
+    expect(find.text(providerTerms(CloudProvider.fashn).price), findsOneWidget);
+    await app.tapText('Cancel');
+    expect(sent, isEmpty);
+    await app.tapText('Try with AI (FASHN)');
+    await app.tapText('Agree and send');
+    await app.waitFor(aiPicture);
+    expect(aiPicture, findsOneWidget);
+    expect(sent.first, 'POST https://api.fashn.ai/v1/run');
+    // Agreed once: not asked again for the same key.
+    sent.clear();
+    await app.tapText('Try with AI (FASHN)');
+    await app.waitFor(aiPicture);
+    expect(find.text('Send your photo to FASHN?'), findsNothing);
+    expect(sent, hasLength(2));
     expect(tester.takeException(), isNull);
     await app.close();
   });

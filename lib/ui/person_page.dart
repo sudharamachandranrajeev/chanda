@@ -89,8 +89,8 @@ class _Consent extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Try-on shows glasses on a photo of your face, at their real size. It needs a photo of your '
-                  'face and, later for clothes, one of your whole body and your sizes.',
+                  'Try-on shows glasses on a photo of your face, at their real size, and clothes on a photo of '
+                  'your whole body, keeping your shape. Your sizes are set against a shop\'s size chart.',
                   style: text.bodyMedium,
                 ),
                 const SizedBox(height: 8),
@@ -277,7 +277,7 @@ class _PersonState extends ConsumerState<_Person> {
                 guide:
                     'Stand straight, facing the camera, with your arms a little away from your sides. Wear '
                     'fitted clothes and stand against a plain wall, the whole of you in the picture. Have the '
-                    'camera at waist height, two to three metres away. Used for clothes, coming soon.',
+                    'camera at waist height, two to three metres away. Used to show clothes on you.',
                 figure: true,
                 thumb: thumbs[PhotoKind.body],
                 busy: _busy,

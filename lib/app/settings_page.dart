@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nithya/nithya.dart';
 
 import '../domain/ai_reader.dart';
+import '../domain/cloud_tryon.dart';
 import '../domain/money.dart';
 import '../domain/notify.dart';
 import '../domain/taste.dart';
@@ -29,9 +30,9 @@ String _picturesAbout(int mb) =>
     'anywhere.';
 
 String tryOnAbout(int mb) =>
-    'See glasses from your vault on a photo of your face, at their real size. It needs a $mb MB download, '
-    'once, and then runs on this device: your photos and sizes stay on it and are never synced or sent '
-    'anywhere.';
+    'See glasses from your vault on a photo of your face, at their real size, and clothes on a photo of your '
+    'whole body, never made slimmer. It needs a $mb MB download, once, and then runs on this device: your '
+    'photos and sizes stay on it and are never synced or sent anywhere, unless you turn on AI try-on below.';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -66,6 +67,7 @@ class SettingsPage extends StatelessWidget {
       ),
       _TasteCard(),
       _AiCard(),
+      _CloudTryOnCard(),
       AppLockCard(),
       HintsCard(),
       SyncCard(),
@@ -80,6 +82,9 @@ class SettingsPage extends StatelessWidget {
             'When you check a shop, Chanda reads its home page and asks the registry for its web address, '
             'found through IANA\'s public list, when the address was first registered. '
             'If you add your own AI key, a product page\'s text goes to Anthropic only when you press Read with AI. '
+            'If you add a key for AI try-on and agree to that service\'s terms, your body photo and the '
+            'garment\'s picture go to that service (FASHN, fal or Gemini) only when you press Try with AI. '
+            'To find a size chart, Chanda reads the product\'s page again. '
             'Shop logins stay in the shop\'s own pages: Chanda never sees or stores your passwords or card '
             'details, never reads payment pages and never checks out for you.',
       ),
@@ -567,6 +572,90 @@ class _AiCard extends ConsumerWidget {
               onPressed: () => _edit(context, ref),
               child: Text(key.isEmpty ? 'Add key' : 'Change'),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// AI try-on: the user's own keys for the cloud services, in the order
+/// Chanda uses them.
+class _CloudTryOnCard extends ConsumerWidget {
+  const _CloudTryOnCard();
+
+  Future<void> _edit(BuildContext context, WidgetRef ref, CloudProvider p) async {
+    final c = TextEditingController();
+    final terms = providerTerms(p);
+    await showFormDialog(
+      context,
+      title: '${providerName(p)} key',
+      fields: (_) => [
+        Text(
+          'Paste an API key from your ${providerName(p)} account (${providerKeyPage(p)}). It stays on this '
+          'device, in the encrypted vault, and is never synced. ${terms.price} Leave empty to remove the key.',
+        ),
+        if (p == CloudProvider.gemini) ...[const SizedBox(height: 8), const Text(geminiFreeWarning)],
+        const SizedBox(height: 12),
+        Field(c, 'API key', autofocus: true),
+      ],
+      onSave: () async {
+        final key = c.text.trim();
+        if (key.isNotEmpty && (key.length < 16 || key.contains(RegExp(r'\s')))) {
+          return 'That does not look like an API key.';
+        }
+        await ref.read(sessionProvider).db.setLocalSetting(cloudKeySetting(p), key);
+        ref.invalidate(cloudKeysProvider);
+        return null;
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(cloudKeysProvider).value;
+    final keys = state?.keys ?? const {};
+    final paid = state?.geminiPaid ?? false;
+    final using = pickProvider(keys, geminiPaid: paid);
+    return SectionCard(
+      title: 'AI try-on',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            using == null
+                ? 'Off. Clothes are drawn on your body photo on this device. With your own key for one of these '
+                      'services, Try with AI also asks it for a more lifelike picture. Before the first one, '
+                      'Chanda shows what is sent, how long it is kept and what it costs, and asks you.'
+                : 'Try with AI uses ${providerName(using)}. Only the clothes are taken from its picture: your '
+                      'shape, face, hair and hands stay as on your photo, and a picture that makes you narrower '
+                      'is not shown.',
+          ),
+          for (final p in CloudProvider.values)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: Icon(Icons.checkroom_outlined, color: NithyaAccent.primary),
+              title: Text(providerName(p)),
+              subtitle: Text(
+                (keys[p] ?? '').isEmpty
+                    ? 'No key'
+                    : 'Your key ending ${keys[p]!.substring(keys[p]!.length - 4)}'
+                          '${p == CloudProvider.gemini && !paid ? ' (not used: not marked as paid)' : ''}',
+              ),
+              trailing: TextButton(
+                onPressed: () => _edit(context, ref, p),
+                child: Text((keys[p] ?? '').isEmpty ? 'Add key' : 'Change'),
+              ),
+            ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('My Gemini key is on a paid plan'),
+            subtitle: const Text(geminiFreeWarning),
+            value: paid,
+            onChanged: (on) async {
+              await ref.read(sessionProvider).db.setLocalSetting(geminiPaidSetting, on ? 'on' : 'off');
+              ref.invalidate(cloudKeysProvider);
+            },
           ),
         ],
       ),

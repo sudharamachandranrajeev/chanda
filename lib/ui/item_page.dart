@@ -10,12 +10,14 @@ import '../app/providers.dart';
 import '../db/database.dart';
 import '../domain/checker.dart';
 import '../domain/frame_size.dart';
+import '../domain/garment_fit.dart';
 import '../domain/images.dart';
 import '../domain/money.dart';
 import '../domain/shops.dart';
 import '../domain/vault.dart';
 import '../domain/watch.dart';
 import 'browser_page.dart';
+import 'clothes_page.dart';
 import 'common.dart';
 import 'compare_card.dart';
 import 'glasses_page.dart';
@@ -156,6 +158,7 @@ class _BodyState extends ConsumerState<_Body> {
     final history = ref.watch(historyProvider(i.id)).value ?? const <PricePoint>[];
     final landed = landedFor(ref, i);
     final wide = MediaQuery.sizeOf(context).width >= 900;
+    final listName = ref.watch(listsProvider).value?.where((l) => l.id == i.listId).firstOrNull?.name ?? '';
 
     final gallery = Extruded(
       child: AspectRatio(
@@ -234,16 +237,19 @@ class _BodyState extends ConsumerState<_Body> {
                 onPressed: _checking ? null : _checkNow,
               ),
             ),
-            if (isGlasses(
-              title: i.title,
-              tags: i.tags,
-              list: ref.watch(listsProvider).value?.where((l) => l.id == i.listId).firstOrNull?.name ?? '',
-            ))
+            if (isGlasses(title: i.title, tags: i.tags, list: listName))
               OutlinedButton.icon(
                 icon: const Icon(Icons.face_retouching_natural_outlined),
                 label: const Text('Try on'),
                 onPressed: () =>
                     Navigator.push(context, MaterialPageRoute<void>(builder: (_) => GlassesPage(i))),
+              )
+            else if (garmentKind(title: i.title, tags: i.tags, list: listName) case final kind?)
+              OutlinedButton.icon(
+                icon: const Icon(Icons.checkroom_outlined),
+                label: const Text('Try on'),
+                onPressed: () =>
+                    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => ClothesPage(i, kind))),
               ),
           ],
         ),

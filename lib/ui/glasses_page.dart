@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image/image.dart' as img;
 
 import '../app/providers.dart';
-import '../app/settings_page.dart' show ModelCard, tryOnAbout;
 import '../db/database.dart';
 import '../domain/face_fit.dart';
 import '../domain/frame_size.dart';
@@ -20,7 +19,7 @@ import '../domain/vault.dart';
 import 'common.dart';
 import 'item_bits.dart';
 import 'look.dart';
-import 'person_page.dart';
+import 'tryon_bits.dart';
 
 // Kept outside the page's classes so the work sent to another isolate
 // carries only the bytes, not the page.
@@ -35,79 +34,29 @@ Future<Uint8List> _png(Cutout cut) => Isolate.run(
 /// Glasses from the vault drawn on the person's face photo at their real
 /// size. When anything needed for a fair fit is missing it says what, and
 /// draws nothing.
-class GlassesPage extends ConsumerWidget {
+class GlassesPage extends StatelessWidget {
   const GlassesPage(this.item, {super.key});
   final VaultItem item;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(tryOnProvider).value ?? const ModelState();
-    final person = ref.watch(personProvider);
-    Widget body;
-    if (!state.present || state.downloading) {
-      body = ModelCard(
-        provider: tryOnProvider,
-        title: 'Try-on needs a download',
-        switchLabel: 'Try things on',
-        about: tryOnAbout,
-      );
-    } else if (!state.on) {
-      body = SectionCard(
-        title: 'Try-on is off',
-        child: Align(
-          alignment: Alignment.centerLeft,
-          child: FilledButton(
-            onPressed: () => ref.read(tryOnProvider.notifier).setOn(true),
-            child: const Text('Turn try-on on'),
+  Widget build(BuildContext context) => PageScaffold(
+    title: 'Try on',
+    body: ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Readable(
+          child: TryOnGate(
+            kind: PhotoKind.face,
+            needPhoto: 'Add a photo of your face',
+            needPhotoText: 'Try-on draws the glasses on a photo of your face, kept only on this device.',
+            // A new face photo starts the fit again.
+            builder: (m, p, face) =>
+                _Fit(key: ValueKey(Object.hashAll(face)), models: m, person: p, item: item),
           ),
         ),
-      );
-    } else {
-      body = AsyncView(
-        person,
-        builder: (p) {
-          final face = p == null ? null : ref.watch(personThumbsProvider(p.id)).value?[PhotoKind.face];
-          if (p == null || face == null) {
-            return SectionCard(
-              title: 'Add a photo of your face',
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Try-on draws the glasses on a photo of your face, kept only on this device.'),
-                  const SizedBox(height: 12),
-                  FilledButton.icon(
-                    icon: const Icon(Icons.face_outlined),
-                    label: const Text('Add my photo'),
-                    onPressed: () =>
-                        Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PersonPage())),
-                  ),
-                ],
-              ),
-            );
-          }
-          return AsyncView(
-            ref.watch(tryOnModelsProvider),
-            builder: (m) => m == null
-                ? const SectionCard(
-                    title: 'Try-on could not start',
-                    child: Text(
-                      'The try-on download could not be opened. Remove it in Settings and download it again.',
-                    ),
-                  )
-                // A new face photo starts the fit again.
-                : _Fit(key: ValueKey(Object.hashAll(face)), models: m, person: p, item: item),
-          );
-        },
-      );
-    }
-    return PageScaffold(
-      title: 'Try on',
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [Readable(child: body)],
-      ),
-    );
-  }
+      ],
+    ),
+  );
 }
 
 class _Fit extends ConsumerStatefulWidget {
@@ -281,7 +230,7 @@ class _FitState extends ConsumerState<_Fit> {
     final children = <Widget>[];
 
     if (_faceProblem != null) {
-      children.add(_Problem(faceProblemText(_faceProblem!), action: 'Change my photo'));
+      children.add(TryOnProblem(faceProblemText(_faceProblem!), action: 'Change my photo'));
     }
     if (photo != null && face != null) {
       final right = _pupils == null ? face.rightPupil : Point(_pupils![0], _pupils![1]);
@@ -356,7 +305,7 @@ class _FitState extends ConsumerState<_Fit> {
       );
       if (_frameLooked && frame == null) {
         children.add(
-          const _Problem(
+          const TryOnProblem(
             'Chanda could not find this frame\'s size in the listing. Type it to see the glasses at their '
             'real size.',
           ),
@@ -367,91 +316,26 @@ class _FitState extends ConsumerState<_Fit> {
         children.add(Text('Product picture', style: text.titleSmall));
         children.add(const SizedBox(height: 8));
         children.add(
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (var n = 0; n < _pictures; n++)
-                InkWell(
-                  onTap: _step != null ? null : () => _cutOut(n),
-                  borderRadius: BorderRadius.circular(8),
-                  child: Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        width: 2,
-                        color: n == _picture ? Theme.of(context).colorScheme.primary : Colors.transparent,
-                      ),
-                    ),
-                    clipBehavior: Clip.antiAlias,
-                    child: ItemImage(_item, index: n, fit: BoxFit.contain),
-                  ),
-                ),
-            ],
+          PictureStrip(
+            count: _pictures,
+            chosen: _picture,
+            picture: (n) => ItemImage(_item, index: n, fit: BoxFit.contain),
+            onTap: _step != null ? null : _cutOut,
           ),
         );
-        if (_cutProblems[_picture] case final p?) children.add(_Problem(cutoutProblemText(p)));
+        if (_cutProblems[_picture] case final p?) children.add(TryOnProblem(cutoutProblemText(p)));
       } else if (_frameLooked) {
-        children.add(const _Problem('This item has no product picture to try on.'));
+        children.add(const TryOnProblem('This item has no product picture to try on.'));
       }
     }
     if (_step != null) {
-      children.insert(
-        0,
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)),
-              const SizedBox(width: 10),
-              Expanded(child: Text(_step!)),
-            ],
-          ),
-        ),
-      );
+      children.insert(0, TryOnStep(_step!));
     }
     return SectionCard(
       title: _item.title,
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
     );
   }
-}
-
-/// A plain-words reason the fit cannot be shown, with an optional way to
-/// change the photo.
-class _Problem extends StatelessWidget {
-  const _Problem(this.message, {this.action});
-  final String message;
-  final String? action;
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(Icons.info_outline, color: Theme.of(context).colorScheme.error),
-            const SizedBox(width: 8),
-            Expanded(child: Text(message)),
-          ],
-        ),
-        if (action != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: OutlinedButton(
-              onPressed: () =>
-                  Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const PersonPage())),
-              child: Text(action!),
-            ),
-          ),
-      ],
-    ),
-  );
 }
 
 /// The face photo as it is, the frame drawn over it, and the two pupil
