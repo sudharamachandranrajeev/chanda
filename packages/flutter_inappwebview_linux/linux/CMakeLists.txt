@@ -296,10 +296,16 @@ if(HAVE_WPE_FDO)
 endif()
 
 # === Library Bundling ===
-# Collect WPE libraries to bundle with the application
-# This ensures the app can run without setting LD_LIBRARY_PATH
+# Chanda links against the system's WPE WebKit and bundles none of it.
+# libWPEWebKit hard-codes its helper processes (WPEWebProcess,
+# WPENetworkProcess) under the system prefix, /usr/lib/wpe-webkit-2.0, so a
+# bundled copy (148 MB) only ever worked next to the very same system version.
+# Set FLUTTER_INAPPWEBVIEW_LINUX_BUNDLE_WPE=ON for upstream's old behaviour.
+option(FLUTTER_INAPPWEBVIEW_LINUX_BUNDLE_WPE
+  "Copy the WPE WebKit libraries into the app bundle" OFF)
 
 set(WPE_BUNDLED_LIBS "")
+if(FLUTTER_INAPPWEBVIEW_LINUX_BUNDLE_WPE)
 
 # Helper function to find and add real shared library files (resolving symlinks)
 function(find_and_add_library LIB_NAME SEARCH_PATHS OUT_LIST)
@@ -364,6 +370,7 @@ endif()
 
 # Also need to create symlinks for the sonames that the libraries expect
 # This will be handled at install time in the example CMakeLists.txt
+endif()
 
 set(flutter_inappwebview_linux_bundled_libraries
   ${WPE_BUNDLED_LIBS}

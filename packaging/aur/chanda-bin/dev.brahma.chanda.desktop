@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Chanda
+GenericName=Shopping assistant
+Comment=Your shopping vault, price alerts and price comparison
+Exec=chanda
+Icon=dev.brahma.chanda
+Terminal=false
+Categories=Utility;
+Keywords=shopping;wishlist;prices;alerts;compare;deals;
+StartupWMClass=dev.brahma.chanda

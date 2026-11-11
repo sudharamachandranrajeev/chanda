@@ -45,7 +45,18 @@ fi
 if ! ldconfig -p 2>/dev/null | grep libsecret-1.so.0 >/dev/null; then
   echo "Warning: libsecret is not installed. Install it (e.g. libsecret / libsecret-1-0) or Chanda cannot store its key." >&2
 fi
-if command -v busctl >/dev/null && ! busctl --user list 2>/dev/null | grep org.freedesktop.secrets >/dev/null; then
+# The -wpe build uses the system's WPE WebKit (2.52 or later) for the in-app browser.
+if [[ -f $bundle/lib/libflutter_inappwebview_linux_plugin.so ]]; then
+  if ! ldconfig -p 2>/dev/null | grep libWPEWebKit-2.0.so.1 >/dev/null; then
+    echo "Warning: WPE WebKit is not installed, so Chanda will not start. Install it (Arch, Omarchy: sudo pacman -S wpewebkit)." >&2
+  elif command -v pacman >/dev/null && command -v vercmp >/dev/null; then
+    wpe_version=$(pacman -Q wpewebkit 2>/dev/null | awk '{print $2}')
+    if [[ -n $wpe_version && $(vercmp "$wpe_version" 2.52) -lt 0 ]]; then
+      echo "Warning: WPE WebKit $wpe_version is older than 2.52. Update it: sudo pacman -Syu wpewebkit" >&2
+    fi
+  fi
+fi
+if command -v busctl >/dev/null &&! busctl --user list 2>/dev/null | grep org.freedesktop.secrets >/dev/null; then
   echo "Note: no keyring service is running right now (GNOME Keyring or KWallet). Chanda needs one when it starts." >&2
 fi
 

@@ -60,3 +60,4 @@ pubspec_overrides.yaml
 
 # Shop pages saved by the live test, replayed by test/live_pages_test.dart (the shops' own pages)
 test/live_pages/
+/dist/

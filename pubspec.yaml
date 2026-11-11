@@ -57,7 +57,8 @@ dev_dependencies:
 
 dependency_overrides:
   # The web view's Linux plugin with libwpe made optional: WPE WebKit 2.52+
-  # (Arch, Fedora) no longer ships it. See packages/flutter_inappwebview_linux.
+  # (Arch) no longer ships it, and the app links the system WPE WebKit instead
+  # of bundling it. See packages/flutter_inappwebview_linux.
   flutter_inappwebview_linux:
     path: packages/flutter_inappwebview_linux
 

@@ -77,41 +77,50 @@ Chanda is an alpha: it works, but expect rough edges. Downloads are on the
 
 **Linux**
 
+There are two Linux downloads:
+
+- `Chanda-<version>-linux-x64-wpe.tar.gz` has the in-app browser: shops, sign-ins and the *needs you*
+  tabs open inside Chanda. It needs WPE WebKit 2.52 or later, which Arch Linux, Omarchy and other
+  Arch-based systems have (the package is called `wpewebkit`).
+- `Chanda-<version>-linux-x64.tar.gz` runs on most other distributions. It has no in-app browser, so
+  shops open in your normal browser. Search still reads shops that offer a plain search.
+
 1. You need GTK 3, libsecret and a keyring (GNOME Keyring or KWallet). Most desktops have them.
-2. Download `Chanda-<version>-linux-x64.tar.gz` and unpack it.
+2. Download the file that fits your system from the Releases page and unpack it.
 3. In the unpacked folder, run `./install.sh` to add Chanda to your app menu. No root needed.
-4. This download opens shops in your normal browser. For the in-app browser, build from source on a
-   system with WPE WebKit (see [For developers](#%EF%B8%8F-for-developers)).
 
 **Arch Linux or Omarchy, from the terminal**
 
 1. Install what Chanda needs (Omarchy already has most of it):
 
    ```bash
-   sudo pacman -S --needed gtk3 libsecret gnome-keyring curl
+   sudo pacman -S --needed gtk3 libsecret wpewebkit gnome-keyring curl
    ```
 
-2. Download the newest Linux release and its checksums, and check them:
+2. Download the newest Linux release with the in-app browser, and its checksums, and check them:
 
    ```bash
    cd "$(mktemp -d)"
    url=$(curl -s https://api.github.com/repos/sudharamachandranrajeev/chanda-shopping-assistant/releases \
-     | grep -o 'https://[^"]*linux-x64\.tar\.gz' | head -n 1)
+     | grep -o 'https://[^"]*linux-x64-wpe\.tar\.gz' | head -n 1)
+   echo "${url:-No download with the in-app browser yet: use the steps under Linux above.}"
    curl -LO "$url"
    curl -LO "${url%/*}/SHA256SUMS.txt"
    sha256sum -c --ignore-missing SHA256SUMS.txt
    ```
 
+   The check should say `OK` for one file.
+
 3. Unpack it and add Chanda to your app menu (no root needed):
 
    ```bash
-   tar xzf Chanda-*-linux-x64.tar.gz
-   ./chanda-*-linux-x64/install.sh
+   tar xzf Chanda-*-linux-x64-wpe.tar.gz
+   ./chanda-*-linux-x64-wpe/install.sh
    ```
 
 4. Open Chanda from your app menu (on Omarchy, press <kbd>Super</kbd> + <kbd>Space</kbd> and type
    "Chanda"), or run `chanda` in a terminal. If `chanda` is not found, add `~/.local/bin` to your `PATH`.
-5. To update, repeat steps 2 and 3. To remove it, run `./chanda-*-linux-x64/install.sh --uninstall`
+5. To update, repeat steps 2 and 3. To remove it, run `./chanda-*-linux-x64-wpe/install.sh --uninstall`
    from the folder you unpacked into. Your data stays.
 
 Each release lists SHA-256 checksums in `SHA256SUMS.txt`, if you want to check your download.

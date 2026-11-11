@@ -1,0 +1,39 @@
+# Maintainer: sudharamachandranrajeev (https://github.com/sudharamachandranrajeev)
+#
+# Repackages the release's -wpe tarball, which is built on Arch against the
+# system's WPE WebKit (2.52 or later) and bundles none of it.
+# Not published yet. Before publishing a release: set pkgver, run updpkgsums
+# so the tarball's checksum replaces SKIP, then makepkg --printsrcinfo > .SRCINFO.
+
+pkgname=chanda-bin
+_appid=dev.brahma.chanda
+pkgver=0.5.0
+pkgrel=1
+pkgdesc="Shopping assistant: a private vault for what you want to buy, with checked price alerts and comparison"
+arch=('x86_64')
+url="https://github.com/sudharamachandranrajeev/chanda"
+license=('MIT')
+depends=('wpewebkit' 'gtk3' 'libsecret')
+optdepends=('gnome-keyring: keeps the database key (or another Secret Service keyring, such as KWallet)')
+provides=('chanda')
+conflicts=('chanda')
+options=('!strip' '!debug')
+source=("Chanda-${pkgver}-linux-x64-wpe.tar.gz::${url}/releases/download/v${pkgver}/Chanda-${pkgver}-linux-x64-wpe.tar.gz"
+        "${_appid}.desktop")
+sha256sums=('SKIP'
+            '334bb871c2c4cff6eb732617a124adaca5e0e7e7920d545bec6ba0c7282a1384')
+
+package() {
+  local _src="${srcdir}/chanda-${pkgver}-linux-x64-wpe"
+
+  install -d "${pkgdir}/opt/chanda"
+  cp -a "${_src}/chanda" "${_src}/lib" "${_src}/data" "${pkgdir}/opt/chanda/"
+
+  install -d "${pkgdir}/usr/bin"
+  ln -s /opt/chanda/chanda "${pkgdir}/usr/bin/chanda"
+
+  install -Dm644 "${srcdir}/${_appid}.desktop" "${pkgdir}/usr/share/applications/${_appid}.desktop"
+  install -Dm644 "${_src}/chanda.png" "${pkgdir}/usr/share/icons/hicolor/512x512/apps/${_appid}.png"
+  install -Dm644 "${_src}/LICENSE" "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+  install -Dm644 "${_src}/THIRD_PARTY_NOTICES.md" "${pkgdir}/usr/share/licenses/${pkgname}/THIRD_PARTY_NOTICES.md"
+}

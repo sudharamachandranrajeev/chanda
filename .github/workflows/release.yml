@@ -195,28 +195,49 @@ jobs:
           flutter build linux --release \
             --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
       - name: Tarball
-        run: |
-          version=${{ needs.version.outputs.version }}
-          dir="chanda-$version-linux-x64"
-          mkdir -p dist "$dir"
-          cp -r build/linux/x64/release/bundle/. "$dir/"
-          cp branding/chanda-512.png "$dir/chanda.png"
-          cp scripts/install-linux.sh "$dir/install.sh"
-          cat > "$dir/README.txt" <<'EOF'
-          Chanda for Linux (x86-64). Needs GTK 3, libsecret and a running keyring
-          (GNOME Keyring or KWallet), which hold the database key.
-
-            ./install.sh              adds Chanda to your app menu (no root needed)
-            ./install.sh --uninstall  removes it; your data stays
-            ./chanda               runs it from this folder without installing
-
-          Your data: ~/.local/share/dev.brahma.chanda (encrypted).
-          EOF
-          sed -i 's/^          //' "$dir/README.txt"
-          tar czf "dist/Chanda-$version-linux-x64.tar.gz" "$dir"
+        run: scripts/linux-tarball.sh ${{ needs.version.outputs.version }}
       - uses: actions/upload-artifact@v7
         with:
           name: linux
+          path: dist/*
+
+  linux-wpe:
+    name: Linux with the in-app browser (Arch)
+    needs: [version, test]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    # Built on Arch against the system's WPE WebKit 2.52+, which the tarball
+    # then needs (Arch, Omarchy, Manjaro, EndeavourOS, CachyOS). It bundles
+    # none of WPE: its helper processes live under /usr/lib/wpe-webkit-2.0.
+    container:
+      image: archlinux:latest
+    steps:
+      - name: Build tools and WPE WebKit
+        timeout-minutes: 20
+        run: |
+          for try in 1 2 3; do
+            pacman -Syu --noconfirm --needed base-devel git curl unzip xz jq which tar clang cmake ninja pkgconf \
+              gtk3 libsecret wpewebkit >/dev/null && break
+            [[ $try == 3 ]] && exit 1
+            echo "pacman failed; retrying in 30 s"; sleep 30
+          done
+          pacman -Q wpewebkit
+          git config --global --add safe.directory '*'
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          cache: true
+      - name: Build
+        run: |
+          flutter build linux --release \
+            --build-name=${{ needs.version.outputs.name }} --build-number=${{ needs.version.outputs.build }}
+      - name: Tarball
+        run: scripts/linux-tarball.sh ${{ needs.version.outputs.version }} wpe
+      - uses: actions/upload-artifact@v7
+        with:
+          name: linux-wpe
           path: dist/*
 
   android-smoke:
@@ -312,9 +333,61 @@ jobs:
           test ! -e home/.local/lib/chanda
           test -s "$db"
 
+  linux-wpe-smoke:
+    name: Linux app with the in-app browser starts on Arch
+    needs: linux-wpe
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container:
+      image: archlinux:latest
+      options: --cap-add=IPC_LOCK
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-wpe
+          path: dist
+      - name: GTK, libsecret, WPE WebKit, a keyring and Xvfb
+        timeout-minutes: 15
+        run: |
+          for try in 1 2 3; do
+            pacman -Syu --noconfirm --needed gtk3 libsecret wpewebkit gnome-keyring dbus mesa xorg-server-xvfb \
+              xorg-xauth >/dev/null && break
+            [[ $try == 3 ]] && exit 1
+            echo "pacman failed; retrying in 30 s"; sleep 30
+          done
+      - name: Smoke test
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar xzf dist/*-linux-x64-wpe.tar.gz
+          app=$(ls -d "$PWD"/chanda-*-linux-x64-wpe)
+          # The web view plugin must find the system's WPE WebKit, not a bundled one.
+          ldd "$app/lib/libflutter_inappwebview_linux_plugin.so" | tee ldd.txt
+          grep -q 'libWPEWebKit-2.0.so.1 => /usr/lib/' ldd.txt
+          if grep -q 'not found' ldd.txt; then echo "::error::missing libraries"; exit 1; fi
+          if ls "$app"/lib/libWPEWebKit* >/dev/null 2>&1; then echo "::error::WPE WebKit is bundled"; exit 1; fi
+          mkdir -p home run
+          chmod 700 run
+          set +e
+          env HOME="$PWD/home" XDG_RUNTIME_DIR="$PWD/run" dbus-run-session -- bash -c '
+            echo -n smoke | gnome-keyring-daemon --unlock --components=secrets >/dev/null
+            timeout 20 xvfb-run -a "$0/chanda"
+          ' "$app" > app.log 2>&1
+          code=$?
+          set -e
+          cat app.log
+          if [[ $code != 124 ]]; then echo "::error::Chanda exited with $code"; exit 1; fi
+          if grep -qE 'Unhandled Exception|Chanda startup failed|error while loading shared libraries|symbol lookup error|undefined symbol|cannot open shared object' app.log; then
+            echo "::error::Chanda failed to start"; exit 1
+          fi
+          db=home/.local/share/dev.brahma.chanda/chanda.sqlite
+          [[ -s $db ]] || { echo "::error::no database at $db"; exit 1; }
+          if head -c 15 "$db" | grep -q 'SQLite format 3'; then echo "::error::the database is not encrypted"; exit 1; fi
+          echo "Chanda with WPE WebKit ran for 20 s and created an encrypted database"
+
   publish:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: [version, android, android-smoke, windows, linux, linux-smoke]
+    needs: [version, android, android-smoke, windows, linux, linux-smoke, linux-wpe, linux-wpe-smoke]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -331,6 +404,10 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: linux
+          path: dist
+      - uses: actions/download-artifact@v8
+        with:
+          name: linux-wpe
           path: dist
       - name: Checksums
         run: |

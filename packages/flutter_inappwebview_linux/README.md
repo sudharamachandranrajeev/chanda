@@ -16,7 +16,7 @@ should add it to your `pubspec.yaml` as usual.
 
 A copy of `flutter_inappwebview_linux` 0.1.0-beta.1 (Apache-2.0, see
 LICENSE), used through `dependency_overrides` in Chanda's pubspec. The
-example app is left out. Five changes:
+example app is left out. Six changes:
 
 1. `linux/CMakeLists.txt` needs libwpe (wpe-1.0) only for the legacy
    WPEBackend-FDO path, because WPE WebKit 2.52 and later with WPEPlatform
@@ -35,5 +35,10 @@ example app is left out. Five changes:
    ref. Before, a bare pointer was kept; WPE frees buffers when the view
    resizes, so the next frame crashed. Pixel frames are copied, so their
    buffer goes back to WPE at once.
+6. `linux/CMakeLists.txt` no longer copies `libWPEWebKit-2.0` (148 MB) into
+   the app bundle. The plugin links against the system's WPE WebKit 2.52+:
+   its helper processes live in `/usr/lib/wpe-webkit-2.0`, so a bundled copy
+   only ran next to the same system version anyway. Configure with
+   `-DFLUTTER_INAPPWEBVIEW_LINUX_BUNDLE_WPE=ON` for the old behaviour.
 
-Drop this copy once upstream fixes all five.
+Drop this copy once upstream fixes changes 2-5 and makes 1 and 6 options.
