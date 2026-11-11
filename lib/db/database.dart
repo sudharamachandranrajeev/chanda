@@ -40,13 +40,13 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
   ];
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (m) async {
       await m.createAll();
-      for (final sql in [..._indexes, ..._phase2, ..._phase3]) {
+      for (final sql in [..._indexes, ..._phase2, ..._phase3, ..._phase4]) {
         await customStatement(sql);
       }
     },
@@ -64,7 +64,16 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
           await customStatement(sql);
         }
       }
+      if (from < 4) {
+        for (final sql in _phase4) {
+          await customStatement(sql);
+        }
+      }
     },
+    // The bundled SQLite3MultipleCiphers leaves secure_delete off: turn it on
+    // so deleted rows (people's photos above all) are overwritten with zeros
+    // in the file rather than left in free pages.
+    beforeOpen: (_) => customStatement('PRAGMA secure_delete = ON'),
   );
 
   static const _indexes = [
@@ -91,5 +100,18 @@ class AppDatabase extends _$AppDatabase with SyncedDatabase {
     'CREATE INDEX chanda_ratings_url ON chanda_ratings (url)',
     'CREATE TABLE IF NOT EXISTS chanda_pictures (url TEXT PRIMARY KEY, vec BLOB NOT NULL)',
     'CREATE TABLE IF NOT EXISTS chanda_shop_facts (domain TEXT PRIMARY KEY, json TEXT NOT NULL, checked TEXT NOT NULL)',
+  ];
+
+  /// Try-on (schema 4): saved people and their photos, on this device only.
+  /// Never synced (not in [syncedTables]); see lib/domain/people.dart.
+  /// Sizes are in centimetres, the pupil distance in millimetres, times ISO
+  /// 8601 in UTC. Photos are resized JPEGs with no metadata.
+  static const _phase4 = [
+    'CREATE TABLE IF NOT EXISTS chanda_people (id TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT \'\', '
+        'consent TEXT NOT NULL, chest REAL, waist REAL, hip REAL, inside_leg REAL, shoulder REAL, pd REAL, '
+        'pupils TEXT, created TEXT NOT NULL, updated TEXT NOT NULL)',
+    'CREATE TABLE IF NOT EXISTS chanda_person_photos (person_id TEXT NOT NULL, kind TEXT NOT NULL, '
+        'jpeg BLOB NOT NULL, thumb BLOB NOT NULL, width INTEGER NOT NULL, height INTEGER NOT NULL, '
+        'added TEXT NOT NULL, PRIMARY KEY (person_id, kind))',
   ];
 }
