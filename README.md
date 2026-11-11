@@ -21,9 +21,9 @@ Chanda is a shopping helper that works only for you. Save a product from any sho
 eye on its price and tells you when it drops. It adds no affiliate tags and sells no data, and it reads
 every price twice before it alerts you.
 
-**Status: alpha.** The vault, price checks, alerts, search and price comparison work. Taste learning,
-similar shops and virtual try-on are still to come. Some shops show prices only to a person in front of the screen, so
-Chanda checks those only while it is open.
+**Status: alpha.** The vault, price checks, alerts, search, price comparison, taste learning, similar
+shops and try-on work. Some shops show prices only to a person in front of the screen, so Chanda checks
+those only while it is open.
 
 ## ✨ What it does
 
@@ -44,6 +44,10 @@ Chanda checks those only while it is open.
 - 👓 **Try glasses on** – see glasses from your vault on a photo of your face, at their real size, sized from
   your eyes or the pupil distance you type. It says how sure it is, and says so plainly when it cannot fit
   them. It never changes your photo. It runs on your device, with an optional download.
+- 👕 **Try clothes on** – see a top, dress or skirt from your vault on a photo of your whole body. The garment
+  is stretched to your shape, never you to the garment, and Chanda will not show a picture that makes you
+  look slimmer. A size note puts your measurements on the shop's size chart. With your own key for an AI
+  try-on service, you can also ask for a more lifelike picture.
 - 🧠 **Smarter search, if you want it** – an optional download that finds things by meaning ("specs" finds
   reading glasses). It runs on your device.
 - 🧾 **What you will really pay** – the delivered total in pounds, with UK VAT and import duty for
@@ -149,6 +153,11 @@ flowchart LR
 - Try-on downloads its models once, from Hugging Face, only if you ask. Your face and body photos, sizes and
   pupil distance are kept only after you agree, only on this device, and are never synced or sent anywhere.
   *Delete my photos and sizes* in Settings removes them from the database file too.
+- AI try-on is off unless you add your own key for FASHN, fal or Gemini. Your body photo and the garment's
+  picture go to that service only when you press **Try with AI**, after you have agreed to what it keeps and
+  charges. Gemini keys are used only on a paid plan, because Google may use what is sent on a free key.
+- To find a size chart, Chanda reads the product's page again. The chart is kept on this device and
+  forgotten when you delete the item.
 - Your ratings sync with your vault. Settings can export them to a file, or forget them all.
 - Delete an item and its saved pictures go with it.
 
@@ -177,6 +186,15 @@ extra, for when you add your own key.
 </details>
 
 <details>
+<summary>Why does try-on say "Cannot fit this photo"?</summary>
+
+Chanda draws clothes only when it can do it fairly. It needs one person, standing and facing the camera,
+the whole body in the photo, and a picture of the garment on its own, laid flat or hung straight. If the
+drawn garment would make you look narrower anywhere, it is not shown. The message says what to change.
+Try another product picture with the buttons under the photo.
+</details>
+
+<details>
 <summary>Does Chanda earn money when I buy?</summary>
 
 No. It removes tracking and affiliate tags from the links you save, and never adds its own.
@@ -195,7 +213,11 @@ No. It removes tracking and affiliate tags from the links you save, and never ad
    `flutter test integration_test/embedder_test.dart -d linux --dart-define=MODEL_DIR=/that/folder`.
 6. To test the picture model, download it into a folder and run
    `flutter test integration_test/pictures_test.dart -d linux --dart-define=PICTURE_DIR=/that/folder`.
-7. For a phone, build with `flutter build apk --split-per-abi`: one APK per processor type is much smaller.
+7. To test try-on with the real models, download them into a folder and run
+   `flutter test integration_test/tryon_test.dart -d linux --dart-define=TRYON_DIR=/that/folder` and
+   `flutter test integration_test/clothes_test.dart -d linux --dart-define=TRYON_DIR=/that/folder`. Each
+   file's header lists the optional pictures it can also check.
+8. For a phone, build with `flutter build apk --split-per-abi`: one APK per processor type is much smaller.
 
 `packages/flutter_inappwebview_linux` is a patched copy of the Linux web view plugin; its README lists
 the changes.

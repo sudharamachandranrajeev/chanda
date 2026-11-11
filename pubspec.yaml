@@ -1,7 +1,7 @@
 name: chanda
 description: "Chanda - shopping assistant: one private vault for everything you want to buy, from any shop in the world. Prices tracked and re-checked before every alert; no affiliate links, no data sale. Linux, Windows, Android. Part of Brahma."
 publish_to: 'none'
-version: 0.3.1+4
+version: 0.4.0+5
 
 environment:
   sdk: ^3.13.5

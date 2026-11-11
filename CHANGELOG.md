@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.4.0
+
+Try things on: glasses on your face at their real size, and clothes on your whole body, keeping your shape.
+
+- *Your photos and sizes* in Settings keeps a face photo, a body photo, your body measurements and pupil
+  distance, only after you agree, only on this device. They are never synced. *Delete my photos and
+  sizes* removes them.
+- Glasses from your vault get a **Try on** button. The frame is drawn on your face photo at its real
+  width, sized from your eyes or the pupil distance you type, with how sure Chanda is. The frame size
+  comes from the listing, or you type it.
+- Tops, dresses and skirts get a **Try on** button too. The garment is cut out of the shop's picture and
+  drawn on your body photo, with your hair, face, arms and hands in front. It is labelled *Fit preview,
+  approximate*. The garment is stretched to your outline, never you to the garment: if the picture would
+  come out narrower than you anywhere, Chanda shows *Cannot fit this photo* and why, and draws nothing.
+  Trousers and shorts are not drawn yet.
+- A size note sets the shop's size chart against your sizes: within a size's range, between two sizes, or
+  outside the chart, with where the chart came from. It never tells you which size to buy.
+- AI try-on, off by default: add your own key for FASHN, fal or Gemini (paid plan only) in Settings. Before
+  the first picture, Chanda shows what is sent, how long the service keeps it and what it costs, and asks
+  you; it asks again if any of that changes. Only the clothes are taken from the picture that comes back,
+  checked the same way, and labelled *AI preview*.
+- Try-on needs a one-time download of about 51 MB, from Hugging Face. It runs on your device.
+- Deleting an item also forgets its frame size and size chart on this device.
+
 ## 0.3.1
 
 - Linux: the download now starts. It was missing a library that the built-in text recognition and
