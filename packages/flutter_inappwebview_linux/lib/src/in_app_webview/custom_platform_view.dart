@@ -597,13 +597,20 @@ class _CustomPlatformViewState extends State<CustomPlatformView> {
                   }
                   _controller._setCursorPos(ev.localPosition);
                 },
+                // Chanda patch: claim the wheel through the resolver, so a
+                // scroll view around the page does not scroll along with it.
                 onPointerSignal: (signal) {
-                  if (signal is PointerScrollEvent) {
-                    _controller._setScrollDelta(
-                      -signal.scrollDelta.dx,
-                      -signal.scrollDelta.dy,
-                    );
-                  }
+                  GestureBinding.instance.pointerSignalResolver.register(
+                    signal,
+                    (event) {
+                      if (event is PointerScrollEvent) {
+                        _controller._setScrollDelta(
+                          -event.scrollDelta.dx,
+                          -event.scrollDelta.dy,
+                        );
+                      }
+                    },
+                  );
                 },
                 onPointerPanZoomUpdate: (ev) {
                   _controller._setScrollDelta(ev.panDelta.dx, ev.panDelta.dy);

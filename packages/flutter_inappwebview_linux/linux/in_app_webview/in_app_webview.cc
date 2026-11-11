@@ -419,6 +419,14 @@ InAppWebView::~InAppWebView() {
   }
   pending_policy_decisions_.clear();
 
+  // Chanda patch: end the page's web process now. Unreffing the view alone
+  // left its WPEWebProcess (hundreds of MB) running after the view was gone.
+  // Our signal handlers go first, so the termination reports nothing back.
+  if (webview_ != nullptr) {
+    g_signal_handlers_disconnect_by_data(webview_, this);
+    webkit_web_view_terminate_web_process(webview_);
+  }
+
 #ifdef HAVE_WPE_PLATFORM
   // === WPEPlatform proper shutdown sequence ===
   // Mark as disposing to prevent buffer callbacks from processing

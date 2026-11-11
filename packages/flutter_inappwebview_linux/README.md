@@ -16,7 +16,7 @@ should add it to your `pubspec.yaml` as usual.
 
 A copy of `flutter_inappwebview_linux` 0.1.0-beta.1 (Apache-2.0, see
 LICENSE), used through `dependency_overrides` in Chanda's pubspec. The
-example app is left out. Six changes:
+example app is left out. Eight changes:
 
 1. `linux/CMakeLists.txt` needs libwpe (wpe-1.0) only for the legacy
    WPEBackend-FDO path, because WPE WebKit 2.52 and later with WPEPlatform
@@ -40,5 +40,13 @@ example app is left out. Six changes:
    its helper processes live in `/usr/lib/wpe-webkit-2.0`, so a bundled copy
    only ran next to the same system version anyway. Configure with
    `-DFLUTTER_INAPPWEBVIEW_LINUX_BUNDLE_WPE=ON` for the old behaviour.
+7. `linux/in_app_webview/in_app_webview.cc` ends the page's web process when
+   the view is destroyed (`webkit_web_view_terminate_web_process`), after
+   disconnecting its own signal handlers. Unreffing the view alone left each
+   `WPEWebProcess` (hundreds of MB) running after the view was gone.
+8. `lib/src/in_app_webview/custom_platform_view.dart` claims mouse-wheel
+   events through `pointerSignalResolver`. Before, a scroll view around the
+   page scrolled along with the page.
 
-Drop this copy once upstream fixes changes 2-5 and makes 1 and 6 options.
+Drop this copy once upstream fixes changes 2-5, 7 and 8 and makes 1 and 6
+options.
