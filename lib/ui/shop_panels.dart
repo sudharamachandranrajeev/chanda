@@ -230,17 +230,27 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
   }
 
   /// Reads the text on the screen and matches it to the page's links.
-  Future<void> _readScreen() async {
+  /// Reads the products off the page as drawn. When the user [asked] and
+  /// nothing could be read, says so (a background try stays quiet).
+  Future<void> _readScreen({bool asked = false}) async {
     final web = _web;
     if (web == null || _reading || _private || _wall) return;
     setState(() => _reading = true);
+    void nothing(String why) {
+      debugPrint('Chanda: nothing read from the screen of ${_shop.id}: $why');
+      if (asked && mounted) {
+        showMessage(context, 'Nothing readable on the screen yet. Scroll to the results and try again.');
+      }
+    }
+
     try {
       final box = await web.evaluateJavascript(source: boxesScript);
       final png = await web.takeScreenshot();
-      if (png == null || !mounted || _private || _wall) return;
+      if (!mounted || _private || _wall) return;
+      if (png == null) return nothing('no screenshot');
       final (lines, height) = await readScreen(png);
       final page = readBoxes(box, scale: 1);
-      if (page.height <= 0) return;
+      if (page.height <= 0) return nothing('no page layout');
       final scale = height / page.height;
       final scaled = readBoxes(box, scale: scale);
       var tiles = screenTiles(lines, scaled.boxes, hint: _shop.currency, width: scaled.width * scale);
@@ -268,7 +278,8 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
         ];
       }
       final offers = parseOffers(_shop, [for (final t in tiles) t.toJson()], source: OfferSource.screen);
-      if (offers.isEmpty || !mounted) return;
+      if (!mounted) return;
+      if (offers.isEmpty) return nothing('${lines.length} text lines, ${tiles.length} tiles, no products');
       setState(() {
         _count = offers.length;
         _fromScreen = true;
@@ -355,7 +366,7 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
                 PopupMenuButton<String>(
                   tooltip: 'More',
                   onSelected: (v) => switch (v) {
-                    'screen' => _readScreen(),
+                    'screen' => _readScreen(asked: true),
                     'browser' => openLink(context, '${cleanLink(_url)}'),
                     _ => null,
                   },
