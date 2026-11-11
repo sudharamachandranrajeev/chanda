@@ -51,7 +51,12 @@ const _ambiguous = <String, List<String>>{
 };
 
 final _code = RegExp(r'\b([A-Z]{3})\b');
-final _number = RegExp(r"\d{1,3}(?:[.,\s  ']\d{3})+(?:[.,]\d{1,2})?(?!\d)|\d+(?:[.,]\d{1,2})?(?!\d)");
+// Four or more digits after a point are decimals ("34.992001"), never a
+// thousands group; a price may start at its point ("$.75").
+final _number = RegExp(
+  r"\d+\.\d{4,}(?!\d)|\d{1,3}(?:[.,\s  ']\d{3})+(?:[.,]\d{1,2})?(?!\d)|\d+(?:[.,]\d{1,2})?(?!\d)|"
+  r"(?<![\d.])\.\.?\d{1,2}(?![\d.,])",
+);
 
 /// The currency [text] names, if any. [hint] (the page's or shop's currency)
 /// settles ambiguous marks such as "$" and "¥".
@@ -75,14 +80,18 @@ String? currencyIn(String text, {String? hint}) {
 ReadPrice? parsePrice(String text, {String? hint}) {
   // Prices drawn in parts ("£8 . 42", "12 ,99 €") read as one number.
   final t = _halfWidth(text)
+      .replaceAll(RegExp('[\u200B-\u200F\u2060\uFEFF]'), '')
       .replaceAll(RegExp(r'\s+'), ' ')
       .replaceAllMapped(RegExp(r'(\d) ?([.,]) ?(\d)'), (m) => '${m[1]}${m[2]}${m[3]}')
+      // The euro sign as the decimal point, as some French shops write it:
+      // "35€ 99" is 35,99 €.
+      .replaceAllMapped(RegExp(r'(\d)€ ?(\d{2})(?![\d.,])'), (m) => '${m[1]},${m[2]} €')
       .trim();
   final code = currencyIn(t, hint: hint) ?? hint;
   if (code == null) return null;
   final m = _number.firstMatch(t);
   if (m == null) return null;
-  final value = parseAmount(m[0]!, scale: currencyInfo(code).scale);
+  final value = parseAmount(m[0]!.replaceFirst(RegExp(r'^\.+'), '.'), scale: currencyInfo(code).scale);
   if (value == null) return null;
   return (minor: value, currency: code);
 }
@@ -104,7 +113,8 @@ String _halfWidth(String text) => text.replaceAllMapped(RegExp('[\uFF01-\uFF5E\u
 /// Turns "1.234,56", "1,234.56", "1 234,5", "12.99" or "1,280" into minor
 /// units with [scale] decimals. The last separator is the decimal point when
 /// one or two digits follow it; three digits after a lone separator mean
-/// thousands ("1,280" is one thousand two hundred and eighty).
+/// thousands ("1,280" is one thousand two hundred and eighty), and four or
+/// more after a lone point are decimals ("34.992001").
 int? parseAmount(String raw, {int scale = 2}) {
   var s = raw.replaceAll(RegExp(r"[\s  ']"), '');
   final lastDot = s.lastIndexOf('.');
@@ -118,7 +128,7 @@ int? parseAmount(String raw, {int scale = 2}) {
     final sep = s[last];
     final sepCount = sep.allMatches(s).length;
     final both = lastDot != -1 && lastComma != -1;
-    if (both || (after <= 2 && sepCount == 1)) {
+    if (both || (after <= 2 && sepCount == 1) || (sep == '.' && after > 3 && sepCount == 1)) {
       whole = s.substring(0, last).replaceAll(RegExp(r'[.,]'), '');
       fraction = s.substring(last + 1);
     } else {

@@ -1,5 +1,6 @@
 import 'package:brahma_core/brahma_core.dart' show currencyInfo;
 
+import 'attributes.dart';
 import 'money.dart';
 import 'shops.dart';
 
@@ -8,11 +9,11 @@ import 'shops.dart';
 class Facet {
   const Facet(this.kind, this.value, this.label);
 
-  /// budget | size | colour | material | shop
+  /// budget | size | colour | material | shop | attribute
   final String kind;
 
   /// budget: "min-max" in minor units ('' for an open end); shop: its id;
-  /// otherwise the lower-case word.
+  /// attribute: its id in the [Lexicon]; otherwise the lower-case word.
   final String value;
   final String label;
 
@@ -29,7 +30,8 @@ class Query {
 
   final String raw;
 
-  /// The words left once the facets are taken out.
+  /// The words left once the facets and small words ("for", "the") are
+  /// taken out.
   final String words;
   final List<Facet> facets;
 
@@ -39,6 +41,18 @@ class Query {
   Query without(Facet f) => Query(raw, words, [...facets.where((x) => x != f)], currency: currency);
 
   Iterable<String> of(String kind) => facets.where((f) => f.kind == kind).map((f) => f.value);
+
+  /// What to type into a shop's search box: the attributes as shops write
+  /// them ("slip on"), then the words. Colours and materials stay out, as
+  /// before: they filter what comes back.
+  String shopWords([Lexicon? lex]) {
+    final l = lex ?? lexicon;
+    return [
+      for (final id in of('attribute').take(2))
+        if (l.byId(id) case final a?) a.shopWords,
+      words,
+    ].where((w) => w.trim().isNotEmpty).join(' ');
+  }
 
   int? get minPrice => _budget(0);
   int? get maxPrice => _budget(1);
@@ -145,7 +159,10 @@ final _sizes = <RegExp>[
 /// Reads [text] into words and facets: "black linen shirt size M under £30
 /// on Amazon" is "shirt" with colour black, material linen, size M, at most
 /// £30, at Amazon UK. Amounts are in [currency] (the user's home currency).
-Query readQuery(String text, {String currency = 'GBP'}) {
+/// [attributes] (default: the loaded [lexicon]) finds what the words ask
+/// for besides the product: "walking shoes for all terrains, easy slip in"
+/// is walking shoes, All-terrain and Slip-on.
+Query readQuery(String text, {String currency = 'GBP', Lexicon? attributes}) {
   var rest = ' ${text.replaceAll(RegExp(r'\s+'), ' ').trim()} ';
   final facets = <Facet>[];
   final scale = currencyInfo(currency).scale;
@@ -196,16 +213,56 @@ Query readQuery(String text, {String currency = 'GBP'}) {
     rest = rest.replaceRange(m.start, m.end, ' ');
   }
 
-  final words = <String>[];
-  for (final w in rest.trim().split(' ')) {
-    final l = w.toLowerCase();
+  // What is left: the attributes the words ask for ("easy slip in" is
+  // Slip-on; "blue light" is not the colour blue), then colours and
+  // materials, then the words themselves without the small ones, and
+  // without what follows "not" or "without".
+  final lex = attributes ?? lexicon;
+  final left = [
+    for (final raw in rest.trim().split(' '))
+      if (raw.replaceAll(RegExp(r'^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$', unicode: true), '') case final w
+          when w.isNotEmpty)
+        w,
+  ];
+  // Each word's stemmed parts ("slip-ons" is slip, on), with the word each
+  // came from.
+  final parts = <String>[], from = <int>[];
+  for (var i = 0; i < left.length; i++) {
+    for (final p in wordsOf(left[i])) {
+      parts.add(p);
+      from.add(i);
+    }
+  }
+  final used = List.filled(left.length, false);
+  for (final f in lex.find(parts)) {
+    final facet = Facet('attribute', f.attribute.id, f.attribute.label);
+    if (!facets.contains(facet)) facets.add(facet);
+    for (var j = f.start; j < f.end; j++) {
+      used[from[j]] = true;
+    }
+  }
+  for (var i = 0; i < left.length; i++) {
+    final l = left[i].toLowerCase();
+    if (used[i]) continue;
     if (colours.contains(l)) {
       facets.add(Facet('colour', l == 'gray' ? 'grey' : l, _cap(l)));
+      used[i] = true;
     } else if (materials.contains(l)) {
       facets.add(Facet('material', l, _cap(l)));
-    } else if (w.isNotEmpty) {
-      words.add(w);
+      used[i] = true;
     }
+  }
+  final words = <String>[];
+  for (var i = 0; i < left.length; i++) {
+    final l = left[i].toLowerCase();
+    if (used[i]) continue;
+    if (negations.contains(l)) {
+      // "not apple": neither word is looked for.
+      if (i + 1 < left.length) used[i + 1] = true;
+      continue;
+    }
+    if (stopWords.contains(l)) continue;
+    words.add(left[i]);
   }
   return Query(text.trim(), words.join(' '), facets, currency: currency);
 }

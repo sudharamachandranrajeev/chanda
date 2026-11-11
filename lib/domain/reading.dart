@@ -692,10 +692,29 @@ String _warrantyIn(String text) {
   return out.join(' · ');
 }
 
-/// True on a shop's bot-check or access-denied page.
-const checkScript = r'''
-(() => /security checks?|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|pardon our interruption|slide to verify|robot check/i
-  .test(document.title + ' ' + (document.body ? document.body.innerText.slice(0, 2000) : '')))()
+/// Addresses shops send a visitor to when they want a check or a sign-in
+/// first: Shein's `/risk/challenge`, Temu's `bgn_verification.html` and
+/// `login.html`, and the usual captcha and challenge pages.
+final wallAddress = RegExp(
+  r'/risk/challenge|bgn_verification|captcha|/punish|_____tmd_____|cf_chl|/challenge(?:[/?#.]|$)|'
+  r'/(?:login|signin|sign-in|sign_in)(?:\.html?)?(?:[/?#]|$)',
+  caseSensitive: false,
+);
+
+/// Words on a shop's check page.
+const _wallWords =
+    r'security checks?|security verification|verify (that )?you are (a )?human|are you a robot|captcha|'
+    r'access denied|unusual traffic|pardon our interruption|slide to verify|robot check';
+
+/// Whether [url] is a shop's check or sign-in wall rather than its results.
+bool isWallAddress(Uri url) => wallAddress.hasMatch('${url.path}?${url.query}');
+
+/// True on a shop's bot-check, sign-in wall or access-denied page: by its
+/// address (some check pages are empty) or its words.
+final checkScript =
+    '''
+(() => /${wallAddress.pattern.replaceAll('/', r'\/')}/i.test(location.pathname + location.search) ||
+  /$_wallWords/i.test(document.title + ' ' + (document.body ? document.body.innerText.slice(0, 2000) : '')))()
 ''';
 
 /// Collects [Evidence] from the page in a web view, as JSON text. It reads
@@ -841,7 +860,7 @@ const evidenceScript = r'''
   }
   const main = document.querySelector('main, #dp, [role="main"]') || document.body;
   out.text = main ? main.innerText.slice(0, 8000) : '';
-  out.check = /security checks?|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|pardon our interruption|slide to verify|robot check/i.test(document.title + ' ' + text.slice(0, 2000));
+  out.check = /security checks?|security verification|verify (that )?you are (a )?human|are you a robot|captcha|access denied|unusual traffic|pardon our interruption|slide to verify|robot check/i.test(document.title + ' ' + text.slice(0, 2000));
   return JSON.stringify(out);
 })()
 ''';

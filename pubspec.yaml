@@ -70,6 +70,8 @@ flutter:
     - assets/pictures/
     # The curated shop list for "Shops like yours" (lib/domain/similar_shops.dart).
     - assets/shops/
+    # What searches ask for and how shops write it (lib/domain/attributes.dart).
+    - assets/search/
 
 # Bundle SQLite3MultipleCiphers instead of plain SQLite so the local database
 # is encrypted at rest on every platform (see doc/hook.md in package:sqlite3).

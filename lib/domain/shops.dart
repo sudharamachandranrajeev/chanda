@@ -75,8 +75,8 @@ void registerShops(List<Shop> added) => _added = [
     if (!_builtIn.any((b) => b.id == s.id || b.domains.any(s.domains.contains))) s,
 ];
 
-/// The shops Chanda was first tested with. Hacoo and Temu are app-first and
-/// strict about automated loads; Shein sends unknown visitors to a check.
+/// The shops Chanda was first tested with. Temu and Shein send unknown
+/// visitors to a check; Hacoo is app-first, with no web search.
 final _builtIn = <Shop>[
   Shop(
     id: 'amazon-uk',
@@ -122,12 +122,14 @@ final _builtIn = <Shop>[
   Shop(
     id: 'hacoo',
     name: 'Hacoo',
-    domains: ['hacoo.com', 'hacoo.app'],
-    home: 'https://www.hacoo.com/',
+    domains: ['hacoo.app', 'hacoo.com'],
+    home: 'https://hacoo.app/',
     currency: 'GBP',
     fromAbroad: true,
     userPresent: true,
-    search: 'https://www.hacoo.com/search?keyword={q}',
+    // App-first: its website has no search (the old domain is parked), so
+    // Hacoo is not searched; a product link shared from its app still is
+    // read like any other.
   ),
 ];
 

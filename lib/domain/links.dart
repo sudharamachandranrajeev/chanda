@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 /// Query parameters that only track the visit or credit someone else for
 /// the sale. Chanda drops them from every saved link: it works for the
 /// shopper alone, so a saved link carries no one's affiliate tag (and none
@@ -68,12 +70,20 @@ Uri? linkIn(String text) {
 bool isPrivatePage(Uri url) {
   final host = url.host.toLowerCase();
   if (_paymentHosts.any((h) => host == h || host.endsWith('.$h'))) return true;
-  final path = url.path.toLowerCase();
-  return RegExp(
-    r'(^|/)(checkout|payment|payments|pay|billing|buy/spc|gp/buy|ap/signin|ap/register|signin|sign-in|login|'
-    r'log-in|account|my-account|order-confirmation|3ds)(/|$|\.)',
-  ).hasMatch(path);
+  return _privatePath.hasMatch(url.path.toLowerCase());
 }
+
+final _privatePath = RegExp(
+  r'(^|/)(checkout|payment|payments|pay|billing|buy/spc|gp/buy|ap/signin|ap/register|signin|sign-in|login|'
+  r'log-in|account|my-account|order-confirmation|3ds)(/|$|\.)',
+);
+
+/// JavaScript that is true on a sign-in or payment page: the page scripts
+/// stay away from it (the same rule as [isPrivatePage]).
+String get privatePageScript =>
+    '(() => { const h = location.hostname.toLowerCase(); '
+    'return ${jsonEncode(_paymentHosts)}.some((d) => h === d || h.endsWith("." + d)) || '
+    '/${_privatePath.pattern.replaceAll('/', r'\/')}/.test(location.pathname.toLowerCase()); })()';
 
 const _paymentHosts = [
   'paypal.com',

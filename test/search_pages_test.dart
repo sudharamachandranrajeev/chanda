@@ -12,6 +12,37 @@ import 'chromium.dart';
 /// headless Chromium. Each must give a page of priced, linked products that
 /// match the search they were saved for ("reading glasses").
 void main() {
+  test(
+    'a made-up results page: adverts skipped, screen-reader words and invisible characters dropped',
+    () async {
+      final tmp = await Directory.systemTemp.createTemp('chanda_search');
+      addTearDown(() => tmp.delete(recursive: true));
+      String tile(String name, String price, {String href = '', String label = ''}) =>
+          '<li class="product-card"><a href="${href.isEmpty ? '/p/${name.hashCode.abs()}' : href}">'
+          '<img alt="$name" src="/i.jpg"><h3>$name</h3></a>$label'
+          '<span class="vp-price-amount"><span class="sr-only">Current price</span> $price</span></li>';
+      final replay = File('${tmp.path}/page.html')
+        ..writeAsStringSync(
+          '<!doctype html><meta charset="utf-8"><base href="https://shop.example/">'
+          '<div class="promo-box"><a href="/deal">Deal of the day</a><b>£5.00</b></div>'
+          '<ul>${tile('Trail walking shoe\u200b one', '£79.99')}${tile('Hiking shoe two', '£49.99')}'
+          '${tile('Slip-on walker three', '£39.99')}'
+          '${tile('Paid placement', '£9.99', href: 'https://shop.example/sspa/click?x=1')}'
+          '${tile('Labelled advert', '£19.99', label: '<span>Sponsored</span>')}</ul>'
+          '<pre id="out"></pre><script>document.getElementById("out").textContent = $offerScript;</script>',
+        );
+      final shop = shopFor(Uri.parse('https://shop.example/'));
+      final offers = parseOffers(shop, await dumpOut(chromium!, tmp, replay));
+      expect(offers.map((o) => (o.title, o.price)), [
+        ('Trail walking shoe one', 7999),
+        ('Hiking shoe two', 4999),
+        ('Slip-on walker three', 3999),
+      ]);
+    },
+    timeout: const Timeout(Duration(seconds: 120)),
+    skip: chromium == null ? 'Chromium is not installed' : null,
+  );
+
   final dir = Directory('test/live_pages/search');
   final pages = dir.existsSync()
       ? (dir.listSync().whereType<File>().where((f) => f.path.endsWith('.html')).toList()

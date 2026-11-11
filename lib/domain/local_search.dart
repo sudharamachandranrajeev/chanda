@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'package:brahma_core/brahma_core.dart';
 import 'package:drift/drift.dart' hide Query;
@@ -195,6 +196,33 @@ class LocalSearch {
     return nearest(scores);
   }
 
+  /// With Smarter search on, how close in meaning each of [offers]' titles
+  /// is to [q] (cosine, by [Offer.id]); empty with it off. Title vectors are
+  /// kept for the session, so a search adding shops embeds only new titles.
+  Future<Map<String, double>> meaningOf(Query q, Iterable<Offer> offers) async {
+    final e = embedder;
+    final text = [
+      q.words,
+      ...q.facets.where((f) => f.kind == 'attribute').map((f) => f.label),
+    ].join(' ').trim();
+    if (e == null || text.isEmpty) return const {};
+    final todo = {
+      for (final o in offers)
+        if (!_titleVectors.containsKey(o.title)) o.title,
+    }.toList();
+    for (var at = 0; at < todo.length; at += 32) {
+      final part = todo.sublist(at, min(at + 32, todo.length));
+      final vecs = await e.embed(part);
+      for (var i = 0; i < part.length; i++) {
+        _titleVectors[part[i]] = vecs[i];
+      }
+    }
+    final want = (await e.embed([text])).single;
+    return {for (final o in offers) o.id: cosine(want, _titleVectors[o.title]!)};
+  }
+
+  final _titleVectors = <String, Float32List>{};
+
   Future<List<(String, String)>> _refs(String sql, List<Object> args) async => [
     for (final row in await db.customSelect(sql, variables: [for (final a in args) Variable(a)]).get())
       (row.read<String>('ref'), row.read<String>('kind')),
@@ -215,10 +243,13 @@ class LocalSearch {
 
   /// Keeps offers a shop's search listed, for searching offline and for
   /// comparing; a later search updates them. Offers not seen for 30 days go.
+  /// Offers read off a screenshot are not kept: their prices are not sure
+  /// enough to compare or alert on until the product page is read.
   Future<void> keepOffers(Iterable<Offer> offers, String query) async {
     final now = nowIso();
     await db.batch((b) {
       for (final o in offers) {
+        if (o.source == OfferSource.screen) continue;
         b.insert(
           db.chandaOffers,
           ChandaOffersCompanion.insert(
