@@ -24,6 +24,11 @@ import 'pose_fit.dart';
 //   from there, each row at least as wide as the body under it.
 //   Sleeves follow the arm from the shoulder through the elbow.
 //   Skirts: the waistband sits at the waist, as wide as the body there.
+//   Trousers and shorts: the seat (waistband to crotch) hangs from the
+//   waist like a skirt; below the crotch each leg is cut into slices that
+//   follow the body's leg from the hip through the knee to the ankle, each
+//   at least as wide as the leg under it. Only what is below the waist is
+//   ever drawn.
 
 /// What a garment is, for how it is placed on the body.
 enum GarmentKind {
@@ -36,25 +41,40 @@ enum GarmentKind {
   /// Skirts: from the waist down.
   skirt,
 
-  /// Trousers and shorts: two legs. Not drawn yet; Chanda says so.
+  /// Trousers, jeans, leggings: from the waist down two legs, to the
+  /// ankles or above.
   trousers,
+
+  /// Shorts: from the waist down two short legs, above the knees.
+  shorts,
+
+  /// Jumpsuits, playsuits, dungarees: top and legs in one. Not drawn on a
+  /// photo yet; Chanda says so.
+  onePiece,
 }
 
 bool _has(String text, String words) => RegExp('\\b($words)\\b', caseSensitive: false).hasMatch(text);
 
-/// What kind of clothes a saved thing is, from its title, tags or list
-/// name; null when it is not clothes.
-GarmentKind? garmentKind({required String title, String tags = '', String list = ''}) {
-  // The title decides when it names a garment; tags and list name only
-  // when it does not ("Linen shirt" in a list called "Dresses" is a top).
-  for (final t in [title, '$tags $list']) {
+/// What kind of clothes a saved thing is, from its title, the shop's
+/// category for it (JSON-LD), tags or list name; null when it is not
+/// clothes.
+GarmentKind? garmentKind({required String title, String category = '', String tags = '', String list = ''}) {
+  // The title decides when it names a garment, then the shop's category;
+  // tags and list name only when neither does ("Linen shirt" in a list
+  // called "Dresses" is a top).
+  for (final t in [title, category, '$tags $list']) {
+    if (_has(t, 'jumpsuits?|playsuits?|dungarees|overalls|boilersuits?|rompers?|catsuits?|unitards?')) {
+      return GarmentKind.onePiece;
+    }
+    if (_has(t, 'skirts?|skorts?')) return GarmentKind.skirt;
+    if (_has(t, 'shorts|bermudas?|hot ?pants')) return GarmentKind.shorts;
     if (_has(
       t,
-      'trousers?|pants|jeans|leggings|shorts|chinos|joggers|culottes|dungarees|jumpsuits?|playsuits?',
+      'trousers?|pants|jeans|jeggings|leggings|chinos|joggers|sweatpants|track ?pants|slacks|culottes|'
+      'cargos|capris?|palazzos?|flares',
     )) {
       return GarmentKind.trousers;
     }
-    if (_has(t, 'skirts?|skorts?')) return GarmentKind.skirt;
     if (_has(t, 'dress(es)?|gowns?|frocks?|sundress(es)?|kaftans?|abayas?') &&
         !_has(t, 'dress (shirts?|shoes|socks|pants|trousers)')) {
       return GarmentKind.dress;
@@ -70,12 +90,32 @@ GarmentKind? garmentKind({required String title, String tags = '', String list =
   return null;
 }
 
+/// The tag a saved thing gets so that it can be tried on: the garment word
+/// the shop's [category] (from its JSON-LD) names, when the [title] names
+/// no garment; else empty.
+String garmentTag({required String title, required String category}) {
+  if (garmentKind(title: title) != null) return '';
+  final kind = garmentKind(title: '', category: category);
+  if (kind == null) return '';
+  // The category's own word for it, as the shop wrote it.
+  final words = category.toLowerCase().split(RegExp(r'[^a-z-]+')).where((w) => w.isNotEmpty);
+  for (final w in words.toList().reversed) {
+    if (garmentKind(title: w) == kind) return w;
+  }
+  return kind.name;
+}
+
 /// Which body points a garment of kind [k] needs.
 BodyNeeds bodyNeeds(GarmentKind k) => switch (k) {
   GarmentKind.top => BodyNeeds.torso,
-  GarmentKind.dress || GarmentKind.skirt => BodyNeeds.knees,
-  GarmentKind.trousers => BodyNeeds.legs,
+  GarmentKind.dress || GarmentKind.skirt || GarmentKind.shorts => BodyNeeds.knees,
+  GarmentKind.trousers || GarmentKind.onePiece => BodyNeeds.legs,
 };
+
+/// Whether a garment of kind [k] is worn on the legs: its fit is checked
+/// at the thighs, knees and calves too.
+bool onLegs(GarmentKind k) =>
+    k == GarmentKind.trousers || k == GarmentKind.shorts || k == GarmentKind.onePiece;
 
 /// Why a product picture cannot be used for a fit.
 enum GarmentProblem {
@@ -97,6 +137,9 @@ enum GarmentProblem {
   /// The outline is not clear enough: sleeves, armholes or hem.
   shape,
 
+  /// The two legs or the waistband of trousers or shorts cannot be read.
+  legs,
+
   /// This kind of garment is not drawn yet.
   unsupported,
 }
@@ -117,8 +160,12 @@ String garmentProblemText(GarmentProblem p) => switch (p) {
   GarmentProblem.shape =>
     'Chanda cannot read the sleeves, armholes or hem on this picture. Try another picture of the garment on '
         'its own, from the front.',
+  GarmentProblem.legs =>
+    'Chanda cannot read the waistband and the two legs on this picture. Try another picture of the garment on '
+        'its own, laid flat or hung straight, from the front, with the legs apart.',
   GarmentProblem.unsupported =>
-    'Chanda does not draw trousers or shorts on a photo yet. Tops, dresses and skirts it does.',
+    'Chanda does not draw jumpsuits, playsuits or dungarees on a photo yet. Tops, dresses, skirts, trousers '
+        'and shorts it does.',
 };
 
 /// The cut-out of the largest connected piece of [alpha] (128 and over) on
@@ -254,6 +301,7 @@ class GarmentShape {
     this.armpitRight,
     this.sleeveLeft,
     this.sleeveRight,
+    this.legs,
   });
 
   final GarmentKind kind;
@@ -262,7 +310,8 @@ class GarmentShape {
   /// First and last solid column of each row (−1 on an empty row).
   final List<int> left, right;
 
-  /// The shoulder seams (tops, dresses) or the waistband's ends (skirts).
+  /// The shoulder seams (tops, dresses) or the waistband's ends (skirts,
+  /// trousers, shorts).
   final Px topLeft, topRight;
   final Px hemLeft, hemRight;
 
@@ -275,11 +324,43 @@ class GarmentShape {
   /// The sleeves; null without.
   final Sleeve? sleeveLeft, sleeveRight;
 
+  /// The legs of trousers and shorts; null for everything else.
+  final Legs? legs;
+
   double get topY => (topLeft.y + topRight.y) / 2;
   double get centreX => (topLeft.x + topRight.x) / 2;
 
   /// The row where the sides start (the armpits; the top for skirts).
   int get bodyRow => armpitLeft == null ? topY.round() : max(armpitLeft!.y, armpitRight!.y).round();
+}
+
+/// The two legs of trousers or shorts laid flat: where they part, and on
+/// each row below that the inner edge of each leg. The outer edges are the
+/// garment's sides ([GarmentShape.left], [GarmentShape.right]).
+class Legs {
+  const Legs({
+    required this.crotch,
+    required this.innerLeft,
+    required this.innerRight,
+    required this.endLeft,
+    required this.endRight,
+  });
+
+  /// The top of the gap between the legs.
+  final Px crotch;
+
+  /// Per row: the last solid column of the picture's left leg and the first
+  /// of its right leg; −1 above the crotch and past the leg's end.
+  final List<int> innerLeft, innerRight;
+
+  /// The last row of each leg.
+  final int endLeft, endRight;
+
+  /// The middle of the gap between the legs on row [y].
+  double gapMiddle(int y) {
+    final l = innerLeft[y], r = innerRight[y];
+    return l < 0 || r < 0 ? crotch.x : (l + r) / 2;
+  }
 }
 
 /// The top edge of each column of [alpha] ([w]×[h]): the first solid row,
@@ -324,8 +405,11 @@ double _median(Iterable<int> v) {
 /// The key points of a garment of kind [kind] from its cut-out [alpha]
 /// ([w]×[h]), or why they cannot be found.
 (GarmentShape?, GarmentProblem?) readGarmentShape(Uint8List alpha, int w, int h, GarmentKind kind) {
-  if (kind == GarmentKind.trousers) return (null, GarmentProblem.unsupported);
+  if (kind == GarmentKind.onePiece) return (null, GarmentProblem.unsupported);
   final (left, right) = _sides(alpha, w, h);
+  if (kind == GarmentKind.trousers || kind == GarmentKind.shorts) {
+    return _readLegs(alpha, w, h, left, right, kind);
+  }
   int wd(int y) => left[y] < 0 ? 0 : right[y] - left[y] + 1;
   final ratio = h / w;
   final hemRow = (h - 1 - max(1, 0.015 * h)).round();
@@ -457,6 +541,95 @@ double _median(Iterable<int> v) {
       armpitRight: armR,
       sleeveLeft: sleeveL,
       sleeveRight: sleeveR,
+    ),
+    null,
+  );
+}
+
+/// The waistband and the two legs of trousers or shorts ([kind]) from
+/// their cut-out [alpha] ([w]×[h], with its sides [left] and [right]).
+(GarmentShape?, GarmentProblem?) _readLegs(
+  Uint8List alpha,
+  int w,
+  int h,
+  List<int> left,
+  List<int> right,
+  GarmentKind kind,
+) {
+  int wd(int y) => left[y] < 0 ? 0 : right[y] - left[y] + 1;
+  bool solid(int x, int y) => x >= 0 && x < w && alpha[y * w + x] >= 128;
+  final ratio = h / w;
+  final shorts = kind == GarmentKind.shorts;
+  final (least, most) = shorts ? (0.4, 1.6) : (0.9, 3.6);
+  if (ratio < least || ratio > most) return (null, GarmentProblem.notFront);
+  // The waistband: across the top, the full width of the seat.
+  final band = max(1, (0.02 * h).round());
+  if (wd(band) < 0.45 * w) return (null, GarmentProblem.legs);
+  final mid = (left[band] + right[band]) / 2;
+  final mx = mid.round();
+  // The crotch: up the middle from the bottom, through the gap between the
+  // legs, to where the fabric joins.
+  if (solid(mx, h - 1)) return (null, GarmentProblem.legs);
+  var crotch = h - 1;
+  while (crotch > band && !solid(mx, crotch - 1)) {
+    crotch--;
+  }
+  final (riseLeast, riseMost) = shorts ? (0.25, 0.85) : (0.12, 0.6);
+  if (crotch < riseLeast * h || crotch > riseMost * h) return (null, GarmentProblem.legs);
+  // Each leg's inner edge, row by row, until the leg ends.
+  final innerL = List<int>.filled(h, -1), innerR = List<int>.filled(h, -1);
+  var endL = crotch - 1, endR = crotch - 1;
+  for (var y = crotch; y < h; y++) {
+    if (endL == y - 1) {
+      var x = mx;
+      while (x >= 0 && !solid(x, y)) {
+        x--;
+      }
+      if (x >= 0) {
+        innerL[y] = x;
+        endL = y;
+      }
+    }
+    if (endR == y - 1) {
+      var x = mx;
+      while (x < w && !solid(x, y)) {
+        x++;
+      }
+      if (x < w) {
+        innerR[y] = x;
+        endR = y;
+      }
+    }
+  }
+  final legL = endL - crotch, legR = endR - crotch;
+  if (min(legL, legR) < 0.08 * h || (legL - legR).abs() > 0.1 * h) return (null, GarmentProblem.legs);
+  // Each leg a real width near its top, and hanging down, not out.
+  final y = crotch + (0.1 * min(legL, legR)).round();
+  if (innerL[y] - left[y] < 0.12 * w || right[y] - innerR[y] < 0.12 * w) return (null, GarmentProblem.legs);
+  for (final (top, bottom, end) in [
+    ((left[y] + innerL[y]) / 2, (left[endL] + innerL[endL]) / 2, legL),
+    ((right[y] + innerR[y]) / 2, (right[endR] + innerR[endR]) / 2, legR),
+  ]) {
+    if ((bottom - top).abs() > 0.6 * end) return (null, GarmentProblem.legs);
+  }
+  return (
+    GarmentShape(
+      kind: kind,
+      width: w,
+      height: h,
+      left: left,
+      right: right,
+      topLeft: Point(left[band].toDouble(), band.toDouble()),
+      topRight: Point(right[band].toDouble(), band.toDouble()),
+      hemLeft: Point(left[endL].toDouble(), endL.toDouble()),
+      hemRight: Point(right[endR].toDouble(), endR.toDouble()),
+      legs: Legs(
+        crotch: Point(mid, crotch.toDouble()),
+        innerLeft: innerL,
+        innerRight: innerR,
+        endLeft: endL,
+        endRight: endR,
+      ),
     ),
     null,
   );
@@ -596,6 +769,10 @@ enum FitProblem {
 
   /// The garment would land mostly off the photo.
   place,
+
+  /// The trouser legs cannot follow the legs: knees (or ankles) hidden, the
+  /// legs raised or crossed.
+  legs,
 }
 
 String fitProblemText(FitProblem p) => switch (p) {
@@ -606,6 +783,9 @@ String fitProblemText(FitProblem p) => switch (p) {
     'This garment would leave much of what you are wearing on your body photo showing, so the preview would '
         'mix the two. A body photo in close-fitting clothes works best.',
   FitProblem.place => 'This garment would land mostly outside your body photo. Use a photo of all of you.',
+  FitProblem.legs =>
+    'Chanda cannot follow your legs on your body photo to draw the legs of this garment, and it does not '
+        'guess. Use a photo standing straight, facing the camera, with both knees and ankles showing.',
 };
 
 /// The reason shown when a preview changed the body's outline at [places].
@@ -633,6 +813,9 @@ class FitPicture {
   required Cutout cut,
   required GarmentShape shape,
 }) {
+  if (shape.legs != null) {
+    return _fitLegs(rgb: rgb, w: w, h: h, parts: parts, body: body, cut: cut, shape: shape);
+  }
   final rs = body.point(Body.rightShoulder), ls = body.point(Body.leftShoulder);
   final span = body.shoulderSpan;
   // The body's own frame: across the shoulders (left to right on the photo)
@@ -722,47 +905,8 @@ class FitPicture {
     kr[y] = at(wr, y);
   }
 
-  final out = Uint8List.fromList(rgb);
-  final drawn = Uint8List(w * h);
-  final src = cut.rgba;
-
-  // Samples the cut-out at (gx, gy) into [sample]: RGB weighted by alpha,
-  // and alpha. False where there is nothing.
-  final sample = Float64List(4);
-  bool sampleAt(double gx, double gy) {
-    if (gx < 0 || gy < 0 || gx > cw - 1 || gy > ch - 1) return false;
-    final x0 = gx.floor(), y0 = gy.floor();
-    final x1 = min(x0 + 1, cw - 1), y1 = min(y0 + 1, ch - 1);
-    final fx = gx - x0, fy = gy - y0;
-    sample.fillRange(0, 4, 0);
-    for (final (x, y, wt) in [
-      (x0, y0, (1 - fx) * (1 - fy)),
-      (x1, y0, fx * (1 - fy)),
-      (x0, y1, (1 - fx) * fy),
-      (x1, y1, fx * fy),
-    ]) {
-      final o = (y * cw + x) * 4;
-      final a = src[o + 3] * wt;
-      sample[0] += src[o] * a;
-      sample[1] += src[o + 1] * a;
-      sample[2] += src[o + 2] * a;
-      sample[3] += a;
-    }
-    return sample[3] >= 1;
-  }
-
-  // Draws [sample] at photo pixel [i], unless hair, face or a hand (or, for
-  // the garment's body, an arm) is in front.
-  void put(int i, bool sleeve) {
-    final part = parts[i];
-    final behind = part == Part.hair || part == Part.faceSkin || part == Part.hand;
-    if (behind || (!sleeve && part == Part.arm)) return;
-    final a = sample[3] / 255;
-    for (var c = 0; c < 3; c++) {
-      out[i * 3 + c] = (rgb[i * 3 + c] * (1 - a) + sample[c] / sample[3] * a).round().clamp(0, 255);
-    }
-    drawn[i] = max(drawn[i], sample[3].round().clamp(0, 255));
-  }
+  final paint = _Painter(rgb, w, parts, cut);
+  final sampleAt = paint.sampleAt, put = paint.put;
 
   // The body of the garment: every photo pixel in its reach, mapped back.
   final kmax = max(kl.reduce(max), kr.reduce(max));
@@ -822,18 +966,358 @@ class FitPicture {
   final hem = origin + down * (scale * (ch - 1 - gy0));
   final top = skirt ? origin.y : outlineRows(body)[0].$1.toDouble();
   final bottom = min(skirt ? body.mid(Body.rightKnee, Body.leftKnee).y : body.hips.y, hem.y);
-  var clothes = 0, covered = 0, area = 0;
-  for (var y = max(0, top.round()); y < min(h, bottom.round()); y++) {
-    for (var x = 0; x < w; x++) {
-      final p = parts[y * w + x];
-      if (isPerson(p)) area++;
-      if (p != Part.clothes) continue;
-      clothes++;
-      if (drawn[y * w + x] >= 128) covered++;
+  if (!paint.covers(top, bottom)) return (null, FitProblem.cover);
+  return (FitPicture(paint.out, paint.drawn), null);
+}
+
+/// Where the waistband of trousers and shorts sits, from the shoulders (0)
+/// to the hips (1).
+const legsWaistAt = 0.8;
+
+/// How many slices each leg of trousers or shorts is cut into.
+const legSlices = 12;
+
+/// How far past the ankle a trouser leg may reach (to the heel), as a share
+/// of the leg from hip to ankle.
+const pastAnkle = 0.05;
+
+/// Whether photo point [p] is in the body's lower half: at or below the
+/// middle between the shoulders and the hips. Trousers and shorts are never
+/// drawn above it.
+bool lowerHalf(BodyReading body, Px p) {
+  final toHips = body.hips - body.shoulders;
+  final len = max(1e-9, toHips.magnitude);
+  final along = ((p.x - body.shoulders.x) * toHips.x + (p.y - body.shoulders.y) * toHips.y) / len;
+  return along >= 0.5 * len;
+}
+
+/// Trousers or shorts ([shape] has its legs) drawn on [body]: the seat from
+/// the waist to the crotch hangs like a skirt; each leg is cut into slices
+/// that follow the body's leg (hip, knee, ankle), each at least as wide as
+/// the leg under it. Only the lower half of the body is drawn on.
+(FitPicture?, FitProblem?) _fitLegs({
+  required Uint8List rgb,
+  required int w,
+  required int h,
+  required Uint8List parts,
+  required BodyReading body,
+  required Cutout cut,
+  required GarmentShape shape,
+}) {
+  final legs = shape.legs!;
+  final rs = body.point(Body.rightShoulder), ls = body.point(Body.leftShoulder);
+  final span = body.shoulderSpan;
+  final across = Point((ls.x - rs.x) / span, (ls.y - rs.y) / span);
+  final toHips = body.hips - body.shoulders;
+  final down = toHips * (1 / max(1e-9, toHips.magnitude));
+  final det = across.x * down.y - across.y * down.x;
+  if (det.abs() < 0.5) return (null, FitProblem.place);
+  final ease = fitEase * span;
+  final gc = shape.centreX, gy0 = shape.topY;
+  final ch = shape.height;
+  final crotchRow = legs.crotch.y.round();
+
+  // The waistband at the waist, as wide as the body there (kept to what a
+  // body can be for its shoulders); that sets the scale.
+  final origin = body.shoulders + toHips * legsWaistAt;
+  final o = outlineAt(parts, w, origin.y.round(), origin.x.round(), of: isTorso, through: isLimb);
+  if (o == null) return (null, FitProblem.place);
+  final (least, most) = waistToShoulders;
+  final wide = (o.$2 - o.$1 + 1.0).clamp(least * span, most * span);
+  final band = gy0.round();
+  final scale = (wide + 2 * ease) * flatToWorn / (shape.right[band] - shape.left[band] + 1);
+
+  // The seat, row by row down to the crotch: each side at least as wide as
+  // the body under it.
+  final kl = Float64List(ch)..fillRange(0, ch, 1);
+  final kr = Float64List(ch)..fillRange(0, ch, 1);
+  final step = max(1, crotchRow ~/ 8);
+  final rows = [for (var y = 0; y < crotchRow; y += step) y, crotchRow];
+  final sl = <double>[], sr = <double>[];
+  for (final gy in rows) {
+    final hl = max(1.0, gc - shape.left[gy]), hr = max(1.0, shape.right[gy] + 1 - gc);
+    var wantL = scale * hl / flatToWorn, wantR = scale * hr / flatToWorn;
+    final p = origin + down * (scale * (gy - gy0));
+    final y = p.y.round(), x = p.x.round();
+    if (y >= 0 && y < h && x >= 0 && x < w) {
+      final at = outlineAt(parts, w, y, x, of: isTorso, through: isLimb);
+      if (at != null) {
+        wantL = max(wantL, p.x - at.$1 + ease);
+        wantR = max(wantR, at.$2 + 1 - p.x + ease);
+      }
+    }
+    sl.add(wantL / (scale * hl));
+    sr.add(wantR / (scale * hr));
+  }
+  List<double> widest(List<double> v) => [
+    for (var i = 0; i < v.length; i++) [v[max(0, i - 1)], v[i], v[min(v.length - 1, i + 1)]].reduce(max),
+  ];
+  final wl = widest(sl), wr = widest(sr);
+  for (var y = 0; y < ch; y++) {
+    final f = min(y, crotchRow) / step;
+    final i = min(f.floor(), rows.length - 1), j = min(i + 1, rows.length - 1);
+    final t = ((min(y, crotchRow) - rows[i]) / max(1, rows[j] - rows[i])).clamp(0.0, 1.0);
+    kl[y] = wl[i] + (wl[j] - wl[i]) * t;
+    kr[y] = wr[i] + (wr[j] - wr[i]) * t;
+  }
+  Px toPhoto(double gx, double gy) {
+    final u = gx - gc, v = gy - gy0;
+    final row = gy.round().clamp(0, crotchRow);
+    return origin + across * (scale * u * (u < 0 ? kl[row] : kr[row])) + down * (scale * v);
+  }
+
+  final paint = _Painter(rgb, w, parts, cut);
+  // Never over the arms or hands in front, nor above the lower half.
+  void put(int i) {
+    if (lowerHalf(body, Point(i % w + 0.5, i ~/ w + 0.5))) paint.put(i, false);
+  }
+
+  // The seat: every photo pixel in its reach, mapped back.
+  final kmax = max(kl.reduce(max), kr.reduce(max));
+  final corners = [
+    for (final (gx, gy) in [
+      (0.0, 0.0),
+      (shape.width - 1.0, 0.0),
+      (0.0, legs.crotch.y),
+      (shape.width - 1.0, legs.crotch.y),
+    ])
+      origin + across * (scale * (gx - gc) * kmax) + down * (scale * (gy - gy0)),
+  ];
+  final bx0 = max(0, corners.map((p) => p.x).reduce(min).floor() - 2);
+  final bx1 = min(w - 1, corners.map((p) => p.x).reduce(max).ceil() + 2);
+  final by0 = max(0, corners.map((p) => p.y).reduce(min).floor() - 2);
+  final by1 = min(h - 1, corners.map((p) => p.y).reduce(max).ceil() + 2);
+  if (bx0 >= bx1 || by0 >= by1) return (null, FitProblem.place);
+  for (var y = by0; y <= by1; y++) {
+    for (var x = bx0; x <= bx1; x++) {
+      final dx = x + 0.5 - origin.x, dy = y + 0.5 - origin.y;
+      final a = (dx * down.y - dy * down.x) / det, b = (across.x * dy - across.y * dx) / det;
+      final gy = gy0 + b / scale;
+      if (gy < 0 || gy > legs.crotch.y + 0.5) continue;
+      final row = gy.round().clamp(0, crotchRow);
+      final gx = gc + a / (scale * (a < 0 ? kl[row] : kr[row]));
+      if (paint.sampleAt(gx - 0.5, gy - 0.5)) put(y * w + x);
     }
   }
-  if (clothes > area * 0.1 && covered < clothes * minCover) return (null, FitProblem.cover);
-  return (FitPicture(out, drawn), null);
+
+  // The legs. The picture's left leg is worn on the person's right.
+  final chains = [
+    for (final side in const [
+      [Body.rightHip, Body.rightKnee, Body.rightAnkle],
+      [Body.leftHip, Body.leftKnee, Body.leftAnkle],
+    ])
+      [for (final i in side) body.point(i)],
+  ];
+  // The point [d] pixels down [chain] from the hip joint, and the leg's
+  // direction there; past the ankle, straight on.
+  (Px, Px) along(List<Px> chain, double d) {
+    var rest = d;
+    for (var i = 0; ; i++) {
+      final a = chain[i], b = chain[i + 1];
+      final len = a.distanceTo(b);
+      final dir = (b - a) * (1 / len);
+      if (rest <= len || i == chain.length - 2) return (a + dir * rest, dir);
+      rest -= len;
+    }
+  }
+
+  double cross(Px a, Px b, Px c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+  // The person's right knee and ankle stay on their right: legs crossed
+  // cannot carry two trouser legs.
+  for (var j = 1; j < 3; j++) {
+    final gap = chains[1][j] - chains[0][j];
+    if (gap.x * across.x + gap.y * across.y <= 0) return (null, FitProblem.legs);
+  }
+  final crotch = toPhoto(legs.crotch.x, legs.crotch.y);
+  var lowest = crotch.y;
+  for (final leftSide in [true, false]) {
+    final chain = chains[leftSide ? 0 : 1], other = chains[leftSide ? 1 : 0];
+    final (knee, ankle) = leftSide ? (Body.rightKnee, Body.rightAnkle) : (Body.leftKnee, Body.leftAnkle);
+    final thigh = chain[0].distanceTo(chain[1]), shin = chain[1].distanceTo(chain[2]);
+    if (!body.sees(knee, w, h) || thigh < 1 || shin < 1) return (null, FitProblem.legs);
+    // The leg must hang down the body: not raised, not folded up.
+    double downward(Px a, Px b) => ((b.x - a.x) * down.x + (b.y - a.y) * down.y) / a.distanceTo(b);
+    if (downward(chain[0], chain[1]) < 0.5 || downward(chain[1], chain[2]) < 0.5) {
+      return (null, FitProblem.legs);
+    }
+    final end = leftSide ? legs.endLeft : legs.endRight;
+    final dir0 = (chain[1] - chain[0]) * (1 / thigh);
+    // Where the crotch's level is down the thigh.
+    final d0 = ((crotch.x - chain[0].x) * dir0.x + (crotch.y - chain[0].y) * dir0.y).clamp(0.0, 0.8 * thigh);
+    var legScale = scale;
+    final reach = d0 + scale * (end - crotchRow);
+    if (reach > 0.9 * thigh && !body.sees(ankle, w, h)) return (null, FitProblem.legs);
+    if (body.sees(ankle, w, h)) {
+      final most = (thigh + shin) * (1 + pastAnkle);
+      if (reach > most) legScale = (most - d0) / max(1, end - crotchRow);
+    }
+    final shift0 =
+        toPhoto(
+          leftSide
+              ? (shape.left[crotchRow] + legs.innerLeft[crotchRow] + 1) / 2
+              : (legs.innerRight[crotchRow] + shape.right[crotchRow] + 1) / 2,
+          legs.crotch.y,
+        ) -
+        along(chain, d0).$1;
+
+    // The slices: on the garment, across the leg from its outer edge to its
+    // inner one, a little wider so none of it is cut off; on the photo,
+    // across the body's leg, as wide as the leg is worn and at least as wide
+    // as the body's leg there.
+    const margin = 0.08;
+    final src = <(Px, Px)>[], dst = <(Px, Px)>[];
+    final outs = <double>[], ins = <double>[];
+    final centres = <Px>[], normals = <Px>[];
+    for (var i = 0; i <= legSlices; i++) {
+      final y = crotchRow + ((end - crotchRow) * i / legSlices).round();
+      final outer = leftSide ? shape.left[y].toDouble() : shape.right[y] + 1.0;
+      final inner = leftSide ? legs.innerLeft[y] + 1.0 : legs.innerRight[y].toDouble();
+      final half = (inner - outer).abs() / 2;
+      final m = 2 * half * margin * (leftSide ? 1 : -1);
+      src.add((Point(outer - m, y.toDouble()), Point(inner + m, y.toDouble())));
+      final d = d0 + legScale * (y - crotchRow);
+      final (c, dir) = along(chain, d);
+      final centre = c + shift0 * max(0.0, 1 - (d - d0) / max(1.0, thigh - d0));
+      var n = Point(-dir.y, dir.x);
+      if (n.x * across.x + n.y * across.y < 0) n = Point(-n.x, -n.y);
+      centres.add(centre);
+      normals.add(n);
+      var wantOut = scale * half / flatToWorn, wantIn = wantOut;
+      final cy = centre.y.round(), cx = centre.x.round();
+      if (cy >= 0 && cy < h && cx >= 0 && cx < w) {
+        final at = outlineAt(parts, w, cy, cx, of: isTorso, through: isLimb);
+        if (at != null) {
+          // Legs together read as one stretch: each leg takes its own side
+          // of the middle between them.
+          final mid = (c.x + along(other, d).$1.x) / 2;
+          if (leftSide) {
+            wantOut = max(wantOut, centre.x - at.$1 + ease);
+            wantIn = max(wantIn, max(0.0, min(at.$2 + 1.0, mid) - centre.x) + ease);
+          } else {
+            wantOut = max(wantOut, at.$2 + 1 - centre.x + ease);
+            wantIn = max(wantIn, max(0.0, centre.x - max(at.$1.toDouble(), mid)) + ease);
+          }
+        }
+      }
+      outs.add(wantOut * (1 + margin * 2));
+      ins.add(wantIn * (1 + margin * 2));
+    }
+    final wo = widest(outs), wi = widest(ins);
+    for (var i = 0; i <= legSlices; i++) {
+      if (i == 0) {
+        // The top slice is the seat's bottom row, so the two meet.
+        dst.add((toPhoto(src[0].$1.x, src[0].$1.y), toPhoto(src[0].$2.x, src[0].$2.y)));
+        continue;
+      }
+      final c = centres[i], n = normals[i] * (leftSide ? -1.0 : 1.0);
+      dst.add((c + n * wo[i], c - n * wi[i]));
+      lowest = max(lowest, c.y);
+    }
+    final tris = <(List<Px>, List<Px>)>[];
+    for (var i = 0; i < legSlices; i++) {
+      final (s0o, s0i) = src[i];
+      final (s1o, s1i) = src[i + 1];
+      final (d0o, d0i) = dst[i];
+      final (d1o, d1i) = dst[i + 1];
+      tris
+        ..add(([s0o, s0i, s1o], [d0o, d0i, d1o]))
+        ..add(([s0i, s1i, s1o], [d0i, d1i, d1o]));
+    }
+    // A slice turned inside out means the legs cross or fold.
+    for (final (s, d) in tris) {
+      final a = cross(s[0], s[1], s[2]), b = cross(d[0], d[1], d[2]);
+      if (a.abs() > 1e-6 && b.abs() > 1e-6 && (a > 0) != (b > 0)) return (null, FitProblem.legs);
+    }
+    for (final (s, d) in tris) {
+      _fillTriangle(d, s, w, h, (i, gx, gy) {
+        final row = gy.round().clamp(crotchRow, ch - 1);
+        final mine = leftSide ? gx < legs.gapMiddle(row) : gx > legs.gapMiddle(row);
+        if (mine && gy >= legs.crotch.y - 0.5 && paint.sampleAt(gx - 0.5, gy - 0.5)) put(i);
+      });
+    }
+  }
+
+  // The clothes the person is wearing from the waist to the hem (or the
+  // ankles, or the knees for shorts) must be mostly covered.
+  final legEnd = body.sees(Body.rightAnkle, w, h) && body.sees(Body.leftAnkle, w, h)
+      ? body.mid(Body.rightAnkle, Body.leftAnkle).y
+      : body.mid(Body.rightKnee, Body.leftKnee).y;
+  if (!paint.covers(origin.y, min(lowest, legEnd))) return (null, FitProblem.cover);
+  return (FitPicture(paint.out, paint.drawn), null);
+}
+
+/// A garment's cut-out drawn onto a body photo: samples the cut-out and
+/// paints the photo's pixels, keeping what is in front.
+class _Painter {
+  _Painter(this.rgb, this.w, this.parts, this.cut)
+    : out = Uint8List.fromList(rgb),
+      drawn = Uint8List(parts.length);
+
+  final Uint8List rgb, parts;
+  final int w;
+  final Cutout cut;
+
+  /// The new picture, and how solid the garment is at each pixel.
+  final Uint8List out, drawn;
+
+  /// The last sample: RGB weighted by alpha, and alpha.
+  final sample = Float64List(4);
+
+  /// Samples the cut-out at (gx, gy) into [sample]. False where there is
+  /// nothing.
+  bool sampleAt(double gx, double gy) {
+    final cw = cut.width, ch = cut.height, src = cut.rgba;
+    if (gx < 0 || gy < 0 || gx > cw - 1 || gy > ch - 1) return false;
+    final x0 = gx.floor(), y0 = gy.floor();
+    final x1 = min(x0 + 1, cw - 1), y1 = min(y0 + 1, ch - 1);
+    final fx = gx - x0, fy = gy - y0;
+    sample.fillRange(0, 4, 0);
+    for (final (x, y, wt) in [
+      (x0, y0, (1 - fx) * (1 - fy)),
+      (x1, y0, fx * (1 - fy)),
+      (x0, y1, (1 - fx) * fy),
+      (x1, y1, fx * fy),
+    ]) {
+      final o = (y * cw + x) * 4;
+      final a = src[o + 3] * wt;
+      sample[0] += src[o] * a;
+      sample[1] += src[o + 1] * a;
+      sample[2] += src[o + 2] * a;
+      sample[3] += a;
+    }
+    return sample[3] >= 1;
+  }
+
+  /// Draws [sample] at photo pixel [i], unless hair, face or a hand (or,
+  /// unless [sleeve], an arm) is in front. Always blended with the photo's
+  /// own pixel, so drawing a pixel twice is the same as once.
+  void put(int i, bool sleeve) {
+    final part = parts[i];
+    final behind = part == Part.hair || part == Part.faceSkin || part == Part.hand;
+    if (behind || (!sleeve && part == Part.arm)) return;
+    final a = sample[3] / 255;
+    for (var c = 0; c < 3; c++) {
+      out[i * 3 + c] = (rgb[i * 3 + c] * (1 - a) + sample[c] / sample[3] * a).round().clamp(0, 255);
+    }
+    drawn[i] = max(drawn[i], sample[3].round().clamp(0, 255));
+  }
+
+  /// Whether the clothes the person is wearing between rows [top] and
+  /// [bottom] are mostly covered (or there are few of them).
+  bool covers(double top, double bottom) {
+    final h = parts.length ~/ w;
+    var clothes = 0, covered = 0, area = 0;
+    for (var y = max(0, top.round()); y < min(h, bottom.round()); y++) {
+      for (var x = 0; x < w; x++) {
+        final p = parts[y * w + x];
+        if (isPerson(p)) area++;
+        if (p != Part.clothes) continue;
+        clothes++;
+        if (drawn[y * w + x] >= 128) covered++;
+      }
+    }
+    return clothes <= area * 0.1 || covered >= clothes * minCover;
+  }
 }
 
 /// Draws [sleeve] along the arm ([arm]: shoulder, elbow, wrist joints):

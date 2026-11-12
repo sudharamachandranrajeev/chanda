@@ -72,6 +72,34 @@ List<(double, double)> dress() => [
 /// A skirt, 280×280.
 List<(double, double)> skirt() => [(80, 0), (200, 0), (205, 20), (279, 279), (1, 279), (75, 20)];
 
+/// Trousers laid flat, 200×370: waistband 140 wide, the legs part 95 rows
+/// down and run straight to the hems, a gap between them.
+List<(double, double)> trousers() => [
+  (30, 0),
+  (170, 0),
+  (176, 40),
+  (172, 369),
+  (112, 369),
+  (100, 95),
+  (88, 369),
+  (28, 369),
+  (24, 40),
+];
+
+/// Shorts laid flat, 240×200: the legs part 110 rows down and flare a
+/// little.
+List<(double, double)> shorts() => [
+  (40, 0),
+  (200, 0),
+  (215, 60),
+  (235, 199),
+  (130, 199),
+  (120, 110),
+  (110, 199),
+  (5, 199),
+  (25, 60),
+];
+
 Cutout cutoutOf(int w, int h, List<(double, double)> poly) {
   final a = drawAlpha(w, h, poly);
   final rgba = Uint8List(w * h * 4);
@@ -85,7 +113,8 @@ Cutout cutoutOf(int w, int h, List<(double, double)> poly) {
 }
 
 /// A person facing the camera on a 400×800 photo, arms a little out.
-BodyReading drawnBody({bool elbowsShow = true}) {
+/// [kneesShow] false hides the knees; [crossed] crosses the legs.
+BodyReading drawnBody({bool elbowsShow = true, bool kneesShow = true, bool crossed = false}) {
   final p = Float64List(Body.outputs * 5);
   void set(int i, double x, double y, {double v = 0.99}) {
     p[i * 5] = x;
@@ -107,18 +136,18 @@ BodyReading drawnBody({bool elbowsShow = true}) {
   set(Body.leftPinky, 304, 450);
   set(Body.rightHip, 170, 420);
   set(Body.leftHip, 230, 420);
-  set(Body.rightKnee, 170, 600);
-  set(Body.leftKnee, 230, 600);
-  set(Body.rightAnkle, 170, 770);
-  set(Body.leftAnkle, 230, 770);
+  set(Body.rightKnee, crossed ? 235 : 170, 600, v: kneesShow ? 0.99 : 0.1);
+  set(Body.leftKnee, crossed ? 165 : 230, 600, v: kneesShow ? 0.99 : 0.1);
+  set(Body.rightAnkle, crossed ? 240 : 170, 770);
+  set(Body.leftAnkle, crossed ? 160 : 230, 770);
   return BodyReading(p);
 }
 
 const bw = 400, bh = 800;
 
 /// The drawn body's parts: hair, face, neck, a close-fitting top, arms,
-/// legs.
-Uint8List bodyParts(BodyReading b) {
+/// legs (together, or [legsApart] with a gap between them).
+Uint8List bodyParts(BodyReading b, {bool legsApart = false}) {
   final parts = Uint8List(bw * bh);
   for (var y = 0; y < bh; y++) {
     for (var x = 0; x < bw; x++) {
@@ -137,7 +166,9 @@ Uint8List bodyParts(BodyReading b) {
           if (segmentDistance(p, b.point(a), b.point(c)).$1 < 14) part = Part.bodySkin;
         }
       }
-      if (part == Part.background && x >= 150 && x < 250 && y >= 440 && y < 780) part = Part.bodySkin;
+      if (part == Part.background && x >= 150 && x < 250 && y >= 440 && y < 780) {
+        part = legsApart && y >= 470 && x >= 192 && x < 208 ? Part.background : Part.bodySkin;
+      }
       parts[y * bw + x] = part;
     }
   }
@@ -154,6 +185,26 @@ void main() {
     expect(garmentKind(title: 'Leather dress shoes'), isNull);
     expect(garmentKind(title: 'Round reading glasses'), isNull);
     expect(garmentKind(title: 'Item 42', tags: 'hoodie'), GarmentKind.top);
+    expect(garmentKind(title: 'High-rise wide leg trousers'), GarmentKind.trousers);
+    expect(garmentKind(title: 'Stretch leggings'), GarmentKind.trousers);
+    expect(garmentKind(title: 'Navy dress pants'), GarmentKind.trousers);
+    expect(garmentKind(title: 'Denim cargo shorts'), GarmentKind.shorts);
+    expect(garmentKind(title: 'A-line denim skirt'), GarmentKind.skirt);
+    expect(garmentKind(title: 'Linen jumpsuit'), GarmentKind.onePiece);
+    expect(garmentKind(title: 'Utility dungarees'), GarmentKind.onePiece);
+    expect(garmentKind(title: 'Cargo jacket'), isNull);
+    // The shop's category (JSON-LD) when the title names no garment; the
+    // title wins when it does.
+    expect(garmentKind(title: 'The Ridley 32', category: 'Men > Clothing > Jeans'), GarmentKind.trousers);
+    expect(garmentKind(title: 'Linen shirt', category: 'Trousers'), GarmentKind.top);
+    expect(garmentTag(title: 'The Ridley 32', category: 'Men > Clothing > Jeans'), 'jeans');
+    expect(garmentTag(title: 'Style 7', category: ['Women', 'Shorts'].join(' > ')), 'shorts');
+    expect(garmentTag(title: 'Slim jeans', category: 'Jeans'), '');
+    expect(garmentTag(title: 'Desk lamp', category: 'Home > Lighting'), '');
+    expect(bodyNeeds(GarmentKind.trousers), BodyNeeds.legs);
+    expect(bodyNeeds(GarmentKind.shorts), BodyNeeds.knees);
+    expect(onLegs(GarmentKind.shorts), isTrue);
+    expect(onLegs(GarmentKind.skirt), isFalse);
   });
 
   group('cutting out', () {
@@ -226,8 +277,62 @@ void main() {
       // A long thin strip is not a top seen from the front.
       final strip = drawAlpha(100, 400, [(0, 0), (100, 0), (100, 400), (0, 400)]);
       expect(readGarmentShape(strip, 100, 400, GarmentKind.top).$2, GarmentProblem.notFront);
-      expect(readGarmentShape(box, 200, 220, GarmentKind.trousers).$2, GarmentProblem.unsupported);
-      expect(garmentProblemText(GarmentProblem.unsupported), contains('trousers'));
+      // Trousers need two legs with a gap between them.
+      expect(readGarmentShape(box, 200, 220, GarmentKind.trousers).$2, GarmentProblem.legs);
+      expect(
+        readGarmentShape(drawAlpha(301, 300, tee()), 301, 300, GarmentKind.trousers).$2,
+        GarmentProblem.legs,
+      );
+      expect(
+        readGarmentShape(drawAlpha(280, 280, skirt()), 280, 280, GarmentKind.shorts).$2,
+        GarmentProblem.legs,
+      );
+      // Long trousers are not shorts, nor shorts long trousers.
+      expect(
+        readGarmentShape(drawAlpha(200, 370, trousers()), 200, 370, GarmentKind.shorts).$2,
+        GarmentProblem.notFront,
+      );
+      expect(
+        readGarmentShape(drawAlpha(240, 200, shorts()), 240, 200, GarmentKind.trousers).$2,
+        GarmentProblem.notFront,
+      );
+      // Legs joined at the bottom (a skirt with a slit) are not two legs.
+      final joined = drawAlpha(200, 370, trousers());
+      for (var x = 80; x < 120; x++) {
+        joined[369 * 200 + x] = 255;
+      }
+      expect(readGarmentShape(joined, 200, 370, GarmentKind.trousers).$2, GarmentProblem.legs);
+      expect(readGarmentShape(box, 200, 220, GarmentKind.onePiece).$2, GarmentProblem.unsupported);
+      expect(garmentProblemText(GarmentProblem.unsupported), contains('jumpsuits'));
+      expect(garmentProblemText(GarmentProblem.legs), contains('two legs'));
+    });
+
+    test('trousers: waistband, crotch and two legs', () {
+      final (s, p) = readGarmentShape(drawAlpha(200, 370, trousers()), 200, 370, GarmentKind.trousers);
+      expect(p, isNull);
+      final legs = s!.legs!;
+      // The gap is narrower than a pixel at its very top.
+      expect(legs.crotch.y, closeTo(100, 8));
+      expect(legs.crotch.x, closeTo(100, 2));
+      expect(s.topLeft.x, closeTo(30, 2));
+      expect(s.topRight.x, closeTo(170, 2));
+      expect(legs.endLeft, closeTo(368, 2));
+      expect(legs.endRight, closeTo(368, 2));
+      // The inner edges run from the crotch down to the hems.
+      expect(legs.innerLeft[300], closeTo(90, 2));
+      expect(legs.innerRight[300], closeTo(110, 2));
+      expect(legs.innerLeft[50], -1);
+      expect(legs.gapMiddle(300), closeTo(100, 1));
+      expect(s.sleeveLeft, isNull);
+      expect(s.notch, isNull);
+      expect(garmentMirrored(cutoutOf(200, 370, trousers())), greaterThan(minGarmentMirror));
+    });
+
+    test('shorts: short legs, low crotch', () {
+      final (s, p) = readGarmentShape(drawAlpha(240, 200, shorts()), 240, 200, GarmentKind.shorts);
+      expect(p, isNull);
+      expect(s!.legs!.crotch.y, closeTo(112, 4));
+      expect(s.legs!.endLeft, closeTo(198, 2));
     });
   });
 
@@ -309,6 +414,131 @@ void main() {
         fitGarment(rgb: photo, w: bw, h: bh, parts: loose, body: body, cut: c, shape: s!).$2,
         FitProblem.cover,
       );
+    });
+  });
+
+  group('trousers and shorts on a drawn body', () {
+    final photo = Uint8List(bw * bh * 3)..fillRange(0, bw * bh * 3, 90);
+
+    (FitPicture?, FitProblem?) fit(Cutout c, GarmentKind k, BodyReading body, Uint8List parts) {
+      final (s, p) = readGarmentShape(cutoutAlpha(c), c.width, c.height, k);
+      expect(p, isNull);
+      return fitGarment(rgb: photo, w: bw, h: bh, parts: parts, body: body, cut: c, shape: s!);
+    }
+
+    /// Checks what must hold for any fit [f] on [parts]: nothing changed
+    /// where nothing was drawn, nothing over the head, hands or arms,
+    /// nothing above the lower half, and the outline (body and legs) never
+    /// narrower afterwards.
+    void keepsTheBody(FitPicture f, BodyReading body, Uint8List parts) {
+      final shoulders = body.shoulders.y, hips = body.hips.y;
+      var changed = 0;
+      for (var i = 0; i < bw * bh; i++) {
+        final same = f.rgb[i * 3] == 90 && f.rgb[i * 3 + 1] == 90 && f.rgb[i * 3 + 2] == 90;
+        if (f.drawn[i] == 0) {
+          expect(same, isTrue, reason: 'pixel $i changed where nothing was drawn');
+          continue;
+        }
+        changed++;
+        final part = parts[i];
+        expect(
+          part == Part.hair || part == Part.faceSkin || part == Part.hand || part == Part.arm,
+          isFalse,
+          reason: 'drawn over part $part at ${i % bw}, ${i ~/ bw}',
+        );
+        expect(i ~/ bw + 0.5, greaterThanOrEqualTo((shoulders + hips) / 2), reason: 'drawn above the waist');
+      }
+      expect(changed, greaterThan(5000));
+      final after = Uint8List.fromList(parts);
+      for (var i = 0; i < bw * bh; i++) {
+        if (f.drawn[i] >= 128) after[i] = Part.clothes;
+      }
+      final rows = outlineRows(body), legs = legRows(body, bw, bh);
+      expect(legs, isNotEmpty);
+      expect(
+        outlineShrunk(
+          measureOutline(parts, bw, bh, rows, legs),
+          measureOutline(after, bw, bh, rows, legs),
+          legs,
+        ),
+        isEmpty,
+      );
+    }
+
+    for (final apart in [false, true]) {
+      test('trousers follow both legs to the ankles (legs ${apart ? 'apart' : 'together'})', () {
+        final body = drawnBody();
+        final parts = bodyParts(body, legsApart: apart);
+        final (f, p) = fit(cutoutOf(200, 370, trousers()), GarmentKind.trousers, body, parts);
+        expect(p, isNull);
+        keepsTheBody(f!, body, parts);
+        // Both legs covered from the hips to the ankles, the seat too.
+        for (final (x, y) in [
+          (200, 400),
+          (160, 470),
+          (240, 470),
+          (170, 600),
+          (230, 600),
+          (170, 740),
+          (230, 740),
+        ]) {
+          expect(f.drawn[y * bw + x], greaterThan(128), reason: '($x, $y)');
+        }
+        // The leg's own width: each body leg is covered edge to edge.
+        for (final x in [152, 188, 212, 248]) {
+          expect(f.drawn[650 * bw + x], greaterThan(128), reason: 'leg edge at $x');
+        }
+        // No further than the heels.
+        for (var i = 790 * bw; i < bw * bh; i++) {
+          expect(f.drawn[i], 0, reason: 'drawn below the heels');
+        }
+      });
+    }
+
+    test('shorts stop above the knees', () {
+      final body = drawnBody();
+      final parts = bodyParts(body, legsApart: true);
+      final (f, p) = fit(cutoutOf(240, 200, shorts()), GarmentKind.shorts, body, parts);
+      expect(p, isNull);
+      keepsTheBody(f!, body, parts);
+      expect(f.drawn[470 * bw + 170], greaterThan(128));
+      expect(f.drawn[470 * bw + 230], greaterThan(128));
+      for (final x in [170, 230]) {
+        expect(f.drawn[700 * bw + x], 0, reason: 'shorts reach the shins');
+      }
+    });
+
+    test('legs that cannot be seen or followed are said, never guessed', () {
+      final cut = cutoutOf(200, 370, trousers());
+      final hidden = drawnBody(kneesShow: false);
+      expect(fit(cut, GarmentKind.trousers, hidden, bodyParts(hidden)).$2, FitProblem.legs);
+      final crossed = drawnBody(crossed: true);
+      expect(fit(cut, GarmentKind.trousers, crossed, bodyParts(crossed)).$2, FitProblem.legs);
+      expect(fitProblemText(FitProblem.legs), allOf(contains('knees and ankles'), contains('does not')));
+      // Before any of that, the body photo is checked for the knees and
+      // ankles a garment needs.
+      expect(bodyProblem([hidden], bw, bh, bodyNeeds(GarmentKind.trousers)), BodyProblem.legs);
+      expect(bodyProblem([hidden], bw, bh, bodyNeeds(GarmentKind.shorts)), BodyProblem.legs);
+      expect(bodyProblem([hidden], bw, bh, bodyNeeds(GarmentKind.top)), isNull);
+    });
+
+    test('the lower half is below the middle of shoulders and hips', () {
+      final body = drawnBody();
+      expect(lowerHalf(body, const Point(200, 300)), isFalse);
+      expect(lowerHalf(body, const Point(200, 310)), isTrue);
+      expect(lowerHalf(body, const Point(170, 700)), isTrue);
+    });
+
+    test('trousers that would leave much of what is worn showing are refused', () {
+      // Long loose clothes reaching out to one side, apart from the legs.
+      final body = drawnBody();
+      final loose = bodyParts(body, legsApart: true);
+      for (var y = 450; y < 700; y++) {
+        for (var x = 300; x < 396; x++) {
+          loose[y * bw + x] = Part.clothes;
+        }
+      }
+      expect(fit(cutoutOf(200, 370, trousers()), GarmentKind.trousers, body, loose).$2, FitProblem.cover);
     });
   });
 

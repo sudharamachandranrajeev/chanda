@@ -278,12 +278,37 @@ bool isLimb(int p) => p == Part.arm || p == Part.hand;
   return (l < 0 ? r : l, r < 0 ? l : r);
 }
 
-/// The body's outline width (pixels) at the shoulders, waist and hips.
+/// The body's outline width (pixels) at the shoulders, waist and hips, and
+/// across the legs where they are measured (see [legRows]).
 class Outline {
-  const Outline(this.shoulder, this.waist, this.hip);
+  const Outline(this.shoulder, this.waist, this.hip, [this.legs = const []]);
   final int shoulder, waist, hip;
 
-  List<int> get all => [shoulder, waist, hip];
+  /// One width per place of [legRows], in the same order.
+  final List<int> legs;
+
+  List<int> get all => [shoulder, waist, hip, ...legs];
+}
+
+/// Where to measure each leg: across the thigh (a third of the way from the
+/// hip to the knee), at the knee and across the calf (a third of the way
+/// from the knee to the ankle), where [b]'s points for them are seen on its
+/// [w]×[h] photo. Each is (place, row, middle).
+List<(String, int, int)> legRows(BodyReading b, int w, int h) {
+  final out = <(String, int, int)>[];
+  for (final (hip, knee, ankle) in const [
+    (Body.rightHip, Body.rightKnee, Body.rightAnkle),
+    (Body.leftHip, Body.leftKnee, Body.leftAnkle),
+  ]) {
+    if (!b.sees(hip, w, h) || !b.sees(knee, w, h)) continue;
+    final hp = b.point(hip), kp = b.point(knee);
+    (String, int, int) at(String name, Px p) => (name, p.y.round(), p.x.round());
+    out
+      ..add(at('thighs', hp + (kp - hp) * (1 / 3)))
+      ..add(at('knees', kp));
+    if (b.sees(ankle, w, h)) out.add(at('calves', kp + (b.point(ankle) - kp) * (1 / 3)));
+  }
+  return out;
 }
 
 /// Where to measure the outline on a body: rows and middles at the
@@ -295,9 +320,15 @@ List<(int, int)> outlineRows(BodyReading b) {
   return [at(0.12), at(0.6), at(1.0)];
 }
 
-/// [parts]' outline widths at [rows] (from [outlineRows]); 0 where the row
-/// misses the person.
-Outline measureOutline(Uint8List parts, int w, int h, List<(int, int)> rows) {
+/// [parts]' outline widths at [rows] (from [outlineRows]) and at [legs]
+/// (from [legRows]); 0 where the row misses the person.
+Outline measureOutline(
+  Uint8List parts,
+  int w,
+  int h,
+  List<(int, int)> rows, [
+  List<(String, int, int)> legs = const [],
+]) {
   int width((int, int) r) {
     final (y, x) = r;
     if (y < 0 || y >= h) return 0;
@@ -305,7 +336,9 @@ Outline measureOutline(Uint8List parts, int w, int h, List<(int, int)> rows) {
     return o == null ? 0 : o.$2 - o.$1 + 1;
   }
 
-  return Outline(width(rows[0]), width(rows[1]), width(rows[2]));
+  return Outline(width(rows[0]), width(rows[1]), width(rows[2]), [
+    for (final (_, y, x) in legs) width((y, x)),
+  ]);
 }
 
 /// The most a fitted picture may narrow the body's outline at the
@@ -315,13 +348,16 @@ Outline measureOutline(Uint8List parts, int w, int h, List<(int, int)> rows) {
 const maxOutlineShrink = 0.03;
 
 /// Where [after] is narrower than [before] by more than [maxOutlineShrink]:
-/// the names of those places ("shoulders", "waist", "hips"), empty when
-/// the outline is kept.
-List<String> outlineShrunk(Outline before, Outline after) => [
+/// the names of those places ("shoulders", "waist", "hips", and for the
+/// legs the names in [legs], from [legRows]), each once; empty when the
+/// outline is kept.
+List<String> outlineShrunk(Outline before, Outline after, [List<(String, int, int)> legs = const []]) => {
   for (final (name, b, a) in [
     ('shoulders', before.shoulder, after.shoulder),
     ('waist', before.waist, after.waist),
     ('hips', before.hip, after.hip),
+    for (var i = 0; i < legs.length && i < before.legs.length && i < after.legs.length; i++)
+      (legs[i].$1, before.legs[i], after.legs[i]),
   ])
     if (b > 0 && a < b * (1 - maxOutlineShrink)) name,
-];
+}.toList();

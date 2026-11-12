@@ -14,11 +14,12 @@ Notes for picking the work up in a new session, possibly on another computer.
     with shop checks and *Add to my search*.
   - Phase 4: try-on. Saved people (face and body photos, sizes, pupil distance; local only, never
     synced, consent first). Glasses at real size from the iris or typed PD (`glasses_fit.dart`,
-    `frame_size.dart`). Clothes (tops, dresses, skirts; trousers say "not yet") drawn on the body
-    photo: BlazePose body points (`pose_fit.dart`), multiclass segmenter parts (`body_mask.dart`),
+    `frame_size.dart`). Clothes (tops, dresses, skirts, trousers, shorts; jumpsuits say "not yet")
+    drawn on the body photo: BlazePose body points (`pose_fit.dart`), multiclass segmenter parts (`body_mask.dart`),
     garment cut-out and shape reading and the fit (`garment_fit.dart`), wired in `clothes_fit.dart`.
     Garments are only ever widened; the result is re-segmented and refused if the outline at the
-    shoulders, waist or hips shrank more than 3% (`maxOutlineShrink`). Size note from JSON-LD
+    shoulders, waist or hips (and, for trousers and shorts, thighs, knees or calves) shrank more than 3%
+    (`maxOutlineShrink`). Size note from JSON-LD
     SizeSpecification or size tables (`size_chart.dart`). AI try-on with the user's own key
     (`cloud_tryon.dart`: FASHN, fal with no-store, Gemini on paid keys only), consent per service tied
     to terms, model, plan and key hash; the result goes through paste-back and the same outline check.
@@ -28,7 +29,7 @@ Notes for picking the work up in a new session, possibly on another computer.
 - Tags `v0.2.0` and `v0.3.0` exist without releases: their Linux smoke tests failed because the
   bundle lacked `libonnxruntime.so.1` (fixed in 0.3.1, `linux/CMakeLists.txt`). 0.3.1 supersedes both.
 - CI: format, analyze, test on every push. Release: push a `v*` tag; Android signing secrets are set.
-- 250 tests pass; `flutter analyze` is clean. Integration tests with the real try-on models:
+- 263 tests pass (2026-11-12); `flutter analyze` is clean. Integration tests with the real try-on models:
   `integration_test/tryon_test.dart` (face, cut-out) and `integration_test/clothes_test.dart` (body
   points and segmenter against `test/fixtures/pose_reference.json`, a full clothes fit, refusals).
 
@@ -137,6 +138,37 @@ screen read on another shop; `--plain-name` for one test). WebKit's own log goes
   - `panel_live_test.dart` now expects 0 web processes after the last view, measures PSS, and has a
     cross-site test (two rounds, site data kept).
 
+### Trousers and shorts on the body photo (2026-11-12, unreleased)
+
+- Kinds (`garmentKind` in `garment_fit.dart`): title first, then the shop's JSON-LD category
+  (`Reading.category`: Product `category`, else the page's BreadcrumbList), then tags and list name.
+  New kinds `shorts` (needs knees) and `onePiece` (jumpsuits, playsuits, dungarees: "not yet", sent to
+  the cloud services as one-pieces). The vault has no category column: the save sheet pre-fills the
+  garment word from the category as a tag (`garmentTag`) when the title names none; the user sees it.
+- Shape (`_readLegs`): waistband at the top (at least 45% of the width), the crotch found up the middle
+  column from the bottom through the gap between the legs, each leg's inner edge row by row (`Legs`).
+  Refused (`GarmentProblem.legs`) when the bottom middle is solid, the rise or leg lengths are out of
+  range, a leg is thin, or a leg splays out. Ratios: trousers 0.9-3.6, shorts 0.4-1.6 (h/w).
+- Fit (`_fitLegs`): the waistband at 80% of the way from the shoulders to the hip joints
+  (`legsWaistAt`), scale from the body's width there as for skirts; the seat (waist to crotch) is mapped
+  per pixel like a skirt, each row at least as wide as the body plus ease. Each leg is 12 slices
+  (`legSlices`) mapped as triangles along hip, knee, ankle; the top slice is the seat's bottom row, the
+  offset from the seat to the bone fades out by the knee, each slice at least as wide as the body's leg
+  (legs together are split at the middle between them). Hems stop at the ankle plus 5% (`pastAnkle`).
+  Never drawn above the middle of shoulders and hips (`lowerHalf`), nor over hair, face, hands or arms.
+  `FitProblem.legs` when a knee (or, for a leg reaching past the knee, an ankle) is not seen, a leg is
+  raised or folded, or the legs cross. `BodyProblem.legs` replaces `cropped` when only knees or ankles
+  are missing. The outline check measures each leg at thigh, knee and calf (`legRows`) for these kinds.
+- Size chart: trousers compare waist, inside leg, hip; shorts waist, hip. "Leg" / "Leg length" columns
+  are the inside leg (not outside leg, opening, width); unlabelled charts are taken as inches by a vote
+  of figures too small for centimetres (chest/hip < 60, waist < 50, leg < 45).
+- Tests: synthetic trousers (200×370) and shorts (240×200) cut-outs on the drawn 400×800 body, legs
+  together and apart; legs hidden, crossed; cover check; leg outline shrink; JSON-LD inseam and an inch
+  jeans table; category and breadcrumbs; the save-sheet tag; the try-on page with trousers and with
+  hidden knees. `flutter test`: 263 pass.
+- Not run with the real models (none downloaded on this laptop). `integration_test/clothes_test.dart`
+  takes `--dart-define=TROUSERS=/path/flat-trousers.jpg` for that.
+
 ## Not verified yet
 
 - Windows on a real machine (CI builds and smoke-starts it).
@@ -148,6 +180,10 @@ screen read on another shop; `--plain-name` for one test). WebKit's own log goes
   answer shapes follow their public docs as of 2026-11.
 - Known clothes limits: objects in front of the body are drawn over; a loose shirt on the body photo
   makes the garment wide; long sleeves hung down the sides read as sleeveless; no relighting.
+- Trousers: only a flat or hung picture with the legs apart works (legs touching at the hem are
+  refused). The hem's height follows the garment's own proportions scaled from the waist, so it is
+  approximate; a long skirt or dress on the body photo makes trouser legs wide; low-rise and high-rise
+  both sit at the same waist line; folds at the knee and the gap between the legs are not shaded.
 
 ## Next
 
@@ -157,8 +193,8 @@ screen read on another shop; `--plain-name` for one test). WebKit's own log goes
 2. Linux engine B: a dlopen shim so one Linux build loads WPE WebKit when the system has it and runs
    without the in-app browser when not. Then a Flatpak with the WebKit runtime. Both are out of
    Phase 4b's scope.
-3. Trousers and shorts on the body photo (legs warp), and the optional realistic mode on a home
-   server.
+3. Trousers and shorts: check with the real models on real shop pictures (`TROUSERS=` in the
+   integration test). Then the optional realistic mode on a home server.
 4. Phase 5: screenshots from demo data and the stable release.
 
 ## Rules that hold

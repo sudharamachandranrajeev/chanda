@@ -44,7 +44,8 @@ those only while it is open.
 - 👓 **Try glasses on** – see glasses from your vault on a photo of your face, at their real size, sized from
   your eyes or the pupil distance you type. It says how sure it is, and says so plainly when it cannot fit
   them. It never changes your photo. It runs on your device, with an optional download.
-- 👕 **Try clothes on** – see a top, dress or skirt from your vault on a photo of your whole body. The garment
+- 👕 **Try clothes on** – see a top, dress, skirt, trousers or shorts from your vault on a photo of your
+  whole body. The garment
   is stretched to your shape, never you to the garment, and Chanda will not show a picture that makes you
   look slimmer. A size note puts your measurements on the shop's size chart. With your own key for an AI
   try-on service, you can also ask for a more lifelike picture.
@@ -199,8 +200,10 @@ extra, for when you add your own key.
 <summary>Why does try-on say "Cannot fit this photo"?</summary>
 
 Chanda draws clothes only when it can do it fairly. It needs one person, standing and facing the camera,
-the whole body in the photo, and a picture of the garment on its own, laid flat or hung straight. If the
-drawn garment would make you look narrower anywhere, it is not shown. The message says what to change.
+the whole body in the photo, and a picture of the garment on its own, laid flat or hung straight. Trousers
+need both knees and ankles to show (shorts need the knees), with the legs apart in the product picture. If
+Chanda cannot see your legs, it says so rather than guessing. If the drawn garment would make you look
+narrower anywhere, it is not shown. The message says what to change.
 Try another product picture with the buttons under the photo.
 </details>
 

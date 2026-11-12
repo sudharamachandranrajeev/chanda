@@ -125,10 +125,19 @@ void main() {
       expect(bodyProblem([person(lsx: 200, rsx: 300)], 500, 800, BodyNeeds.torso), BodyProblem.turned);
       expect(bodyProblem([person(depthGap: 300)], 500, 800, BodyNeeds.torso), BodyProblem.turned);
       expect(bodyProblem([person(kneesOn: false)], 500, 800, BodyNeeds.torso), isNull);
-      expect(bodyProblem([person(kneesOn: false)], 500, 800, BodyNeeds.knees), BodyProblem.cropped);
+      // Knees or ankles not seen: said so, never guessed.
+      expect(bodyProblem([person(kneesOn: false)], 500, 800, BodyNeeds.knees), BodyProblem.legs);
+      expect(bodyProblem([person(kneesOn: false)], 500, 800, BodyNeeds.legs), BodyProblem.legs);
       // The ankles are below the bottom of the photo.
-      expect(bodyProblem([person()], 500, 650, BodyNeeds.legs), BodyProblem.cropped);
+      expect(bodyProblem([person()], 500, 650, BodyNeeds.legs), BodyProblem.legs);
+      expect(bodyProblem([person()], 500, 650, BodyNeeds.knees), isNull);
+      // The hips below it.
+      expect(bodyProblem([person()], 500, 380, BodyNeeds.torso), BodyProblem.cropped);
       expect(bodyProblemText(BodyProblem.cropped), contains('head to feet'));
+      expect(
+        bodyProblemText(BodyProblem.legs),
+        allOf(contains('knees or ankles'), contains('does not guess')),
+      );
     });
   });
 

@@ -8,8 +8,59 @@ import 'package:chanda/domain/size_chart.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  Person person({double? chest, double? waist, double? hip}) =>
-      Person(id: 'p', consent: DateTime(2026), chest: chest, waist: waist, hip: hip);
+  Person person({double? chest, double? waist, double? hip, double? insideLeg}) =>
+      Person(id: 'p', consent: DateTime(2026), chest: chest, waist: waist, hip: hip, insideLeg: insideLeg);
+
+  test('trousers: waist and inside leg from JSON-LD and from tables in inches', () {
+    final ld = jsonEncode({
+      '@type': 'Product',
+      'name': 'Slim jeans',
+      'size': [
+        for (final (s, waist, leg) in [('30/32', 76, 81), ('32/32', 81, 81)])
+          {
+            '@type': 'SizeSpecification',
+            'name': s,
+            'hasMeasurement': [
+              {
+                'valueReference': 'https://schema.org/WearableMeasurementWaist',
+                'value': waist,
+                'unitCode': 'CMT',
+              },
+              {
+                'valueReference': 'https://schema.org/WearableMeasurementInseam',
+                'value': leg,
+                'unitCode': 'CMT',
+              },
+            ],
+          },
+      ],
+    });
+    final fromLd = findSizeChart(Evidence(url: 'https://shop.example/jeans', ld: [ld]))!;
+    expect(fromLd.rows[1].ranges, {Measure.waist: (81.0, 81.0), Measure.insideLeg: (81.0, 81.0)});
+
+    // A jeans table that names no unit: a 32 waist and a 30 leg are inches.
+    // The outside leg and the leg opening are the garment's, not the body's.
+    final rows = chartFromTable([
+      ['Size', 'Waist', 'Leg', 'Outside leg', 'Leg opening'],
+      ['30R', '30', '31', '41', '7'],
+      ['32R', '32', '31', '42', '7.5'],
+      ['34R', '34', '31', '42', '8'],
+    ]);
+    expect(rows.map((r) => r.size), ['30R', '32R', '34R']);
+    expect(rows[1].ranges[Measure.waist]!.$1, closeTo(32 * 2.54, 1e-9));
+    expect(rows[1].ranges[Measure.insideLeg]!.$1, closeTo(31 * 2.54, 1e-9));
+    expect(rows[1].ranges.keys, unorderedEquals([Measure.waist, Measure.insideLeg]));
+
+    // The note for trousers sets waist and inside leg against the chart; for
+    // shorts the leg does not matter.
+    final chart = SizeChart(rows, ChartSource.table, 'shop.example');
+    final note = sizeNote(chart, person(waist: 81, insideLeg: 79), GarmentKind.trousers);
+    expect(note.lines.map((l) => l.measure), [Measure.waist, Measure.insideLeg]);
+    expect(note.lines[0].fit, SizeFit.within);
+    expect(note.lines[1].fit, SizeFit.within);
+    expect(sizeNote(chart, person(waist: 81), GarmentKind.trousers).missing, [Measure.insideLeg]);
+    expect(sizeNote(chart, person(waist: 81), GarmentKind.shorts).missing, isEmpty);
+  });
 
   test('reads a size chart from JSON-LD size specifications, in centimetres', () {
     final ld = jsonEncode({

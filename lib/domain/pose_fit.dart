@@ -204,9 +204,12 @@ enum BodyProblem {
   /// Turned to the side.
   turned,
 
-  /// Shoulders or hips (or, for long things, knees and ankles) are not in
-  /// the photo or hidden.
+  /// Shoulders or hips are not in the photo or hidden.
   cropped,
+
+  /// The knees (or, for trousers, the ankles) are not in the photo or
+  /// hidden: the legs cannot be placed, and are never guessed.
+  legs,
 }
 
 /// The widest turn, and the narrowest shoulders for the torso's length,
@@ -234,15 +237,13 @@ BodyProblem? bodyProblem(List<BodyReading> bodies, int w, int h, BodyNeeds needs
   if (bodies.isEmpty) return BodyProblem.none;
   if (bodies.length > 1) return BodyProblem.several;
   final b = bodies.single;
-  final need = [
-    Body.rightShoulder,
-    Body.leftShoulder,
-    Body.rightHip,
-    Body.leftHip,
+  const torso = [Body.rightShoulder, Body.leftShoulder, Body.rightHip, Body.leftHip];
+  final legs = [
     if (needs != BodyNeeds.torso) ...[Body.rightKnee, Body.leftKnee],
     if (needs == BodyNeeds.legs) ...[Body.rightAnkle, Body.leftAnkle],
   ];
-  if (!need.every((i) => b.sees(i, w, h))) return BodyProblem.cropped;
+  if (!torso.every((i) => b.sees(i, w, h))) return BodyProblem.cropped;
+  if (!legs.every((i) => b.sees(i, w, h))) return BodyProblem.legs;
   // From the front, the person's right shoulder is on the left of the photo,
   // the shoulders are wide for the torso, and neither is much further away.
   final rs = b.point(Body.rightShoulder), ls = b.point(Body.leftShoulder);
@@ -260,4 +261,7 @@ String bodyProblemText(BodyProblem p) => switch (p) {
   BodyProblem.cropped =>
     'Part of you that this needs is outside your body photo or hidden. Use a photo of all of you, from head '
         'to feet, with your arms a little away from your sides.',
+  BodyProblem.legs =>
+    'Chanda cannot see your knees or ankles on your body photo, and it does not guess where your legs are. '
+        'Use a photo of all of you, from head to feet, with nothing in front of your legs.',
 };

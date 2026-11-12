@@ -76,6 +76,26 @@ void main() {
       expect(r.usable, isTrue);
     });
 
+    test("the shop's category comes from the product, else the breadcrumbs", () {
+      Reading read(List<String> ld) => readProduct(
+        Evidence(url: _url, h1: 'The Ridley 32', ld: ld),
+        hint: 'GBP',
+      );
+      const product =
+          '{"@type":"Product","name":"The Ridley 32","offers":{"price":"40","priceCurrency":"GBP"}';
+      expect(read(['$product,"category":"Men > Jeans"}']).category, 'Men > Jeans');
+      expect(read(['$product,"category":["Men",{"@type":"Thing","name":"Jeans"}]}']).category, 'Men > Jeans');
+      const crumbs =
+          '{"@type":"BreadcrumbList","itemListElement":['
+          '{"@type":"ListItem","position":2,"item":{"@id":"/men/jeans","name":"Jeans"}},'
+          '{"@type":"ListItem","position":1,"name":"Men"}]}';
+      expect(read(['$product}', crumbs]).category, 'Men > Jeans');
+      expect(read(['$product}']).category, '');
+      // Kept when the AI reads the page again.
+      final r = read(['$product,"category":"Jeans"}']);
+      expect(r.withFacts(layer: 'ai', warning: 'Read by AI').category, 'Jeans');
+    });
+
     test('out of stock is read from the offer', () {
       expect(readProduct(_priced(20, inStock: false), hint: 'GBP').inStock, isFalse);
     });

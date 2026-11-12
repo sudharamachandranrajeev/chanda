@@ -227,8 +227,8 @@ class CloudTryOn {
 
   static String _category(GarmentKind k) => switch (k) {
     GarmentKind.top => 'tops',
-    GarmentKind.dress => 'one-pieces',
-    GarmentKind.skirt || GarmentKind.trousers => 'bottoms',
+    GarmentKind.dress || GarmentKind.onePiece => 'one-pieces',
+    GarmentKind.skirt || GarmentKind.trousers || GarmentKind.shorts => 'bottoms',
   };
 
   /// Throws the plain-words error for a failed HTTP answer.

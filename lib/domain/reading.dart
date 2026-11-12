@@ -167,6 +167,7 @@ class Reading {
     this.warnings = const [],
     this.check = false,
     this.text = '',
+    this.category = '',
   });
 
   final String url;
@@ -203,6 +204,10 @@ class Reading {
   /// The page's main text, kept only while the save sheet is open so the
   /// user can ask an AI to read it. Never saved.
   final String text;
+
+  /// The shop's category for the product, from its JSON-LD (the product's
+  /// own category, else the page's breadcrumbs): "Women > Jeans".
+  final String category;
 
   bool get usable => price != null && title.isNotEmpty && !check;
 
@@ -241,6 +246,7 @@ class Reading {
     warnings: [warning],
     check: check && price == null,
     text: text,
+    category: category,
   );
 }
 
@@ -366,6 +372,7 @@ Reading readProduct(Evidence e, {required String hint}) {
     warnings: warnings,
     check: e.check && price == null,
     text: e.text,
+    category: _s(ld?['category']) ?? ldBreadcrumbs(e.ld),
   );
 }
 
@@ -444,7 +451,54 @@ Map<String, Object?>? _ldProduct(List<String> blocks, String heading) {
     'sku': _s(p['sku']) ?? _s(o['sku']),
     'rating': rating is Map ? _s(rating['ratingValue']) : null,
     'reviews': rating is Map ? _s(rating['reviewCount']) ?? _s(rating['ratingCount']) : null,
+    'category': _category(p['category']),
   };
+}
+
+/// A JSON-LD category: text, a thing with a name, or a list of either.
+String? _category(Object? c) {
+  if (c is List) {
+    final parts = c.map(_category).whereType<String>().toList();
+    return parts.isEmpty ? null : parts.join(' > ');
+  }
+  return _name(c);
+}
+
+/// The names in the first JSON-LD BreadcrumbList of [blocks], joined with
+/// " > "; empty when there is none.
+String ldBreadcrumbs(List<String> blocks) {
+  String? found;
+  void walk(Object? n, int depth) {
+    if (found != null || depth > 12) return;
+    if (n is List) {
+      for (final x in n) {
+        walk(x, depth + 1);
+      }
+    } else if (n is Map) {
+      if ('${n['@type']}' == 'BreadcrumbList' && n['itemListElement'] is List) {
+        final items = (n['itemListElement'] as List).whereType<Map>().toList()
+          ..sort((a, b) => ((a['position'] as num?) ?? 0).compareTo((b['position'] as num?) ?? 0));
+        final names = [
+          for (final i in items)
+            ?(_s(i['name']) ?? (i['item'] is Map ? _s((i['item'] as Map)['name']) : null)),
+        ];
+        if (names.isNotEmpty) found = names.join(' > ');
+        return;
+      }
+      for (final v in n.values) {
+        walk(v, depth + 1);
+      }
+    }
+  }
+
+  for (final b in blocks) {
+    try {
+      walk(jsonDecode(b), 0);
+    } on FormatException {
+      continue;
+    }
+  }
+  return found ?? '';
 }
 
 List<Map> _offers(Object? o) {

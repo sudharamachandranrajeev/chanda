@@ -145,6 +145,34 @@ void main() {
       expect(outlineShrunk(const Outline(100, 100, 100), const Outline(98, 97, 100)), isEmpty);
       expect(outlineShrunk(const Outline(100, 100, 100), const Outline(96, 100, 100)), ['shoulders']);
     });
+
+    test('the legs are measured at the thighs, knees and calves, and a narrower leg is caught', () {
+      final parts = drawn();
+      final legs = legRows(body, w, h);
+      expect([for (final l in legs) l.$1], ['thighs', 'knees', 'calves', 'thighs', 'knees', 'calves']);
+      expect(legs[1], ('knees', 300, 85));
+      expect(legs[2].$2, (300 + 85 / 3).round());
+      final rows = outlineRows(body);
+      final before = measureOutline(parts, w, h, rows, legs);
+      expect(before.legs, hasLength(6));
+      // The drawn legs are one stretch of clothes, 48 wide.
+      expect(before.legs.take(2), [48, 48]);
+      // One leg's outer edge pulled in by 4 pixels: thighs and knees.
+      final thin = Uint8List.fromList(parts);
+      for (var y = 230; y < 320; y++) {
+        for (var x = 76; x < 80; x++) {
+          thin[y * w + x] = Part.background;
+        }
+      }
+      final after = measureOutline(thin, w, h, rows, legs);
+      expect(outlineShrunk(before, after, legs), ['thighs', 'knees']);
+      // Without the legs asked for, only the body is compared.
+      expect(outlineShrunk(before, after), isEmpty);
+      // Legs whose knees are not seen are not measured.
+      final p = Float64List.fromList(body.points);
+      p[Body.rightKnee * 5 + 3] = 0.1;
+      expect([for (final l in legRows(BodyReading(p), w, h)) l.$1], ['thighs', 'knees', 'calves']);
+    });
   });
 }
 

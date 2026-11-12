@@ -14,11 +14,12 @@ import 'package:integration_test/integration_test.dart';
 // a folder; optionally the stock photo the body reference was made from
 // (test/fixtures/pose_reference.json), a full-length photo of one person
 // facing the camera, a front picture of a garment on a plain background,
-// and pictures that must be refused (a garment worn by a model, a crumpled
-// one):
+// a front picture of trousers laid flat, and pictures that must be refused
+// (a garment worn by a model, a crumpled one):
 //   flutter test integration_test/clothes_test.dart -d linux \
 //     --dart-define=TRYON_DIR=/path --dart-define=POSE=/path/pose.jpg \
 //     --dart-define=BODY=/path/person.jpg --dart-define=GARMENT=/path/tee.jpg \
+//     --dart-define=TROUSERS=/path/jeans.jpg \
 //     --dart-define=REFUSE=/path/worn.jpg,/path/crumpled.png
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ void main() {
   const pose = String.fromEnvironment('POSE');
   const body = String.fromEnvironment('BODY');
   const garment = String.fromEnvironment('GARMENT');
+  const trousers = String.fromEnvironment('TROUSERS');
   const refuse = String.fromEnvironment('REFUSE');
 
   testWidgets('the body models match the reference on its photo', (_) async {
@@ -80,9 +82,18 @@ void main() {
     expect(fit.problem, isNull);
     expect(decodeRgb(fit.jpeg!)!.w, photo.w);
 
-    // Trousers are not drawn yet.
-    final trousers = await fitClothes(models, photo, await File(garment).readAsBytes(), GarmentKind.trousers);
-    expect(trousers.problem, garmentProblemText(GarmentProblem.unsupported));
+    // A top is not two legs; jumpsuits are not drawn yet.
+    final notLegs = await fitClothes(models, photo, await File(garment).readAsBytes(), GarmentKind.trousers);
+    expect(notLegs.jpeg, isNull);
+    expect(notLegs.problem, isNotNull);
+    final onePiece = await fitClothes(models, photo, await File(garment).readAsBytes(), GarmentKind.onePiece);
+    expect(onePiece.problem, garmentProblemText(GarmentProblem.unsupported));
+    if (trousers.isNotEmpty) {
+      final legs = await fitClothes(models, photo, await File(trousers).readAsBytes(), GarmentKind.trousers);
+      // ignore: avoid_print
+      print('trousers: ${legs.problem ?? 'drawn'}');
+      expect(legs.problem, isNull);
+    }
 
     for (final path in refuse.split(',').where((p) => p.isNotEmpty)) {
       final r = await fitClothes(models, photo, await File(path).readAsBytes(), GarmentKind.top);

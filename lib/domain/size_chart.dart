@@ -40,7 +40,9 @@ List<Measure> measuresFor(GarmentKind k) => switch (k) {
   GarmentKind.top => const [Measure.chest, Measure.waist],
   GarmentKind.dress => const [Measure.chest, Measure.waist, Measure.hip],
   GarmentKind.skirt => const [Measure.waist, Measure.hip],
-  GarmentKind.trousers => const [Measure.waist, Measure.hip, Measure.insideLeg],
+  GarmentKind.shorts => const [Measure.waist, Measure.hip],
+  GarmentKind.trousers => const [Measure.waist, Measure.insideLeg, Measure.hip],
+  GarmentKind.onePiece => const [Measure.chest, Measure.waist, Measure.hip, Measure.insideLeg],
 };
 
 /// One size's row: its label and, per measurement, the range it is for
@@ -186,6 +188,11 @@ Measure? _measure(String label) {
   if (RegExp(r'waist').hasMatch(l)) return Measure.waist;
   if (RegExp(r'hip').hasMatch(l)) return Measure.hip;
   if (RegExp(r'inside ?leg|inseam|inner ?leg').hasMatch(l)) return Measure.insideLeg;
+  // "Leg" or "Leg length" on a trousers chart is the inside leg; the outside
+  // leg and the leg opening are garment measurements.
+  if (RegExp(r'\bleg\b').hasMatch(l) && !RegExp(r'outside|outer|open|width|hem|cuff').hasMatch(l)) {
+    return Measure.insideLeg;
+  }
   return null;
 }
 
@@ -223,8 +230,8 @@ bool? _inchLabel(String label) {
 /// The size rows in [table] (rows of cell texts): a row per size with the
 /// measurements as column headings, or a column per size with the
 /// measurements down the first column. Inches are turned into centimetres;
-/// a chart that does not say is taken as inches when its chest or hip
-/// figures are too small for centimetres.
+/// a chart that does not say is taken as inches when most of its figures
+/// are too small for centimetres (a 32 waist, a 30 leg).
 List<SizeRow> chartFromTable(List<List<String>> table) {
   if (table.length < 2) return const [];
   final tableInches = _inchLabel(table.expand((r) => r).join(' '));
@@ -260,14 +267,25 @@ List<SizeRow> chartFromTable(List<List<String>> table) {
     for (final c in cells)
       if (c.$4 == false) c.$2,
   };
+  // Each unlabelled figure too small for centimetres for what it measures
+  // is a vote for inches.
   final guessInches = () {
-    final big = [
-      for (final c in cells)
-        if (c.$4 == null && (c.$2 == Measure.chest || c.$2 == Measure.hip)) c.$3.$2,
-    ];
-    if (big.isEmpty) return tableInches ?? false;
-    big.sort();
-    return tableInches ?? big[big.length ~/ 2] < 60;
+    if (tableInches != null) return tableInches;
+    var inch = 0, cm = 0;
+    for (final (_, m, r, label) in cells) {
+      if (label != null) continue;
+      final least = switch (m) {
+        Measure.chest || Measure.hip => 60,
+        Measure.waist => 50,
+        Measure.insideLeg => 45,
+      };
+      if (r.$2 < least) {
+        inch++;
+      } else {
+        cm++;
+      }
+    }
+    return inch > cm;
   }();
   final out = <String, Map<Measure, (double, double)>>{};
   final order = <String>[];

@@ -21,7 +21,7 @@ import 'package:http/testing.dart';
 import 'package:image/image.dart' as img;
 
 import 'app_harness.dart';
-import 'garment_fit_test.dart' show bh, bodyParts, bw, cutoutOf, drawnBody, skirt;
+import 'garment_fit_test.dart' show bh, bodyParts, bw, cutoutOf, drawnBody, skirt, trousers;
 
 /// Faces as the test sets them.
 class FakeFaces implements FaceFinding {
@@ -46,8 +46,10 @@ class FakeFrames implements FrameCutting {
 
 /// The drawn person of test/garment_fit_test.dart.
 class FakeBodies implements BodyFinding, BodySegmenting {
+  BodyReading body = drawnBody();
+
   @override
-  Future<List<BodyReading>> find(Rgb photo) async => [drawnBody()];
+  Future<List<BodyReading>> find(Rgb photo) async => [body];
 
   @override
   Future<Uint8List> parts(Rgb photo, BodyReading body) async => bodyParts(body);
@@ -56,16 +58,18 @@ class FakeBodies implements BodyFinding, BodySegmenting {
 /// Product picture [n]: a small plain picture [n] + 10 pixels wide.
 Uint8List productPicture(int n) => img.encodePng(img.Image(width: n + 10, height: 10));
 
-/// Picture 0 shows the garment from the side; picture 1 is a drawn skirt.
+/// Picture 0 shows the garment from the side; picture 1 is a drawn
+/// [garment] (a skirt unless set).
 class FakeGarments implements GarmentCutting {
   final pictures = <int>[];
+  Cutout garment = cutoutOf(280, 280, skirt());
 
   @override
   Future<(Cutout?, GarmentProblem?, Rgb?)> cut(Uint8List picture) async {
     final n = img.decodePng(picture)!.width - 10;
     pictures.add(n);
     if (n == 0) return (null, GarmentProblem.notFront, null);
-    return (cutoutOf(280, 280, skirt()), null, null);
+    return (garment, null, null);
   }
 }
 
@@ -391,6 +395,75 @@ void main() {
     await app.waitFor(aiPicture);
     expect(find.text('Send your photo to FASHN?'), findsNothing);
     expect(sent, hasLength(2));
+    expect(tester.takeException(), isNull);
+    await app.close();
+  });
+
+  testWidgets('trousers are drawn on the legs with a waist and inside-leg note, or Chanda says why not', (
+    tester,
+  ) async {
+    final bodies = FakeBodies(), garments = FakeGarments()..garment = cutoutOf(200, 370, trousers());
+    final app = AppHarness(tester)..desktop();
+    const url = 'https://www.shein.co.uk/Skirt-p-123.html';
+    final grey = img.Image(width: bw, height: bh)..clear(img.ColorRgb8(128, 128, 128));
+    await app.open(
+      seed: (v) async {
+        await seedVault(v);
+        final item = (await v.items()).firstWhere((i) => i.title == 'Pleated midi skirt');
+        await v.updateItem(
+          item.copyWith(
+            title: 'Slim stretch jeans',
+            images: jsonEncode(['https://shop.example/side.jpg', 'https://shop.example/flat.jpg']),
+          ),
+        );
+        final people = People(app.session.db);
+        final p = await people.add(consent: DateTime.now());
+        await people.save(p.copyWith(waist: () => 81, insideLeg: () => 79));
+        await people.setPhoto(p.id, PhotoKind.body, preparePhoto(img.encodeJpg(grey))!);
+      },
+    );
+    await app.run(
+      pages: {
+        url: const Evidence(
+          url: url,
+          tables: [
+            [
+              ['Size', 'Waist (cm)', 'Inside leg (cm)'],
+              ['30', '74-78', '79'],
+              ['32', '79-83', '79'],
+            ],
+          ],
+        ),
+      },
+      extra: [
+        tryOnProvider.overrideWith(_Downloaded.new),
+        tryOnModelsProvider.overrideWith(
+          (_) async =>
+              TryOnModels(FakeFaces(), FakeFrames(), bodies: bodies, segmenter: bodies, garments: garments),
+        ),
+        itemPictureProvider.overrideWithValue((_, n, _) async => productPicture(n)),
+      ],
+    );
+    await app.go('Vault');
+    await app.tap(find.descendant(of: find.byType(ItemCard), matching: find.text('Slim stretch jeans')));
+    await app.tapText('Try on');
+    await app.waitFor(find.text('Fit preview, approximate'));
+    expect(find.text('Cannot fit this photo'), findsNothing);
+    await app.waitFor(find.text("Size note: within the chart's range"));
+    expect(find.text("Waist 81 cm: within the chart's range for 32 (79–83 cm)."), findsOneWidget);
+    expect(find.textContaining('Inside leg 79 cm: within'), findsOneWidget);
+    await tester.pageBack();
+    await app.settle();
+
+    // Knees hidden on the body photo: nothing drawn, Chanda says so and
+    // offers to change the photo.
+    bodies.body = drawnBody(kneesShow: false);
+    await app.tapText('Try on');
+    await app.waitFor(find.text(bodyProblemText(BodyProblem.legs)));
+    expect(find.text('Fit preview, approximate'), findsNothing);
+    expect(find.text('Change my photo'), findsOneWidget);
+    // No picture was cut again: the body photo is checked first.
+    expect(garments.pictures, [0, 1]);
     expect(tester.takeException(), isNull);
     await app.close();
   });

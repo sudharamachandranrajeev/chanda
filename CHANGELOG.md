@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Try-on draws trousers, jeans, leggings and shorts on your body photo, not only tops, dresses and skirts.
+  The waistband sits at your waist and each leg follows your own leg through the knee to the ankle, at
+  least as wide as you are there. It is drawn only below your waist, never over your hands or arms, and the
+  preview is refused if your thighs, knees or calves come out narrower, as with the shoulders, waist and
+  hips before. If your knees or ankles cannot be seen on your body photo, Chanda says so and draws nothing.
+  Jumpsuits, playsuits and dungarees are recognised and Chanda says it does not draw them yet.
+- A product whose title names no garment ("The Ridley 32") but whose shop lists it under one ("Men > Jeans")
+  is saved with that word as a tag, so it can be tried on. The tag shows in the save sheet; remove it if you
+  like.
+- Size notes for trousers set your waist and inside leg against the chart. Jeans charts that give a "Leg"
+  column, or figures in inches without saying so (a 32 waist, a 30 leg), are now read.
 - *Read the results from the screen* now works on long results pages. Before, it read only the part of the
   page in view, which at the top of a shop's results is often its header, adverts and a cookie notice, so
   it found nothing. It now reads up to six screens down the page, then puts the page back where it was.

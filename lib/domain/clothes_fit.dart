@@ -50,7 +50,7 @@ Future<bool> showsPerson(TryOnModels m, Rgb picture) async {
 /// The garment on [picture] (a product picture) drawn on the body [photo];
 /// or why it cannot be.
 Future<ClothesFit> fitClothes(TryOnModels m, Rgb photo, Uint8List picture, GarmentKind kind) async {
-  if (kind == GarmentKind.trousers) return ClothesFit.problem(garmentProblemText(GarmentProblem.unsupported));
+  if (kind == GarmentKind.onePiece) return ClothesFit.problem(garmentProblemText(GarmentProblem.unsupported));
   final (body, bodyWhy) = await findBody(m, photo, kind);
   if (body == null) return ClothesFit.problem(bodyWhy!);
 
@@ -82,28 +82,32 @@ Future<ClothesFit> fitClothes(TryOnModels m, Rgb photo, Uint8List picture, Garme
   final (fit, fitWhy) = fitted;
   if (fit == null) return ClothesFit.problem(fitProblemText(fitWhy!));
   final after = (rgb: fit.rgb, w: photo.w, h: photo.h);
-  final why = await outlineCheck(m, photo, after, body, raw);
+  final why = await outlineCheck(m, photo, after, body, before: raw, legs: onLegs(kind));
   if (why != null) return ClothesFit.problem(why);
   return ClothesFit.picture(await encodeJpeg(after), cut);
 }
 
 /// Why [after] (a picture made from [photo]) cannot be shown: the body's
-/// outline came out narrower at the shoulders, waist or hips; null when it
-/// is kept. [before] is the photo's parts, when already known.
+/// outline came out narrower at the shoulders, waist or hips (and, with
+/// [legs], the thighs, knees or calves); null when it is kept. [before] is
+/// the photo's parts, when already known.
 Future<String?> outlineCheck(
   TryOnModels m,
   Rgb photo,
   Rgb after,
-  BodyReading body, [
+  BodyReading body, {
   Uint8List? before,
-]) async {
+  bool legs = false,
+}) async {
   final b = before ?? await m.segmenter!.parts(photo, body);
   final a = await m.segmenter!.parts(after, body);
   final shrunk = await Isolate.run(() {
     final rows = outlineRows(body);
+    final leg = legs ? legRows(body, photo.w, photo.h) : const <(String, int, int)>[];
     return outlineShrunk(
-      measureOutline(b, photo.w, photo.h, rows),
-      measureOutline(a, after.w, after.h, rows),
+      measureOutline(b, photo.w, photo.h, rows, leg),
+      measureOutline(a, after.w, after.h, rows, leg),
+      leg,
     );
   });
   return shrunk.isEmpty ? null : outlineProblemText(shrunk);
@@ -145,7 +149,7 @@ Future<ClothesFit> checkCloudResult(TryOnModels m, Rgb photo, Uint8List result, 
     () => pasteBack(photo.rgb, made.rgb, splitArms(raw, photo.w, photo.h, body), madeParts),
   );
   final after = (rgb: pasted, w: photo.w, h: photo.h);
-  final why = await outlineCheck(m, photo, after, body, raw);
+  final why = await outlineCheck(m, photo, after, body, before: raw, legs: onLegs(kind));
   if (why != null) return ClothesFit.problem(why);
   return ClothesFit.picture(await encodeJpeg(after), null);
 }

@@ -8,6 +8,7 @@ import 'package:nithya/nithya.dart';
 import '../app/providers.dart';
 import '../db/database.dart';
 import '../domain/ai_reader.dart';
+import '../domain/garment_fit.dart' show garmentTag;
 import '../domain/html_evidence.dart';
 import '../domain/images.dart';
 import '../domain/links.dart';
@@ -88,7 +89,11 @@ class _SaveSheetState extends ConsumerState<SaveSheet> {
   late final _title = TextEditingController(text: r.title);
   late final _price = TextEditingController(text: r.price == null ? '' : _decimal(r.price!, r.currency));
   final _target = TextEditingController();
-  final _tags = TextEditingController();
+  // A garment the title does not name but the shop's category does gets
+  // that word as a tag, so it can be tried on; the user can remove it.
+  late final _tags = TextEditingController(
+    text: garmentTag(title: r.title, category: r.category),
+  );
   final _note = TextEditingController();
   String? _listId;
   var _alertDrop = true, _alertStock = true, _watchClose = false;

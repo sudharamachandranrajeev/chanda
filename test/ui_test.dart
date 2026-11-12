@@ -97,6 +97,29 @@ void main() {
     await app.close();
   });
 
+  testWidgets("a garment named only by the shop's category is tagged so it can be tried on", (tester) async {
+    final app = AppHarness(tester)..desktop();
+    await app.open();
+    await app.run();
+    final context = tester.element(find.byType(Scaffold).first);
+    showSaveSheet(
+      context,
+      const Reading(
+        url: 'https://www.shop.example/p/ridley',
+        title: 'The Ridley 32',
+        price: 4000,
+        currency: 'GBP',
+        category: 'Men > Clothing > Jeans',
+      ),
+    );
+    await app.settle();
+    // The tag shows in the sheet, where the user can remove it.
+    expect(find.widgetWithText(TextField, 'jeans'), findsOneWidget);
+    await app.tapText('Save to vault');
+    expect((await tester.runAsync(app.vault.items))!.single.tags, 'jeans');
+    await app.close();
+  });
+
   testWidgets('Read with AI fills the price for the user to confirm, with their own key', (tester) async {
     final app = AppHarness(tester)..desktop();
     await app.open(seed: (v) => v.store.db.setLocalSetting(aiKeySetting, 'sk-ant-test-0123456789abcdefghij'));
