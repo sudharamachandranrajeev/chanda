@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- *Read the results from the screen* now works on long results pages. Before, it read only the part of the
+  page in view, which at the top of a shop's results is often its header, adverts and a cookie notice, so
+  it found nothing. It now reads up to six screens down the page, then puts the page back where it was.
+  Prices drawn with small raised pence (£47⁴⁹) read as £47.49, not £4749, and a price far out of line
+  with the rest is dropped. If something covers the page, such as a cookie notice, Chanda says so.
+- Linux: closing the last shop page or in-app browser now frees all of its memory. Before, a page that had
+  moved to another site left two to four helper processes running, about 550-700 MB, for many minutes.
+  Sign-ins and site data are kept as before.
+
 ## 0.5.1
 
 - Same app as 0.5.0, which was never published: its Ubuntu start test failed on a script error in

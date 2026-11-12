@@ -80,6 +80,12 @@
 
 using json = nlohmann::json;
 
+// Chanda patch: the web context the views share while any of them is alive
+// (see InitWebView); null when none is.
+namespace {
+WebKitWebContext* g_shared_context = nullptr;
+}  // namespace
+
 // Forward declaration of InAppWebView for FileChooserContext
 namespace flutter_inappwebview_plugin {
 class InAppWebView;
@@ -684,7 +690,24 @@ void InAppWebView::InitWebView(const InAppWebViewCreationParams& params) {
   }
   
   WebKitWebContext* webContext = params.webContext;
-  
+
+  // Chanda patch: views that name no context share one that lives only while
+  // a view holds it, instead of WebKit's default context, which lives until
+  // the app quits. A context's process pool keeps web processes that no view
+  // uses: the processes of pages left by a cross-site navigation (in its
+  // process cache, up to 32 for many minutes) and a prewarmed one. When the
+  // last view goes, this context and its pool go, and those processes end.
+  // Cookies and site data are kept: they belong to the network session.
+  WebKitWebContext* ownedContext = nullptr;
+  if (webContext == nullptr && params.relatedWebView == nullptr) {
+    if (g_shared_context == nullptr) {
+      ownedContext = webkit_web_context_new();
+      g_shared_context = ownedContext;
+      g_object_add_weak_pointer(G_OBJECT(g_shared_context), reinterpret_cast<gpointer*>(&g_shared_context));
+    }
+    webContext = g_shared_context;
+  }
+
   // Check if we're creating a related webview (for multi-window support)
   if (params.relatedWebView != nullptr) {
     webview_ = WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW,
@@ -722,7 +745,11 @@ void InAppWebView::InitWebView(const InAppWebViewCreationParams& params) {
   }
   
   g_object_unref(settings);
-  
+  // The views hold the shared context from here on.
+  if (ownedContext != nullptr) {
+    g_object_unref(ownedContext);
+  }
+
   if (webview_ == nullptr) {
     errorLog("InAppWebView: Failed to create WebKitWebView with WPEPlatform");
     if (networkSession != nullptr) {

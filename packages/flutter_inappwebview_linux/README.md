@@ -16,7 +16,7 @@ should add it to your `pubspec.yaml` as usual.
 
 A copy of `flutter_inappwebview_linux` 0.1.0-beta.1 (Apache-2.0, see
 LICENSE), used through `dependency_overrides` in Chanda's pubspec. The
-example app is left out. Eight changes:
+example app is left out. Nine changes:
 
 1. `linux/CMakeLists.txt` needs libwpe (wpe-1.0) only for the legacy
    WPEBackend-FDO path, because WPE WebKit 2.52 and later with WPEPlatform
@@ -47,6 +47,17 @@ example app is left out. Eight changes:
 8. `lib/src/in_app_webview/custom_platform_view.dart` claims mouse-wheel
    events through `pointerSignalResolver`. Before, a scroll view around the
    page scrolled along with the page.
+9. `linux/in_app_webview/in_app_webview.cc`: views that name no web context
+   share one the plugin makes (`webkit_web_context_new`), held only by the
+   views, instead of WebKit's default context, which lives until the app
+   quits. After a cross-site navigation WebKit kept the old page's web
+   process and a prewarmed one in the context's process pool (its process
+   cache holds up to 32, for many minutes), so 2-4 `WPEWebProcess`es
+   (about 550-700 MB resident) stayed after the last view closed. Now the
+   context and its pool end with the last view, and those processes with
+   them. Cookies and site data are unaffected: they live in the network
+   session. A lower cache model does not help: the process cache reads it
+   only when the pool is made.
 
-Drop this copy once upstream fixes changes 2-5, 7 and 8 and makes 1 and 6
+Drop this copy once upstream fixes changes 2-5 and 7-9 and makes 1 and 6
 options.

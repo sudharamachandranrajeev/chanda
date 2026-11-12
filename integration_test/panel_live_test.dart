@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:chanda/domain/attributes.dart';
 import 'package:chanda/domain/offers.dart';
@@ -9,6 +8,7 @@ import 'package:chanda/domain/shops.dart';
 import 'package:chanda/ui/shop_panels.dart';
 import 'package:flutter/gestures.dart' show HitTestResult;
 import 'package:flutter/material.dart';
+import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
@@ -74,8 +74,8 @@ void main() {
     final after = Memory.now();
     log('memory ${gone.inMilliseconds} ms after dispose: $after');
     expect(found.any((f) => f.$2.isNotEmpty), isTrue);
-    // The web processes of both views are gone or idle again.
-    expect(after.webProcesses, lessThanOrEqualTo(before.webProcesses + 1));
+    // The web processes of both views are gone.
+    expect(after.webProcesses, lessThanOrEqualTo(before.webProcesses));
   }, timeout: const Timeout(Duration(minutes: 4)));
 
   for (final id in ['temu', 'shein']) {
@@ -103,8 +103,8 @@ void main() {
       await tester.pumpWidget(const SizedBox());
       final gone = await settled(0);
       log('panel $id closed: ${gone.inMilliseconds} ms to free; open $open; after ${Memory.now()}');
-      // WebKit may keep one spare web process for the next page; no more.
-      expect(Memory.now().webProcesses, lessThanOrEqualTo(1));
+      // No web process stays once the last view is gone.
+      expect(Memory.now().webProcesses, 0);
     }, timeout: const Timeout(Duration(minutes: 2)));
   }
 
@@ -159,8 +159,43 @@ void main() {
     final gone = await settled(before.webProcesses);
     final after = Memory.now();
     log('panel memory: before $before; open $open; ${gone.inMilliseconds} ms after closing $after');
-    expect(after.webProcesses, lessThanOrEqualTo(max(before.webProcesses, 1)));
+    expect(after.webProcesses, lessThanOrEqualTo(before.webProcesses));
   }, timeout: const Timeout(Duration(minutes: 5)));
+
+  testWidgets('a view that went across sites leaves no web process', (tester) async {
+    // A cross-site navigation moves the page to a new web process; WebKit
+    // keeps the old one (and a prewarmed one) for later pages. They must end
+    // with the last view, twice in a row, and site data must stay.
+    final before = Memory.now();
+    for (var round = 0; round < 2; round++) {
+      InAppWebViewController? c;
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: InAppWebView(
+              initialUrlRequest: URLRequest(url: WebUri('https://example.com/')),
+              onWebViewCreated: (x) => c = x,
+            ),
+          ),
+        ),
+      );
+      await wait(tester, const Duration(seconds: 6));
+      final kept = await c!.evaluateJavascript(
+        source:
+            "(() => { const k = localStorage.getItem('chanda-test');"
+            " localStorage.setItem('chanda-test', 'round $round'); return k; })()",
+      );
+      if (round > 0) expect(kept, 'round ${round - 1}', reason: 'site data was lost');
+      await c!.loadUrl(urlRequest: URLRequest(url: WebUri('https://www.iana.org/help/example-domains')));
+      await wait(tester, const Duration(seconds: 8));
+      final open = Memory.now();
+      await tester.pumpWidget(const SizedBox());
+      final gone = await settled(before.webProcesses);
+      final after = Memory.now();
+      log('across sites, round $round: open $open; ${gone.inMilliseconds} ms after closing $after');
+      expect(after.webProcesses, lessThanOrEqualTo(before.webProcesses));
+    }
+  }, timeout: const Timeout(Duration(minutes: 2)));
 }
 
 /// Whether a tap at the middle of [f] reaches it (a menu still growing in
@@ -173,11 +208,11 @@ bool takesTaps(WidgetTester tester, Finder f) {
   return result.path.any((e) => e.target == box);
 }
 
-/// Waits up to 20 s for the web processes to drop back to [count] (or the one
-/// spare WebKit may keep); how long it took.
+/// Waits up to 20 s for the web processes to drop back to [count]; how long
+/// it took.
 Future<Duration> settled(int count) async {
   final watch = Stopwatch()..start();
-  while (Memory.now().webProcesses > max(count, 1) && watch.elapsed < const Duration(seconds: 20)) {
+  while (Memory.now().webProcesses > count && watch.elapsed < const Duration(seconds: 20)) {
     await Future<void>.delayed(const Duration(milliseconds: 250));
   }
   return watch.elapsed;
@@ -186,20 +221,39 @@ Future<Duration> settled(int count) async {
 /// Resident memory of this process and the web engine's helper processes
 /// (its children), from /proc. Linux only.
 class Memory {
-  Memory(this.self, this.children, this.webProcesses);
+  Memory(this.self, this.children, this.webProcesses, {this.childrenPss = 0, this.web = const []});
   final int self, children, webProcesses;
+
+  /// The helpers' proportional set size (shared pages split between the
+  /// processes that share them), in MB.
+  final int childrenPss;
+
+  /// Each web process: its id, resident and proportional size in MB.
+  final List<(int, int, int)> web;
   int get total => self + children;
 
   static Memory now() {
     final me = pid;
-    var kids = 0, web = 0;
+    var kids = 0, kidsPss = 0;
+    final web = <(int, int, int)>[];
     for (final d in Directory('/proc').listSync().whereType<Directory>()) {
       final p = int.tryParse(d.uri.pathSegments.where((s) => s.isNotEmpty).last);
       if (p == null || p == me || !_descends(p, me)) continue;
-      kids += _rss(p);
-      if (_name(p).startsWith('WPEWebProcess')) web++;
+      final rss = _rss(p), pss = _pss(p);
+      kids += rss;
+      kidsPss += pss;
+      if (_name(p).startsWith('WPEWebProcess')) web.add((p, rss, pss));
     }
-    return Memory(_rss(me), kids, web);
+    return Memory(_rss(me), kids, web.length, childrenPss: kidsPss, web: web);
+  }
+
+  static int _pss(int p) {
+    try {
+      final m = RegExp(r'Pss:\s+(\d+)').firstMatch(File('/proc/$p/smaps_rollup').readAsStringSync());
+      return m == null ? 0 : int.parse(m.group(1)!) ~/ 1024;
+    } on Object {
+      return 0;
+    }
   }
 
   static bool _descends(int p, int root) {
@@ -237,5 +291,7 @@ class Memory {
   }
 
   @override
-  String toString() => 'app $self MB + helpers $children MB ($webProcesses web processes)';
+  String toString() =>
+      'app $self MB + helpers $children MB RSS, $childrenPss MB PSS ($webProcesses web processes'
+      '${[for (final (p, r, s) in web) ' $p:$r/$s'].join()})';
 }
