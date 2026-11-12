@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.1
+
+- Same app as 0.5.0, which was never published: its Ubuntu start test failed on a script error in
+  the release workflow, not in Chanda. 0.5.1 is the first release with try-on and in-app search.
+
 ## 0.5.0: search that stays in the app
 
 - Searches that ask for more than words now find things. "Walking shoes for all terrains, easy slip in" is

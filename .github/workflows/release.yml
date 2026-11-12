@@ -285,6 +285,7 @@ jobs:
           path: dist
       - name: GTK, libsecret, a keyring and Xvfb
         timeout-minutes: 15
+        shell: bash
         run: |
           if command -v apt-get >/dev/null; then
             opts=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
