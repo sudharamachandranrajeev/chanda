@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:brahma_core/brahma_core.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -229,13 +230,20 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
     widget.request.onOffers(offers);
   }
 
-  /// Reads the text on the screen and matches it to the page's links.
-  /// Reads the products off the page as drawn. When the user [asked] and
-  /// nothing could be read, says so (a background try stays quiet).
+  /// Reads the products off the page as drawn. The panel shows only part of
+  /// the page, and the top of a results page is mostly the shop's header,
+  /// its own adverts and a cookie notice, so it looks at up to
+  /// [screenViews] screenfuls: it scrolls down a step at a time, keeps a
+  /// screenshot of each, puts the page back where it was, and only then
+  /// reads the text off them. A background try ([asked] false) scrolls only
+  /// while the page is still at its top, so it never moves a page the user
+  /// is reading. When the user [asked] and nothing could be read, says so.
   Future<void> _readScreen({bool asked = false}) async {
     final web = _web;
     if (web == null || _reading || _private || _wall) return;
     setState(() => _reading = true);
+    final at = _url;
+    final watch = Stopwatch()..start();
     void nothing(String why) {
       debugPrint('Chanda: nothing read from the screen of ${_shop.id}: $why');
       if (asked && mounted) {
@@ -244,52 +252,96 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
     }
 
     try {
-      final box = await web.evaluateJavascript(source: boxesScript);
-      final png = await web.takeScreenshot();
-      if (!mounted || _private || _wall) return;
-      if (png == null) return nothing('no screenshot');
-      final (lines, height) = await readScreen(png);
-      final page = readBoxes(box, scale: 1);
-      if (page.height <= 0) return nothing('no page layout');
-      final scale = height / page.height;
-      final scaled = readBoxes(box, scale: scale);
-      var tiles = screenTiles(lines, scaled.boxes, hint: _shop.currency, width: scaled.width * scale);
-      // Tiles without a picture link: the link under the text.
-      final missing = [
-        for (final t in tiles)
-          if (t.href.isEmpty) t,
-      ];
-      if (missing.isNotEmpty) {
-        final probes = [for (final t in missing) ...t.probes.map((p) => (p.$1 / scale, p.$2 / scale))];
-        final answer = await web.evaluateJavascript(source: linkProbeScript(probes));
-        final hrefs = answer is String ? jsonList(answer) : const <String>[];
-        var at = 0;
-        tiles = [
-          for (final t in tiles)
-            if (t.href.isNotEmpty)
-              t
-            else
-              () {
-                final mine =
-                    hrefs.skip(at).take(t.probes.length).where((h) => h.isNotEmpty).firstOrNull ?? '';
-                at += t.probes.length;
-                return t.withHref(mine);
-              }(),
-        ];
+      final shots = <(ScreenView, Uint8List)>[];
+      var moved = 0.0, covered = false;
+      try {
+        Uint8List? previous;
+        // A few more steps than screenfuls: skipping the header costs one.
+        for (var i = 0; i < screenViews + 2 && shots.length < screenViews; i++) {
+          final png = await _settledShot(web, previous);
+          if (png == null) break;
+          previous = png;
+          // The layout as drawn: read after the screenshot, since a page may
+          // show a bar of its own once it scrolls.
+          final json = await web.evaluateJavascript(source: viewScript);
+          final css = readView(json, scale: 1);
+          if (css.isEmpty) break;
+          final band = css.bottom - css.top;
+          if (band < css.height * 0.15) {
+            covered = true;
+            break;
+          }
+          if (worthReading(css)) shots.add((readView(json, scale: pngHeight(png) / css.height), png));
+          // A page the user has scrolled is not moved by a background try.
+          if ((!asked && i == 0 && css.scrollY > 0) || !mounted || _url != at) break;
+          final step = await web.evaluateJavascript(source: scrollByScript(screenStep(css)));
+          if (step is! num || step <= 0) break;
+          moved += step;
+        }
+      } finally {
+        if (moved > 0) await web.evaluateJavascript(source: scrollByScript(-moved));
       }
-      final offers = parseOffers(_shop, [for (final t in tiles) t.toJson()], source: OfferSource.screen);
+      if (!mounted || _private || _wall || _url != at) return;
+      if (covered && shots.isEmpty) {
+        debugPrint('Chanda: nothing read from the screen of ${_shop.id}: something covers the page');
+        if (asked) {
+          showMessage(
+            context,
+            'Something on the page covers the results, like a cookie notice. Close it, then try again.',
+          );
+        }
+        return;
+      }
+      if (shots.isEmpty) return nothing('no screenshot or no page layout');
+      final views = <List<ScreenTile>>[];
+      var lineCount = 0;
+      for (final (view, png) in shots) {
+        final (lines, _) = await readScreen(png, top: view.top, bottom: view.bottom);
+        lineCount += lines.length;
+        views.add(viewTiles(lines, view, hint: _shop.currency));
+      }
+      final tiles = mergeTiles(views);
+      final offers = plausiblePrices(
+        parseOffers(_shop, [for (final t in tiles) t.toJson()], source: OfferSource.screen),
+        (o) => o.price,
+      );
+      debugPrint(
+        'Chanda: read ${offers.length} products from ${shots.length} screens of ${_shop.id} '
+        '(${tiles.length} tiles, $lineCount lines) in ${watch.elapsedMilliseconds} ms',
+      );
       if (!mounted) return;
-      if (offers.isEmpty) return nothing('${lines.length} text lines, ${tiles.length} tiles, no products');
+      if (offers.isEmpty) {
+        return nothing(
+          '$lineCount text lines, ${tiles.length} tiles on ${shots.length} screens, no products',
+        );
+      }
       setState(() {
         _count = offers.length;
         _fromScreen = true;
       });
       widget.request.onOffers(offers);
     } on Object catch (e) {
+      debugPrint('Chanda: reading the screen of ${_shop.id} failed: $e');
       if (mounted) showError(context, e);
     } finally {
       if (mounted) setState(() => _reading = false);
     }
+  }
+
+  /// A screenshot of the page once it shows something new: after a scroll
+  /// the web engine draws the page again a moment later, and until then a
+  /// screenshot is the screen before ([before]).
+  Future<Uint8List?> _settledShot(InAppWebViewController web, Uint8List? before) async {
+    if (before == null) return web.takeScreenshot();
+    Uint8List? png;
+    for (var i = 0; i < 15; i++) {
+      await Future<void>.delayed(const Duration(milliseconds: 150));
+      png = await web.takeScreenshot();
+      if (png != null && !listEquals(png, before)) break;
+    }
+    // Let the newly shown part finish drawing (late pictures, text).
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    return await web.takeScreenshot() ?? png;
   }
 
   /// A while after the page loads with nothing read, try the screen once.
@@ -424,18 +476,5 @@ class _LiveShopPanelState extends ConsumerState<LiveShopPanel> {
         ],
       ),
     );
-  }
-}
-
-/// The strings of a JSON list, or none.
-List<String> jsonList(String text) {
-  try {
-    final j = jsonDecode(text);
-    return [
-      if (j is List)
-        for (final e in j) '$e',
-    ];
-  } on FormatException {
-    return const [];
   }
 }

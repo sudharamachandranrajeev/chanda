@@ -7,6 +7,7 @@ import 'package:chanda/domain/query.dart';
 import 'package:chanda/domain/shop_search.dart';
 import 'package:chanda/domain/shops.dart';
 import 'package:chanda/ui/shop_panels.dart';
+import 'package:flutter/gestures.dart' show HitTestResult;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -26,6 +27,8 @@ import 'package:nithya/nithya.dart';
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   const text = String.fromEnvironment('QUERY', defaultValue: 'walking shoes for all terrains, easy slip in');
+  // The shop whose results page the screen-reading test uses (it must load hidden).
+  const panelShop = String.fromEnvironment('SHOP', defaultValue: 'amazon-uk');
 
   // ignore: avoid_print
   void log(String s) => print('LIVE $s');
@@ -108,7 +111,7 @@ void main() {
   testWidgets('a panel reads tiles as they appear, and from the screen', (tester) async {
     await loadLexicon();
     final q = readQuery(text);
-    final shop = shopById('amazon-uk')!;
+    final shop = shopById(panelShop)!;
     final got = <List<Offer>>[];
     final before = Memory.now();
     await tester.pumpWidget(
@@ -119,7 +122,7 @@ void main() {
       await wait(tester, const Duration(seconds: 1));
     }
     log(
-      'panel amazon-uk: first report after ${watch.elapsed.inSeconds}s, '
+      'panel $panelShop: first report after ${watch.elapsed.inSeconds}s, '
       '${got.isEmpty ? 0 : got.last.length} offers, ${got.length} reports; memory ${Memory.now()}',
     );
     expect(got, isNotEmpty, reason: 'the tiles handler never reported');
@@ -127,19 +130,25 @@ void main() {
 
     // The read-from-screen fallback, on the real page as it is drawn.
     await tester.tap(find.byTooltip('More'));
-    await wait(tester, const Duration(seconds: 1));
-    await tester.tap(find.text('Read the results from the screen'));
+    // The menu grows in over a few frames; tap its item once it takes taps.
+    final item = find.text('Read the results from the screen');
+    final shown = Stopwatch()..start();
+    do {
+      await wait(tester, const Duration(milliseconds: 250));
+    } while (!takesTaps(tester, item) && shown.elapsed < const Duration(seconds: 10));
+    await tester.tap(item);
     final ocr = Stopwatch()..start();
     final reports = got.length;
     // The page script may report again meanwhile; the screen's report is the
     // one whose offers say so.
     bool fromScreen(List<Offer> r) => r.isNotEmpty && r.first.source == OfferSource.screen;
-    while (!got.skip(reports).any(fromScreen) && ocr.elapsed < const Duration(seconds: 40)) {
+    // A debug build reads text several times slower than a release build.
+    while (!got.skip(reports).any(fromScreen) && ocr.elapsed < const Duration(seconds: 150)) {
       await wait(tester, const Duration(milliseconds: 500));
     }
     final screen = got.skip(reports).where(fromScreen).firstOrNull ?? const <Offer>[];
     log(
-      'panel amazon-uk from the screen: ${screen.length} offers in ${ocr.elapsed.inMilliseconds} ms'
+      'panel $panelShop from the screen: ${screen.length} offers in ${ocr.elapsed.inMilliseconds} ms'
       '${[for (final o in screen.take(4)) '\n  ${o.price} ${o.currency} ${o.url.isEmpty ? '(no link)' : 'link'} ${o.title.length > 60 ? o.title.substring(0, 60) : o.title}'].join()}',
     );
     expect(screen, isNotEmpty, reason: 'nothing read from the screen');
@@ -151,7 +160,17 @@ void main() {
     final after = Memory.now();
     log('panel memory: before $before; open $open; ${gone.inMilliseconds} ms after closing $after');
     expect(after.webProcesses, lessThanOrEqualTo(max(before.webProcesses, 1)));
-  }, timeout: const Timeout(Duration(minutes: 3)));
+  }, timeout: const Timeout(Duration(minutes: 5)));
+}
+
+/// Whether a tap at the middle of [f] reaches it (a menu still growing in
+/// does not take taps yet).
+bool takesTaps(WidgetTester tester, Finder f) {
+  if (f.evaluate().isEmpty) return false;
+  final box = tester.renderObject(f.first) as RenderBox;
+  final result = HitTestResult();
+  tester.binding.hitTestInView(result, box.localToGlobal(box.size.center(Offset.zero)), tester.view.viewId);
+  return result.path.any((e) => e.target == box);
 }
 
 /// Waits up to 20 s for the web processes to drop back to [count] (or the one

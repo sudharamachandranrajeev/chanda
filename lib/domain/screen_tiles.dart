@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import 'money.dart';
 import 'screen_text.dart';
@@ -68,9 +69,17 @@ bool isPriceLine(ScreenLine l, String hint) {
   return p != null && p.minor > 0;
 }
 
+/// Shop furniture around a tile's name: "Sponsored", "+6 other colours",
+/// "Add to basket", "100+ bought in past month", "Best Seller".
+final _tileNoise = RegExp(
+  r'^(sponsored|\+\s?\d+\s+(other|more)\b|add to (basket|cart|bag|trolley)|\d+[\d,.]*k?\+?\s+bought\b|'
+  r'best\s?seller|amazon.s choice|limited time deal|options?:|more (buying )?(choices|options))',
+  caseSensitive: false,
+);
+
 bool _isTitleLine(ScreenLine l, String hint) {
   final t = l.text.trim();
-  if (t.length < 4 || isPriceLine(l, hint) || _priceWords.hasMatch(t)) return false;
+  if (t.length < 4 || isPriceLine(l, hint) || _priceWords.hasMatch(t) || _tileNoise.hasMatch(t)) return false;
   // "4.5 (120)" and "★★★★" are ratings; they have almost no letters.
   return RegExp(r'\p{L}', unicode: true).allMatches(t).length >= 3;
 }
@@ -124,7 +133,11 @@ List<ScreenTile> screenTiles(
       final prices = ls.where((l) => isPriceLine(l, hint)).toList();
       if (prices.isEmpty) continue;
       final (:now, :was) = _prices(prices, hint);
-      final title = _title(ls, hint);
+      // The name is over the price; under it are delivery and basket lines.
+      final title = _title([
+        for (final l in ls)
+          if (l.bottom <= now.top + now.height * 0.3) l,
+      ], hint);
       if (title.length < 6) continue;
       out.add(ScreenTile(title: title, price: now.text.trim(), was: was?.text.trim() ?? '', href: b.href));
     }
@@ -188,70 +201,220 @@ List<ScreenTile> screenTiles(
   return out;
 }
 
-/// JavaScript that lists the picture links on the screen: the page's size in
-/// CSS pixels and, for each link around a picture, its place. It reads only.
-const boxesScript = r'''
+/// The height in pixels of the PNG picture [png] (from its header), or 0.
+double pngHeight(Uint8List png) {
+  const sign = [0x89, 0x50, 0x4E, 0x47];
+  if (png.length < 24 || [for (var i = 0; i < 4; i++) png[i]].join() != sign.join()) return 0;
+  return ByteData.sublistView(png, 20, 24).getUint32(0).toDouble();
+}
+
+/// One screenful of a page, as [viewScript] saw it, in screenshot pixels:
+/// the band not hidden by bars pinned to the top or bottom of the view (a
+/// sticky header, a cookie notice), the picture links in it ([boxes]) and
+/// every link in it ([links]), and how far the page was scrolled.
+class ScreenView {
+  const ScreenView({
+    required this.width,
+    required this.height,
+    required this.top,
+    required this.bottom,
+    required this.scrollY,
+    this.next,
+    this.boxes = const [],
+    this.links = const [],
+  });
+  static const none = ScreenView(width: 0, height: 0, top: 0, bottom: 0, scrollY: 0);
+
+  /// The view's size in CSS pixels.
+  final double width, height;
+
+  /// The clear band, in screenshot pixels.
+  final double top, bottom;
+
+  /// How far the page was scrolled, in CSS pixels.
+  final double scrollY;
+
+  /// Where the first picture link at or below the band's top starts (it may
+  /// be below the view), scaled like the band; null when the page has none.
+  final double? next;
+  final List<ScreenBox> boxes;
+  final List<ScreenBox> links;
+
+  bool get isEmpty => height <= 0;
+}
+
+/// The view [viewScript] answered with [json], scaled by [scale]
+/// (screenshot pixels per CSS pixel).
+ScreenView readView(Object? json, {required double scale}) {
+  List<ScreenBox> rects(Object? list) => [
+    if (list is List)
+      for (final b in list.whereType<Map>())
+        ScreenBox(
+          '${b['href']}',
+          left: (b['x'] as num) * scale,
+          top: (b['y'] as num) * scale,
+          width: (b['w'] as num) * scale,
+          height: (b['h'] as num) * scale,
+        ),
+  ];
+  try {
+    final j = json is String ? jsonDecode(json) : json;
+    if (j is! Map) return ScreenView.none;
+    final h = (j['h'] as num).toDouble();
+    return ScreenView(
+      width: (j['w'] as num).toDouble(),
+      height: h,
+      top: ((j['top'] as num?) ?? 0) * scale,
+      bottom: ((j['bottom'] as num?) ?? h) * scale,
+      scrollY: ((j['sy'] as num?) ?? 0).toDouble(),
+      next: switch (j['next']) {
+        final num n => n * scale,
+        _ => null,
+      },
+      boxes: rects(j['boxes']),
+      links: rects(j['links']),
+    );
+  } on Object {
+    return ScreenView.none;
+  }
+}
+
+/// The link under the first of [probes] that has one: the smallest of
+/// [links] holding the point. Empty when none does.
+String linkAt(List<(double, double)> probes, List<ScreenBox> links) {
+  for (final (x, y) in probes) {
+    ScreenBox? best;
+    for (final l in links) {
+      if (x < l.left || x > l.right || y < l.top || y > l.bottom) continue;
+      if (best == null || l.width * l.height < best.width * best.height) best = l;
+    }
+    if (best != null) return best.href;
+  }
+  return '';
+}
+
+/// The products read off one screenful: [lines] matched to the view's
+/// picture links, and a tile without one given the link under its text.
+List<ScreenTile> viewTiles(List<ScreenLine> lines, ScreenView view, {required String hint}) => [
+  for (final t in screenTiles(lines, view.boxes, hint: hint, width: view.width))
+    t.href.isNotEmpty ? t : t.withHref(linkAt(t.probes, view.links)),
+];
+
+/// The tiles of several screenfuls, each product once: by its link, or by
+/// its name and price where it has none. Where one screenful cut a name
+/// short at its edge, the longest reading of the name is kept.
+List<ScreenTile> mergeTiles(Iterable<List<ScreenTile>> views) {
+  final out = <String, ScreenTile>{};
+  for (final view in views) {
+    for (final t in view) {
+      final key = t.href.isNotEmpty ? t.href : '${t.title}|${t.price}';
+      final old = out[key];
+      if (old == null || t.title.length > old.title.length) out[key] = t;
+    }
+  }
+  return [...out.values];
+}
+
+/// [items] without prices far out of line with the rest: a misread digit
+/// or two lines read as one ("£80.28" and "100 sold" as "£8028100") gives a
+/// sum ten times the others or more. Needs three or more to compare.
+List<T> plausiblePrices<T>(List<T> items, int Function(T) minor) {
+  if (items.length < 3) return items;
+  final sorted = [for (final i in items) minor(i)]..sort();
+  final median = sorted[sorted.length ~/ 2];
+  return [
+    for (final i in items)
+      if (minor(i) <= median * 10 && minor(i) * 10 >= median) i,
+  ];
+}
+
+/// How many screenfuls a read from the screen reads at most.
+const screenViews = 6;
+
+/// How far to scroll from [view] (CSS pixels) for the next screenful: past
+/// the shop's header and banners to the first picture link when there is
+/// none in reach yet, otherwise on by part of the clear band, so that a
+/// tile's text cut at the band's edge is whole in the next one.
+double screenStep(ScreenView view) {
+  final band = view.bottom - view.top;
+  final next = view.next;
+  if (view.boxes.isEmpty && next != null && next > view.top + band * 0.5) return next - view.top - 8;
+  return max(band * 0.5, band - 260);
+}
+
+/// Whether [view] is worth reading: it has a picture link in reach, or the
+/// page has none at all (then its text alone is grouped into tiles).
+bool worthReading(ScreenView view) => view.boxes.isNotEmpty || view.next == null;
+
+/// JavaScript that describes what is on the screen: the view's size and
+/// scroll, the band not covered by bars pinned to its top or bottom, and the
+/// links in that band (with the picture links among them), all in CSS
+/// pixels. It reads only.
+const viewScript = r'''
 (() => {
   const ad = /sponsored-ads\.|\/sspa\/|[/.]aax-|\/gp\/slredirect|\/aclk\b|doubleclick\./i;
-  const seen = new Map();
+  const W = innerWidth, H = innerHeight;
+  const pinned = (el) => {
+    for (let e = el; e && e !== document.body && e !== document.documentElement; e = e.parentElement) {
+      const p = getComputedStyle(e).position;
+      if (p === 'fixed' || p === 'sticky') return e;
+    }
+    return null;
+  };
+  let top = 0, bottom = H;
+  for (const f of [0.1, 0.5, 0.9]) {
+    const a = pinned(document.elementFromPoint(W * f, 2));
+    if (a) { const r = a.getBoundingClientRect(); if (r.top <= 2 && r.bottom < H * 0.5) top = Math.max(top, r.bottom); }
+    const b = pinned(document.elementFromPoint(W * f, H - 2));
+    if (b) { const r = b.getBoundingClientRect(); if (r.bottom >= H - 2 && r.top > H * 0.25) bottom = Math.min(bottom, r.top); }
+  }
+  // Links in the band; picture links in it or just over it (a tile's
+  // picture may sit above the band while its text is in it); and where the
+  // first picture link at or below the band's top starts.
+  const boxes = new Map(), links = [];
+  let next = null;
   for (const a of document.querySelectorAll('a[href]')) {
-    if (a.closest('header, nav, footer') || !a.querySelector('img')) continue;
+    if (a.closest('header, nav, footer')) continue;
     let href = '';
     try { href = new URL(a.getAttribute('href'), document.baseURI).href; } catch (e) { continue; }
     if (!/^https?:/.test(href) || ad.test(href)) continue;
     const r = a.getBoundingClientRect();
-    if (r.width < 40 || r.height < 40 || r.bottom < 0 || r.top > innerHeight || r.right < 0 || r.left > innerWidth) continue;
-    const old = seen.get(href);
-    if (!old || old.w * old.h < r.width * r.height) seen.set(href, {href, x: r.left, y: r.top, w: r.width, h: r.height});
+    if (r.width < 4 || r.height < 4 || r.right < 0 || r.left > W) continue;
+    if (r.bottom >= top && r.top <= bottom && links.length < 800) links.push({href, x: r.left, y: r.top, w: r.width, h: r.height});
+    if (r.width < 40 || r.height < 40 || !a.querySelector('img')) continue;
+    if (r.top >= top && (next === null || r.top < next)) next = r.top;
+    if (r.top > bottom || r.bottom < top - r.height * 1.6) continue;
+    const old = boxes.get(href);
+    if (!old || old.w * old.h < r.width * r.height) boxes.set(href, {href, x: r.left, y: r.top, w: r.width, h: r.height});
   }
-  return JSON.stringify({w: innerWidth, h: innerHeight, boxes: [...seen.values()]});
+  const s = document.scrollingElement || document.documentElement;
+  return JSON.stringify({w: W, h: H, top, bottom, sy: s.scrollTop, next, boxes: [...boxes.values()], links});
 })()
 ''';
 
-/// The page size and picture links [boxesScript] found, scaled by [scale]
-/// (screenshot pixels per CSS pixel).
-({double width, double height, List<ScreenBox> boxes}) readBoxes(Object? json, {required double scale}) {
-  try {
-    final j = json is String ? jsonDecode(json) : json;
-    if (j is! Map) return (width: 0, height: 0, boxes: const []);
-    return (
-      width: (j['w'] as num).toDouble(),
-      height: (j['h'] as num).toDouble(),
-      boxes: [
-        for (final b in (j['boxes'] as List).whereType<Map>())
-          ScreenBox(
-            '${b['href']}',
-            left: (b['x'] as num) * scale,
-            top: (b['y'] as num) * scale,
-            width: (b['w'] as num) * scale,
-            height: (b['h'] as num) * scale,
-          ),
-      ],
-    );
-  } on Object {
-    return (width: 0, height: 0, boxes: const []);
+/// The element the page scrolls: the document, or where the document does
+/// not scroll, the biggest scrolling box in the middle of the view.
+const _scroller = r'''
+const scroller = () => {
+  const doc = document.scrollingElement || document.documentElement;
+  if (doc.scrollHeight > innerHeight + 4) return doc;
+  for (let e = document.elementFromPoint(innerWidth / 2, innerHeight / 2); e; e = e.parentElement) {
+    const o = getComputedStyle(e).overflowY;
+    if ((o === 'auto' || o === 'scroll') && e.scrollHeight > e.clientHeight + 4) return e;
   }
-}
+  return doc;
+};
+''';
 
-/// JavaScript that finds, for each point (CSS pixels, as JSON text), the
-/// link under it, using `elementsFromPoint`; empty where there is none or it
-/// is an advert. It reads only.
-String linkProbeScript(List<(double, double)> points) =>
+/// JavaScript that scrolls the page down by [dy] CSS pixels at once and
+/// says how far it moved (a negative [dy] scrolls back up). Only the view
+/// moves: nothing is clicked.
+String scrollByScript(double dy) =>
     '''
-((pts) => {
-  const ad = /sponsored-ads\\.|\\/sspa\\/|[/.]aax-|\\/gp\\/slredirect|\\/aclk\\b|doubleclick\\./i;
-  return JSON.stringify(pts.map(([x, y]) => {
-    for (const el of document.elementsFromPoint(x, y)) {
-      const a = el.closest('a[href]');
-      if (!a) continue;
-      try {
-        const href = new URL(a.getAttribute('href'), document.baseURI).href;
-        if (/^https?:/.test(href) && !ad.test(href)) return href;
-      } catch (e) {}
-    }
-    return '';
-  }));
-})(${jsonEncode([
-      for (final (x, y) in points) [x, y],
-    ])})
+(() => {
+  $_scroller
+  const s = scroller(), before = s.scrollTop;
+  s.scrollTo({top: before + ${dy.round()}, behavior: 'instant'});
+  return s.scrollTop - before;
+})()
 ''';

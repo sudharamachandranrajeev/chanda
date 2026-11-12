@@ -2,6 +2,7 @@ import 'package:chanda/domain/reading.dart';
 import 'package:chanda/domain/pp_ocr.dart';
 import 'package:chanda/domain/screen_text.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:image/image.dart' as img;
 
 void main() {
   const blank = Reading(url: 'https://www.hacoo.com/p/1', title: '', currency: 'GBP', was: 1500);
@@ -68,5 +69,44 @@ void main() {
     final (text, conf) = ctcDecode([for (final c in steps) ...step(c)], steps.length, classes, chars);
     expect(text, '£45.99');
     expect(conf, closeTo(0.9, 1e-9));
+  });
+
+  group('a price drawn with raised pence', () {
+    // White picture, dark text: "$47" big on the baseline, then "49" small
+    // and set high, as shops draw "£47⁴⁹".
+    img.Image price({required bool raised}) {
+      final p = img.Image(width: 240, height: 80)..clear(img.ColorRgb8(255, 255, 255));
+      final ink = img.ColorRgb8(20, 20, 20);
+      img.drawString(p, r'$47', font: img.arial48, x: 10, y: 14, color: ink);
+      if (raised) {
+        img.drawString(p, '49', font: img.arial24, x: 92, y: 16, color: ink);
+      } else {
+        img.drawString(p, '49', font: img.arial48, x: 92, y: 14, color: ink);
+      }
+      return p;
+    }
+
+    test('splits between the whole pounds and the pence', () {
+      final parts = raisedTail(price(raised: true), const TextBox(0, 0, 240, 80));
+      expect(parts, isNotNull);
+      final (whole, pence) = parts!;
+      expect(whole.left, 0);
+      expect(whole.right, inInclusiveRange(84, 94));
+      expect(pence.left, whole.right);
+      expect(pence.right, lessThan(130));
+      expect(pence.bottom, lessThan(50), reason: 'the pence box keeps to the raised digits');
+    });
+
+    test('a price written on one line is left alone', () {
+      expect(raisedTail(price(raised: false), const TextBox(0, 0, 240, 80)), isNull);
+    });
+
+    test('smaller text after the price on the baseline is passed over', () {
+      final p = price(raised: true);
+      img.drawString(p, 'RRP', font: img.arial14, x: 128, y: 44, color: img.ColorRgb8(20, 20, 20));
+      final parts = raisedTail(p, const TextBox(0, 0, 240, 80));
+      expect(parts, isNotNull);
+      expect(parts!.$2.right, lessThan(130));
+    });
   });
 }
