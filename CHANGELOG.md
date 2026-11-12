@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased (0.5.0): search that stays in the app
+## 0.5.0: search that stays in the app
 
 - Searches that ask for more than words now find things. "Walking shoes for all terrains, easy slip in" is
   read as walking shoes that are *All-terrain* and *Slip-on*; both show as chips you can tap off. Shops
@@ -22,6 +22,18 @@
   At most two shop pages load in the background at once on a computer, one on a phone.
 - Hacoo is no longer searched on the web (its old website address is for sale); save its products from
   the app's share link instead.
+- *Sharper ranking* in Settings (off by default): a 96 MB download, once, then a small model on this device
+  reads your search and each product name together and puts the closest fits first among the best
+  matches. Nothing is sent anywhere.
+- Linux: a second download, `Chanda-<version>-linux-x64-wpe.tar.gz`, for Arch Linux, Omarchy and other
+  Arch-based systems. It has the in-app browser and the shop panels and uses the system's WPE WebKit 2.52
+  or later (`pacman -S wpewebkit`) instead of carrying its own copy, so the download is about 36 MB. The
+  other Linux download stays, without the in-app browser.
+- Linux: closing a shop page or finishing a background search now frees its web process. Before, each one
+  kept hundreds of MB until Chanda quit.
+- Linux: the mouse wheel over a shop panel scrolls only that page, not Search around it.
+- Exchange rates: the app's tests no longer reach the network, which is where the "HTTP 400" in the logs
+  came from. The live service answers normally.
 - Attribute list from the Shopify Standard Product Taxonomy (MIT) and price test cases from price-parser
   (BSD-3): see THIRD_PARTY_NOTICES.md.
 
