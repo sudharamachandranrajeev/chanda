@@ -19,7 +19,7 @@ void main() {
       addTearDown(() => tmp.delete(recursive: true));
       String tile(String name, String price, {String href = '', String label = ''}) =>
           '<li class="product-card"><a href="${href.isEmpty ? '/p/${name.hashCode.abs()}' : href}">'
-          '<img alt="$name" src="/i.jpg"><h3>$name</h3></a>$label'
+          '<img alt="$name" src="data:image/gif;base64,R0lGODlhAQABAAAAACw="><h3>$name</h3></a>$label'
           '<span class="vp-price-amount"><span class="sr-only">Current price</span> $price</span></li>';
       final replay = File('${tmp.path}/page.html')
         ..writeAsStringSync(
