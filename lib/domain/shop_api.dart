@@ -17,7 +17,8 @@ import 'shops.dart';
 // No web view, no page, so it works on every build and in the background.
 
 /// How Chanda says who is asking.
-const apiAgent = 'Chanda/0.5 (shop search for one shopper; https://github.com/sudharamachandranrajeev/chanda-shopping-assistant)';
+const apiAgent =
+    'Chanda/0.5 (shop search for one shopper; https://github.com/sudharamachandranrajeev/chanda-shopping-assistant)';
 
 /// A shop asked Chanda to slow down; the next try is after [until].
 class ShopBusy implements Exception {
