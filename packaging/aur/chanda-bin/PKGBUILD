@@ -20,7 +20,7 @@ conflicts=('chanda')
 options=('!strip' '!debug')
 source=("Chanda-${pkgver}-linux-x64-wpe.tar.gz::${url}/releases/download/v${pkgver}/Chanda-${pkgver}-linux-x64-wpe.tar.gz"
         "${_appid}.desktop")
-sha256sums=('32cb83eacf69e4ed3200851d6b488107f756166a1516e55b889570d31ef418d2')
+sha256sums=('32cb83eacf69e4ed3200851d6b488107f756166a1516e55b889570d31ef418d2'
             '334bb871c2c4cff6eb732617a124adaca5e0e7e7920d545bec6ba0c7282a1384')
 
 package() {
